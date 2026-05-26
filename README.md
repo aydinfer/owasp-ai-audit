@@ -16,6 +16,38 @@ A drop-in skill folder for [Claude Code](https://claude.ai/code). Point Claude a
 
 LLMs hallucinate threat categories, invent CVE numbers, and confidently mis-cite OWASP. This skill refuses to. Every finding cites a real permalink on owaspai.org. If the source can't be fetched and isn't in the bundled snapshot, the finding doesn't ship.
 
+## How this differs from Claude Code's `/security-review`
+
+Claude Code already ships with a `/security-review` skill. It's good. This skill does something different. Run both.
+
+|                       | **`/security-review`** (built-in)                                  | **`owasp-ai-audit`** (this skill)                                                                       |
+| --------------------- | ------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------- |
+| **Scope**             | Pending diff on the current branch                                 | The whole AI system — codebase or architecture description                                              |
+| **Threat surface**    | General app sec: SQLi, XSS, secrets, auth, OWASP Web Top 10        | AI-specific: prompt injection, RAG poisoning, model theft, training-data leak, agent over-privilege, alignment, etc. |
+| **Source of truth**   | Claude's general knowledge of security patterns                    | The OWASP AI Exchange taxonomy — every finding cites a `/go/{slug}/` permalink                          |
+| **When to run**       | Before merging a PR                                                | Before shipping an AI feature, or auditing one that's already live                                      |
+| **Output**            | Prose review in chat                                               | `findings.json` + a self-contained `dashboard.html` (print-to-PDF for sharing)                          |
+| **Will catch**        | "You're concatenating SQL strings at `db.py:42`"                   | "Your RAG retrieves from a user-editable KB without provenance — that's indirect prompt injection"      |
+| **Will miss**         | The RAG-injection thing above                                      | The SQL concat thing                                                                                    |
+
+They're complementary by design. `/security-review` won't flag prompt injection — it's not a Web Top-10 concern. `owasp-ai-audit` won't flag a credential in `.env` — that's not an AI threat. The honest workflow on a serious AI system: run both, treat the outputs as a union, fix everything.
+
+## Does it audit, or does it also fix?
+
+It audits and **recommends grounded controls**. It does *not* write patches.
+
+Every finding includes a `recommended_controls` list. Each control is itself an OWASP-cited permalink with a short summary of what to do — e.g. for indirect prompt injection, the recommendation cites [`/go/promptinjectionsevenlayers/`](https://owaspai.org/go/promptinjectionsevenlayers/) (the layered defence) and [`/go/inputsegregation/`](https://owaspai.org/go/inputsegregation/) (treat retrieved content as untrusted). You implement; the skill points at the canonical reference.
+
+This is deliberate. Auto-patching a security finding without human review is how you ship false confidence — a "fix" that closes the lint warning but not the actual attack path. The recommendation pattern is: *the skill grades the system, cites the literature, and a human makes the call on the patch* (with Claude Code's normal coding tools, in a follow-up turn, if you want).
+
+If you do want a patch turn after the audit, just ask:
+
+```
+Take the HIGH and CRITICAL findings from dashboard.html and propose patches.
+```
+
+That's normal Claude Code — the audit happens to give you a structured, cited starting point.
+
 ## Install
 
 ```bash
