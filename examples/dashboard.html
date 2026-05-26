@@ -1,0 +1,439 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>OWASP AI Audit — Example RAG-based customer support assistant</title>
+<style>
+  :root {
+    --bg: #fafafa;
+    --panel: #ffffff;
+    --ink: #1a1a1a;
+    --muted: #5a5a5a;
+    --border: #e3e3e3;
+    --accent: #0b3d91;
+  }
+  * { box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+         margin: 0; padding: 0; background: var(--bg); color: var(--ink); line-height: 1.5; }
+  .wrap { max-width: 1100px; margin: 0 auto; padding: 32px 24px; }
+  header.report-head { border-bottom: 1px solid var(--border); padding-bottom: 20px; margin-bottom: 24px; }
+  header.report-head h1 { margin: 0 0 4px; font-size: 28px; }
+  header.report-head .sub { color: var(--muted); font-size: 14px; }
+  .grid { display: grid; gap: 16px; }
+  .row-2 { grid-template-columns: 2fr 1fr; }
+  .row-3 { grid-template-columns: repeat(3, 1fr); }
+  .row-6 { grid-template-columns: repeat(6, 1fr); }
+  @media (max-width: 800px) {
+    .row-2, .row-3, .row-6 { grid-template-columns: 1fr; }
+  }
+  .card { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 20px; }
+  .card h2 { margin: 0 0 12px; font-size: 18px; }
+  .card h3 { margin: 0 0 8px; font-size: 15px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
+  .posture { display: flex; align-items: center; gap: 16px; }
+  .posture-dot { width: 24px; height: 24px; border-radius: 50%; flex-shrink: 0; }
+  .posture-label { font-size: 22px; font-weight: 600; }
+  .counts { display: flex; gap: 12px; flex-wrap: wrap; }
+  .count-pill { padding: 6px 12px; border-radius: 999px; font-size: 13px; font-weight: 600; color: white; }
+  .category-row { display: flex; align-items: center; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--border); }
+  .category-row:last-child { border-bottom: none; }
+  .category-name { flex: 1; }
+  .category-light { width: 16px; height: 16px; border-radius: 50%; }
+  .category-count { color: var(--muted); font-size: 13px; min-width: 80px; text-align: right; }
+  .finding { border: 1px solid var(--border); border-radius: 8px; padding: 16px; margin-bottom: 12px; background: var(--panel); page-break-inside: avoid; }
+  .finding-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 8px; }
+  .finding-title { font-weight: 600; font-size: 15px; margin: 0; }
+  .finding-title a { color: var(--accent); text-decoration: none; }
+  .finding-title a:hover { text-decoration: underline; }
+  .verdict-badge { padding: 4px 10px; border-radius: 4px; font-size: 12px; font-weight: 700; color: white; letter-spacing: 0.04em; }
+  .finding dl { margin: 8px 0 0; display: grid; grid-template-columns: 120px 1fr; gap: 4px 12px; font-size: 14px; }
+  .finding dt { color: var(--muted); font-weight: 600; }
+  .finding dd { margin: 0; }
+  .finding .controls { margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--border); font-size: 13px; }
+  .finding .controls a { color: var(--accent); }
+  .category-section { margin-top: 24px; }
+  .category-section h2 { font-size: 20px; border-bottom: 2px solid var(--border); padding-bottom: 8px; margin-bottom: 12px; display: flex; align-items: center; gap: 10px; }
+  .category-section .light { width: 14px; height: 14px; border-radius: 50%; display: inline-block; }
+  footer.report-foot { margin-top: 32px; padding-top: 16px; border-top: 1px solid var(--border); font-size: 12px; color: var(--muted); }
+  footer.report-foot p { margin: 4px 0; }
+  code { background: #f0f0f0; padding: 1px 5px; border-radius: 3px; font-size: 90%; }
+
+  @media print {
+    body { background: white; }
+    .wrap { max-width: none; padding: 16px; }
+    .card, .finding { break-inside: avoid; }
+    .category-section { break-before: auto; }
+    a { color: var(--ink); text-decoration: none; }
+    a[href]::after { content: " (" attr(href) ")"; font-size: 10px; color: var(--muted); }
+    .no-print { display: none; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="report-head">
+  <h1>OWASP AI Exchange Audit</h1>
+  <div class="sub">
+    Subject: <strong>Example RAG-based customer support assistant</strong> ·
+    Type: <strong>architecture</strong> ·
+    Generated: <strong>2026-05-20T14:30:00Z</strong>
+  </div>
+</header>
+
+<div class="grid row-2">
+  <div class="card">
+    <h3>Overall posture</h3>
+    <div class="posture">
+      <div class="posture-dot" style="background: #b00020;"></div>
+      <div class="posture-label">Critical</div>
+    </div>
+    <p style="margin: 12px 0 0; color: var(--muted); font-size: 14px;">
+      Live fetch failed. Findings grounded in bundled snapshot. Refresh snapshot or check connectivity.
+    </p>
+  </div>
+  <div class="card">
+    <h3>Findings by severity</h3>
+    <div class="counts">
+      
+        <div class="count-pill" style="background: #b00020;">
+          CRITICAL: 0
+        </div>
+        <div class="count-pill" style="background: #d84315;">
+          HIGH: 3
+        </div>
+        <div class="count-pill" style="background: #f9a825;">
+          MEDIUM: 5
+        </div>
+        <div class="count-pill" style="background: #9e9d24;">
+          LOW: 1
+        </div>
+        <div class="count-pill" style="background: #2e7d32;">
+          PASS: 0
+        </div>
+        <div class="count-pill" style="background: #607d8b;">
+          N/A: 0
+        </div>
+    </div>
+  </div>
+</div>
+
+<div class="card" style="margin-top: 16px;">
+  <h2>Category posture</h2>
+  
+    <div class="category-row">
+      <span class="category-light" style="background: #f9a825;"></span>
+      <span class="category-name">General Controls</span>
+      <span class="category-count">1 finding</span>
+    </div>
+    <div class="category-row">
+      <span class="category-light" style="background: #b00020;"></span>
+      <span class="category-name">Input Threats</span>
+      <span class="category-count">3 findings</span>
+    </div>
+    <div class="category-row">
+      <span class="category-light" style="background: #f9a825;"></span>
+      <span class="category-name">Development-time</span>
+      <span class="category-count">1 finding</span>
+    </div>
+    <div class="category-row">
+      <span class="category-light" style="background: #b00020;"></span>
+      <span class="category-name">Runtime</span>
+      <span class="category-count">2 findings</span>
+    </div>
+    <div class="category-row">
+      <span class="category-light" style="background: #f9a825;"></span>
+      <span class="category-name">Testing</span>
+      <span class="category-count">1 finding</span>
+    </div>
+    <div class="category-row">
+      <span class="category-light" style="background: #2e7d32;"></span>
+      <span class="category-name">Privacy</span>
+      <span class="category-count">1 finding</span>
+    </div>
+</div>
+
+<div class="card" style="margin-top: 16px;">
+  <h2>Scope</h2>
+  <dl style="display: grid; grid-template-columns: 180px 1fr; gap: 6px 12px; font-size: 14px; margin: 0;">
+    <dt style="color: var(--muted);">System kind</dt>
+    <dd>rag</dd>
+    <dt style="color: var(--muted);">Included categories</dt>
+    <dd>general-controls, input-threats, dev-time, runtime, testing, privacy</dd>
+    <dt style="color: var(--muted);">Excluded categories</dt>
+    <dd>none</dd>
+  </dl>
+  
+</div>
+
+
+  <section class="category-section">
+    <h2>
+      <span class="light" style="background: #f9a825;"></span>
+      General Controls
+    </h2>
+    
+      <div class="finding">
+        <div class="finding-head">
+          <p class="finding-title">
+            <a href="https://owaspai.org/go/governancecontrols/" target="_blank" rel="noopener">GEN-GOVERNANCE — governancecontrols</a>
+          </p>
+          <span class="verdict-badge" style="background: #f9a825;">MEDIUM</span>
+        </div>
+        <dl>
+          <dt>Evidence</dt>
+          <dd>No mention of incident response process, model registry, or change-management for prompts or models in the architecture document.</dd>
+          <dt>Reasoning</dt>
+          <dd>Governance gaps. Not exploitable directly but compounds every other risk.</dd>
+        </dl>
+        
+          <div class="controls">
+            <strong>Recommended controls:</strong>
+            <ul style="margin: 4px 0 0; padding-left: 20px;">
+              
+                <li><a href="https://owaspai.org/go/governancecontrols/" target="_blank" rel="noopener">CTRL-AI-GOVERNANCE</a> — AI governance: model registry, prompt versioning, incident response, change management.</li>
+              
+            </ul>
+          </div>
+      </div>
+    
+  </section>
+  <section class="category-section">
+    <h2>
+      <span class="light" style="background: #b00020;"></span>
+      Input Threats
+    </h2>
+    
+      <div class="finding">
+        <div class="finding-head">
+          <p class="finding-title">
+            <a href="https://owaspai.org/go/promptinjection/" target="_blank" rel="noopener">INPUT-PROMPT-INJECTION — promptinjection</a>
+          </p>
+          <span class="verdict-badge" style="background: #d84315;">HIGH</span>
+        </div>
+        <dl>
+          <dt>Evidence</dt>
+          <dd>Architecture states &#39;user message concatenated into system prompt template&#39;. No mention of input filtering, instruction hierarchy, or output validation.</dd>
+          <dt>Reasoning</dt>
+          <dd>Direct concatenation without delimiter discipline. No detection layer mentioned. No output validation. The retrieval step compounds risk because attacker-controlled content can also reach the prompt.</dd>
+        </dl>
+        
+          <div class="controls">
+            <strong>Recommended controls:</strong>
+            <ul style="margin: 4px 0 0; padding-left: 20px;">
+              
+                <li><a href="https://owaspai.org/go/promptinjectionsevenlayers/" target="_blank" rel="noopener">CTRL-PROMPT-INJECTION-LAYERS</a> — Apply layered prompt injection defence — input filtering, instruction hierarchy, output validation, content provenance.</li>
+              
+            </ul>
+          </div>
+      </div>
+    
+      <div class="finding">
+        <div class="finding-head">
+          <p class="finding-title">
+            <a href="https://owaspai.org/go/indirectpromptinjection/" target="_blank" rel="noopener">INPUT-INDIRECT-PROMPT-INJECTION — indirectpromptinjection</a>
+          </p>
+          <span class="verdict-badge" style="background: #d84315;">HIGH</span>
+        </div>
+        <dl>
+          <dt>Evidence</dt>
+          <dd>RAG retrieval pulls from a knowledge base updated by support agents. No mention of content sanitisation before inclusion in the LLM context.</dd>
+          <dt>Reasoning</dt>
+          <dd>Trusted-feeling sources (internal KB) are still injection vectors if any contributor is compromised or if any document contains untrusted content. The architecture treats KB content as trusted, which is the failure mode.</dd>
+        </dl>
+        
+          <div class="controls">
+            <strong>Recommended controls:</strong>
+            <ul style="margin: 4px 0 0; padding-left: 20px;">
+              
+                <li><a href="https://owaspai.org/go/promptinjectionsevenlayers/" target="_blank" rel="noopener">CTRL-PROMPT-INJECTION-LAYERS</a> — Treat retrieved content as untrusted. Sanitise, mark provenance, isolate from instructions.</li>
+              
+            </ul>
+          </div>
+      </div>
+    
+      <div class="finding">
+        <div class="finding-head">
+          <p class="finding-title">
+            <a href="https://owaspai.org/go/disclosureuseoutput/" target="_blank" rel="noopener">INPUT-SENSITIVE-DISCLOSURE — disclosureuseoutput</a>
+          </p>
+          <span class="verdict-badge" style="background: #f9a825;">MEDIUM</span>
+        </div>
+        <dl>
+          <dt>Evidence</dt>
+          <dd>System prompt contains operational details about internal tooling. No output filter for these details.</dd>
+          <dt>Reasoning</dt>
+          <dd>Disclosable through prompt-leak attacks. Material risk but not catastrophic.</dd>
+        </dl>
+        
+          <div class="controls">
+            <strong>Recommended controls:</strong>
+            <ul style="margin: 4px 0 0; padding-left: 20px;">
+              
+                <li><a href="https://owaspai.org/go/limitunwanted/" target="_blank" rel="noopener">CTRL-OUTPUT-FILTERING</a> — Output filtering and redaction layer for sensitive operational details.</li>
+              
+            </ul>
+          </div>
+      </div>
+    
+  </section>
+  <section class="category-section">
+    <h2>
+      <span class="light" style="background: #f9a825;"></span>
+      Development-time
+    </h2>
+    
+      <div class="finding">
+        <div class="finding-head">
+          <p class="finding-title">
+            <a href="https://owaspai.org/go/supplychainmanage/" target="_blank" rel="noopener">DEV-SUPPLY-CHAIN — supplychainmanage</a>
+          </p>
+          <span class="verdict-badge" style="background: #f9a825;">MEDIUM</span>
+        </div>
+        <dl>
+          <dt>Evidence</dt>
+          <dd>Architecture references using an open-source embedding model from HuggingFace. No mention of signature verification, SBOM, or provenance tracking.</dd>
+          <dt>Reasoning</dt>
+          <dd>Third-party model with no integrity verification. Mitigation: model is widely-used and well-known, but no controls listed.</dd>
+        </dl>
+        
+          <div class="controls">
+            <strong>Recommended controls:</strong>
+            <ul style="margin: 4px 0 0; padding-left: 20px;">
+              
+                <li><a href="https://owaspai.org/go/supplychainmanage/" target="_blank" rel="noopener">CTRL-SUPPLY-CHAIN</a> — Model SBOM, signature verification, pinned versions, periodic re-validation.</li>
+              
+            </ul>
+          </div>
+      </div>
+    
+  </section>
+  <section class="category-section">
+    <h2>
+      <span class="light" style="background: #b00020;"></span>
+      Runtime
+    </h2>
+    
+      <div class="finding">
+        <div class="finding-head">
+          <p class="finding-title">
+            <a href="https://owaspai.org/go/augmentationmanipulation/" target="_blank" rel="noopener">RUN-AUGMENTATION-MANIPULATION — augmentationmanipulation</a>
+          </p>
+          <span class="verdict-badge" style="background: #d84315;">HIGH</span>
+        </div>
+        <dl>
+          <dt>Evidence</dt>
+          <dd>Knowledge base is editable by support staff (per Section 2.4). No two-person review on KB changes. Embeddings re-indexed automatically on KB change.</dd>
+          <dt>Reasoning</dt>
+          <dd>A single insider or compromised account can poison the retrieval surface for the entire user base. Auto re-indexing removes a natural delay window for detection.</dd>
+        </dl>
+        
+          <div class="controls">
+            <strong>Recommended controls:</strong>
+            <ul style="margin: 4px 0 0; padding-left: 20px;">
+              
+                <li><a href="https://owaspai.org/go/augmentationmanipulation/" target="_blank" rel="noopener">CTRL-RAG-INTEGRITY</a> — Review workflow on KB changes, signed content, anomaly detection on retrieval distributions.</li>
+              
+            </ul>
+          </div>
+      </div>
+    
+      <div class="finding">
+        <div class="finding-head">
+          <p class="finding-title">
+            <a href="https://owaspai.org/go/outputinjection/" target="_blank" rel="noopener">RUN-OUTPUT-INJECTION — outputinjection</a>
+          </p>
+          <span class="verdict-badge" style="background: #f9a825;">MEDIUM</span>
+        </div>
+        <dl>
+          <dt>Evidence</dt>
+          <dd>LLM output rendered as Markdown in the support agent&#39;s UI. No mention of HTML escaping or link validation.</dd>
+          <dt>Reasoning</dt>
+          <dd>Markdown rendering of attacker-influenced output can result in XSS, phishing links, or malformed UI. Risk depends on Markdown renderer config.</dd>
+        </dl>
+        
+          <div class="controls">
+            <strong>Recommended controls:</strong>
+            <ul style="margin: 4px 0 0; padding-left: 20px;">
+              
+                <li><a href="https://owaspai.org/go/outputinjection/" target="_blank" rel="noopener">CTRL-OUTPUT-HANDLING</a> — Escape output, restrict Markdown features, validate links against allowlist.</li>
+              
+            </ul>
+          </div>
+      </div>
+    
+  </section>
+  <section class="category-section">
+    <h2>
+      <span class="light" style="background: #f9a825;"></span>
+      Testing
+    </h2>
+    
+      <div class="finding">
+        <div class="finding-head">
+          <p class="finding-title">
+            <a href="https://owaspai.org/go/adversarialsimulation/" target="_blank" rel="noopener">TEST-ADVERSARIAL — adversarialsimulation</a>
+          </p>
+          <span class="verdict-badge" style="background: #f9a825;">MEDIUM</span>
+        </div>
+        <dl>
+          <dt>Evidence</dt>
+          <dd>Architecture document does not mention any red-teaming, adversarial simulation, or jailbreak testing process.</dd>
+          <dt>Reasoning</dt>
+          <dd>No evidence the system has been adversarially tested. For a public-facing LLM application this is a material gap.</dd>
+        </dl>
+        
+          <div class="controls">
+            <strong>Recommended controls:</strong>
+            <ul style="margin: 4px 0 0; padding-left: 20px;">
+              
+                <li><a href="https://owaspai.org/go/adversarialsimulation/" target="_blank" rel="noopener">CTRL-RED-TEAM</a> — Establish adversarial testing cadence: jailbreak corpus, automated probes, human red team before major releases.</li>
+              
+            </ul>
+          </div>
+      </div>
+    
+  </section>
+  <section class="category-section">
+    <h2>
+      <span class="light" style="background: #2e7d32;"></span>
+      Privacy
+    </h2>
+    
+      <div class="finding">
+        <div class="finding-head">
+          <p class="finding-title">
+            <a href="https://owaspai.org/go/dataminimisation/" target="_blank" rel="noopener">PRIV-MINIMIZATION — dataminimisation</a>
+          </p>
+          <span class="verdict-badge" style="background: #9e9d24;">LOW</span>
+        </div>
+        <dl>
+          <dt>Evidence</dt>
+          <dd>User messages are logged with full content for 30 days. PII not redacted before logging.</dd>
+          <dt>Reasoning</dt>
+          <dd>Necessary for debugging but excessive retention period and no minimisation. Hygiene issue.</dd>
+        </dl>
+        
+          <div class="controls">
+            <strong>Recommended controls:</strong>
+            <ul style="margin: 4px 0 0; padding-left: 20px;">
+              
+                <li><a href="https://owaspai.org/go/dataminimisation/" target="_blank" rel="noopener">CTRL-DATA-MIN</a> — Shorten retention, redact PII before logging, document lawful basis.</li>
+              
+            </ul>
+          </div>
+      </div>
+    
+  </section>
+
+<footer class="report-foot">
+  <p><strong>Grounding:</strong> Live fetch failed. Findings grounded in bundled snapshot. Refresh snapshot or check connectivity.</p>
+  <p><strong>Snapshot date:</strong> 2026-05-13 · <strong>Audit run:</strong> 2026-05-20T14:25:00Z</p>
+  <p><strong>Audit ID:</strong> <code>demo-2026-05-20-001</code></p>
+  <p>Threat taxonomy: <a href="https://owaspai.org/">OWASP AI Exchange</a>. This report is not a compliance certification.</p>
+  <p class="no-print"><em>Tip: To export this report as PDF, use your browser's "Print → Save as PDF".</em></p>
+</footer>
+
+</div>
+</body>
+</html>

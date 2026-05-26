@@ -1,0 +1,51 @@
+name: Snapshot refresh
+
+on:
+  schedule:
+    # Every Monday at 06:00 UTC
+    - cron: '0 6 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Refresh snapshot
+        run: node scripts/snapshot-update.js --verbose
+
+      - name: Check for changes
+        id: diff
+        run: |
+          if [[ -n "$(git status --porcelain reference/snapshot)" ]]; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Create pull request
+        if: steps.diff.outputs.changed == 'true'
+        uses: peter-evans/create-pull-request@v6
+        with:
+          title: 'chore: weekly OWASP AI Exchange snapshot refresh'
+          commit-message: 'chore: refresh snapshot from owaspai.org'
+          branch: snapshot-refresh
+          delete-branch: true
+          body: |
+            Automated weekly refresh of `reference/snapshot/` from owaspai.org.
+
+            See `reference/snapshot/manifest.json` for entry-level status and any failed fetches.
+          labels: |
+            automated
+            snapshot

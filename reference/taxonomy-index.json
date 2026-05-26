@@ -1,0 +1,1325 @@
+{
+  "version": "0.2.0",
+  "source": "https://owaspai.org/",
+  "last_reviewed": "2026-05-26",
+  "build_method": "Extracted from live owaspai.org chapter pages. Every entry verified to return HTTP 200 by scripts/snapshot-update.js. Categories taken from the \"Category:\" line preceding each \"Permalink:\" block on the chapter pages.",
+  "categories": {
+    "general-controls": {
+      "title": "General Controls",
+      "url": "https://owaspai.org/docs/1_general_controls/",
+      "description": "Governance, data limitation, and unwanted behaviour controls that apply broadly."
+    },
+    "input-threats": {
+      "title": "Input Threats & Controls",
+      "url": "https://owaspai.org/docs/2_threats_through_use/",
+      "description": "Threats that arrive via model input at runtime, and their controls."
+    },
+    "dev-time": {
+      "title": "Development-time Threats & Controls",
+      "url": "https://owaspai.org/docs/3_development_time_threats/",
+      "description": "Threats during training, fine-tuning, and the AI supply chain."
+    },
+    "runtime": {
+      "title": "Runtime Application Security",
+      "url": "https://owaspai.org/docs/4_runtime_application_security_threats/",
+      "description": "Conventional and AI-specific runtime threats to the deployed system."
+    },
+    "testing": {
+      "title": "AI Security Testing",
+      "url": "https://owaspai.org/docs/5_testing/",
+      "description": "Adversarial testing, red-teaming, and validation of AI systems."
+    },
+    "privacy": {
+      "title": "AI Privacy",
+      "url": "https://owaspai.org/docs/6_privacy/",
+      "description": "Data minimisation, fairness, consent, transparency, and privacy rights."
+    }
+  },
+  "threats": [
+    {
+      "id": "INPUT-INPUTTHREATS",
+      "slug": "inputthreats",
+      "title": "Input threats - introduction",
+      "kind": "threat",
+      "category": "input-threats",
+      "url": "https://owaspai.org/go/inputthreats/",
+      "owasp_category_line": "group of input threats",
+      "applies_to": [
+        "genai",
+        "predictive"
+      ]
+    },
+    {
+      "id": "INPUT-EVASION",
+      "slug": "evasion",
+      "title": "Evasion",
+      "kind": "threat",
+      "category": "input-threats",
+      "url": "https://owaspai.org/go/evasion/",
+      "owasp_category_line": "group of input threats",
+      "applies_to": [
+        "predictive",
+        "genai"
+      ]
+    },
+    {
+      "id": "INPUT-ZEROKNOWLEDGEEVASION",
+      "slug": "zeroknowledgeevasion",
+      "title": "Zero-knowledge evasion",
+      "kind": "threat",
+      "category": "input-threats",
+      "url": "https://owaspai.org/go/zeroknowledgeevasion/",
+      "owasp_category_line": "input threat",
+      "applies_to": [
+        "predictive",
+        "genai"
+      ]
+    },
+    {
+      "id": "INPUT-PERFECTKNOWLEDGEEVASION",
+      "slug": "perfectknowledgeevasion",
+      "title": "Perfect-knowledge evasion",
+      "kind": "threat",
+      "category": "input-threats",
+      "url": "https://owaspai.org/go/perfectknowledgeevasion/",
+      "owasp_category_line": "input threat",
+      "applies_to": [
+        "predictive",
+        "genai"
+      ]
+    },
+    {
+      "id": "INPUT-TRANSFERATTACK",
+      "slug": "transferattack",
+      "title": "Transferability-based evasion",
+      "kind": "threat",
+      "category": "input-threats",
+      "url": "https://owaspai.org/go/transferattack/",
+      "owasp_category_line": "input threat",
+      "applies_to": [
+        "predictive",
+        "genai"
+      ]
+    },
+    {
+      "id": "INPUT-PARTIALKNOWLEDGEEVASION",
+      "slug": "partialknowledgeevasion",
+      "title": "Partial-knowledge evasion",
+      "kind": "threat",
+      "category": "input-threats",
+      "url": "https://owaspai.org/go/partialknowledgeevasion/",
+      "owasp_category_line": "input threat",
+      "applies_to": [
+        "predictive",
+        "genai"
+      ]
+    },
+    {
+      "id": "INPUT-EVASIONAFTERPOISON",
+      "slug": "evasionafterpoison",
+      "title": "Evasion after data poisoning",
+      "kind": "threat",
+      "category": "input-threats",
+      "url": "https://owaspai.org/go/evasionafterpoison/",
+      "owasp_category_line": "input threat",
+      "applies_to": [
+        "predictive",
+        "genai"
+      ]
+    },
+    {
+      "id": "INPUT-PROMPTINJECTION",
+      "slug": "promptinjection",
+      "title": "Prompt injection",
+      "kind": "threat",
+      "category": "input-threats",
+      "url": "https://owaspai.org/go/promptinjection/",
+      "owasp_category_line": "group of input threats",
+      "applies_to": [
+        "genai"
+      ]
+    },
+    {
+      "id": "INPUT-DIRECTPROMPTINJECTION",
+      "slug": "directpromptinjection",
+      "title": "Direct prompt injection",
+      "kind": "threat",
+      "category": "input-threats",
+      "url": "https://owaspai.org/go/directpromptinjection/",
+      "owasp_category_line": "input threat",
+      "applies_to": [
+        "genai"
+      ]
+    },
+    {
+      "id": "INPUT-INDIRECTPROMPTINJECTION",
+      "slug": "indirectpromptinjection",
+      "title": "Indirect prompt injection",
+      "kind": "threat",
+      "category": "input-threats",
+      "url": "https://owaspai.org/go/indirectpromptinjection/",
+      "owasp_category_line": "input threat",
+      "applies_to": [
+        "genai",
+        "agent"
+      ]
+    },
+    {
+      "id": "INPUT-DISCLOSUREUSE",
+      "slug": "disclosureuse",
+      "title": "Sensitive data disclosure through use",
+      "kind": "threat",
+      "category": "input-threats",
+      "url": "https://owaspai.org/go/disclosureuse/",
+      "owasp_category_line": "group of input threats",
+      "applies_to": [
+        "genai",
+        "predictive"
+      ]
+    },
+    {
+      "id": "INPUT-DISCLOSUREINOUTPUT",
+      "slug": "disclosureinoutput",
+      "title": "Disclosure of sensitive data in model output",
+      "kind": "threat",
+      "category": "input-threats",
+      "url": "https://owaspai.org/go/disclosureinoutput/",
+      "owasp_category_line": "input threat",
+      "applies_to": [
+        "genai",
+        "predictive"
+      ]
+    },
+    {
+      "id": "INPUT-MODELINVERSIONANDMEMBERSHIP",
+      "slug": "modelinversionandmembership",
+      "title": "Model inversion and Membership inference",
+      "kind": "threat",
+      "category": "input-threats",
+      "url": "https://owaspai.org/go/modelinversionandmembership/",
+      "owasp_category_line": "input threat",
+      "applies_to": [
+        "predictive",
+        "genai"
+      ]
+    },
+    {
+      "id": "INPUT-MODELEXFILTRATION",
+      "slug": "modelexfiltration",
+      "title": "Model exfiltration",
+      "kind": "threat",
+      "category": "input-threats",
+      "url": "https://owaspai.org/go/modelexfiltration/",
+      "owasp_category_line": "input threat",
+      "applies_to": [
+        "genai",
+        "predictive"
+      ]
+    },
+    {
+      "id": "INPUT-AIRESOURCEEXHAUSTION",
+      "slug": "airesourceexhaustion",
+      "title": "AI resource exhaustion",
+      "kind": "threat",
+      "category": "input-threats",
+      "url": "https://owaspai.org/go/airesourceexhaustion/",
+      "owasp_category_line": "input threat",
+      "applies_to": [
+        "genai",
+        "predictive"
+      ]
+    },
+    {
+      "id": "DEV-DEVELOPMENTTIME",
+      "slug": "developmenttime",
+      "title": "Development-time threats - Introduction",
+      "kind": "threat",
+      "category": "dev-time",
+      "url": "https://owaspai.org/go/developmenttime/",
+      "owasp_category_line": "group of development-time threats",
+      "applies_to": [
+        "genai",
+        "predictive"
+      ]
+    },
+    {
+      "id": "DEV-MODELPOISON",
+      "slug": "modelpoison",
+      "title": "Broad model poisoning development-time",
+      "kind": "threat",
+      "category": "dev-time",
+      "url": "https://owaspai.org/go/modelpoison/",
+      "owasp_category_line": "group of development-time threats",
+      "applies_to": [
+        "genai",
+        "predictive"
+      ]
+    },
+    {
+      "id": "DEV-DATAPOISON",
+      "slug": "datapoison",
+      "title": "Data poisoning",
+      "kind": "threat",
+      "category": "dev-time",
+      "url": "https://owaspai.org/go/datapoison/",
+      "owasp_category_line": "development-time threat",
+      "applies_to": [
+        "genai",
+        "predictive"
+      ]
+    },
+    {
+      "id": "DEV-DEVMODELPOISON",
+      "slug": "devmodelpoison",
+      "title": "Direct development-time model poisoning",
+      "kind": "threat",
+      "category": "dev-time",
+      "url": "https://owaspai.org/go/devmodelpoison/",
+      "owasp_category_line": "development-time threat",
+      "applies_to": [
+        "genai",
+        "predictive"
+      ]
+    },
+    {
+      "id": "DEV-SUPPLYMODELPOISON",
+      "slug": "supplymodelpoison",
+      "title": "Supply-chain model poisoning",
+      "kind": "threat",
+      "category": "dev-time",
+      "url": "https://owaspai.org/go/supplymodelpoison/",
+      "owasp_category_line": "development-time threat",
+      "applies_to": [
+        "genai",
+        "predictive"
+      ]
+    },
+    {
+      "id": "DEV-DEVLEAK",
+      "slug": "devleak",
+      "title": "Sensitive data leak development-time",
+      "kind": "threat",
+      "category": "dev-time",
+      "url": "https://owaspai.org/go/devleak/",
+      "owasp_category_line": "group of development-time threats",
+      "applies_to": [
+        "genai",
+        "predictive"
+      ]
+    },
+    {
+      "id": "DEV-DEVDATALEAK",
+      "slug": "devdataleak",
+      "title": "Development-time data leak",
+      "kind": "threat",
+      "category": "dev-time",
+      "url": "https://owaspai.org/go/devdataleak/",
+      "owasp_category_line": "development-time threat",
+      "applies_to": [
+        "genai",
+        "predictive"
+      ]
+    },
+    {
+      "id": "DEV-DEVMODELLEAK",
+      "slug": "devmodelleak",
+      "title": "Direct development-time model leak",
+      "kind": "threat",
+      "category": "dev-time",
+      "url": "https://owaspai.org/go/devmodelleak/",
+      "owasp_category_line": "development-time threat",
+      "applies_to": [
+        "genai",
+        "predictive"
+      ]
+    },
+    {
+      "id": "DEV-DEVCODELEAK",
+      "slug": "devcodeleak",
+      "title": "Source code/configuration leak",
+      "kind": "threat",
+      "category": "dev-time",
+      "url": "https://owaspai.org/go/devcodeleak/",
+      "owasp_category_line": "development-time threat",
+      "applies_to": [
+        "genai",
+        "predictive"
+      ]
+    },
+    {
+      "id": "RUN-RUNTIMECONVENTIONALSEC",
+      "slug": "runtimeconventionalsec",
+      "title": "Runtime conventional security threats",
+      "kind": "threat",
+      "category": "runtime",
+      "url": "https://owaspai.org/go/runtimeconventionalsec/",
+      "owasp_category_line": "group of runtime threats",
+      "applies_to": [
+        "genai",
+        "predictive"
+      ]
+    },
+    {
+      "id": "RUN-GENERICSECTHREATS",
+      "slug": "genericsecthreats",
+      "title": "Generic security threats",
+      "kind": "threat",
+      "category": "runtime",
+      "url": "https://owaspai.org/go/genericsecthreats/",
+      "owasp_category_line": "group of runtime threats",
+      "applies_to": [
+        "genai",
+        "predictive"
+      ]
+    },
+    {
+      "id": "RUN-RUNTIMEMODELPOISON",
+      "slug": "runtimemodelpoison",
+      "title": "Direct runtime model poisoning",
+      "kind": "threat",
+      "category": "runtime",
+      "url": "https://owaspai.org/go/runtimemodelpoison/",
+      "owasp_category_line": "runtime conventional security threat",
+      "applies_to": [
+        "genai",
+        "predictive"
+      ]
+    },
+    {
+      "id": "RUN-RUNTIMEMODELLEAK",
+      "slug": "runtimemodelleak",
+      "title": "Direct runtime model leak",
+      "kind": "threat",
+      "category": "runtime",
+      "url": "https://owaspai.org/go/runtimemodelleak/",
+      "owasp_category_line": "runtime conventional security threat",
+      "applies_to": [
+        "genai",
+        "predictive"
+      ]
+    },
+    {
+      "id": "RUN-OUTPUTCONTAINSCONVENTIONALINJECTION",
+      "slug": "outputcontainsconventionalinjection",
+      "title": "Output contains conventional injection",
+      "kind": "threat",
+      "category": "runtime",
+      "url": "https://owaspai.org/go/outputcontainsconventionalinjection/",
+      "owasp_category_line": "runtime conventional security threat",
+      "applies_to": [
+        "genai",
+        "agent"
+      ]
+    },
+    {
+      "id": "RUN-INPUTDATALEAK",
+      "slug": "inputdataleak",
+      "title": "Input data leak",
+      "kind": "threat",
+      "category": "runtime",
+      "url": "https://owaspai.org/go/inputdataleak/",
+      "owasp_category_line": "runtime conventional security threat",
+      "applies_to": [
+        "genai",
+        "predictive"
+      ]
+    },
+    {
+      "id": "RUN-AUGMENTATIONDATALEAK",
+      "slug": "augmentationdataleak",
+      "title": "Direct augmentation data leak",
+      "kind": "threat",
+      "category": "runtime",
+      "url": "https://owaspai.org/go/augmentationdataleak/",
+      "owasp_category_line": "runtime conventional security threat",
+      "applies_to": [
+        "genai",
+        "predictive"
+      ]
+    },
+    {
+      "id": "RUN-AUGMENTATIONDATAMANIPULATION",
+      "slug": "augmentationdatamanipulation",
+      "title": "Augmentation data manipulation",
+      "kind": "threat",
+      "category": "runtime",
+      "url": "https://owaspai.org/go/augmentationdatamanipulation/",
+      "owasp_category_line": "runtime conventional security threat",
+      "applies_to": [
+        "genai",
+        "predictive"
+      ]
+    }
+  ],
+  "controls": [
+    {
+      "id": "GEN-GENERALCONTROLS",
+      "slug": "generalcontrols",
+      "title": "General controls",
+      "kind": "control",
+      "category": "general-controls",
+      "url": "https://owaspai.org/go/generalcontrols/",
+      "owasp_category_line": "group of controls",
+      "applies_to": [
+        "genai",
+        "predictive",
+        "agent"
+      ]
+    },
+    {
+      "id": "GEN-GOVERNANCECONTROLS",
+      "slug": "governancecontrols",
+      "title": "General governance controls",
+      "kind": "control",
+      "category": "general-controls",
+      "url": "https://owaspai.org/go/governancecontrols/",
+      "owasp_category_line": "group of controls",
+      "applies_to": [
+        "genai",
+        "predictive",
+        "agent"
+      ]
+    },
+    {
+      "id": "GEN-AIPROGRAM",
+      "slug": "aiprogram",
+      "title": "#AI PROGRAM",
+      "kind": "control",
+      "category": "general-controls",
+      "url": "https://owaspai.org/go/aiprogram/",
+      "owasp_category_line": "governance control",
+      "applies_to": [
+        "genai",
+        "predictive",
+        "agent"
+      ]
+    },
+    {
+      "id": "GEN-SECPROGRAM",
+      "slug": "secprogram",
+      "title": "#SEC PROGRAM",
+      "kind": "control",
+      "category": "general-controls",
+      "url": "https://owaspai.org/go/secprogram/",
+      "owasp_category_line": "governance control",
+      "applies_to": [
+        "genai",
+        "predictive",
+        "agent"
+      ]
+    },
+    {
+      "id": "GEN-SECDEVPROGRAM",
+      "slug": "secdevprogram",
+      "title": "#SEC DEV PROGRAM",
+      "kind": "control",
+      "category": "general-controls",
+      "url": "https://owaspai.org/go/secdevprogram/",
+      "owasp_category_line": "governance control",
+      "applies_to": [
+        "genai",
+        "predictive",
+        "agent"
+      ]
+    },
+    {
+      "id": "GEN-DEVPROGRAM",
+      "slug": "devprogram",
+      "title": "#DEV PROGRAM",
+      "kind": "control",
+      "category": "general-controls",
+      "url": "https://owaspai.org/go/devprogram/",
+      "owasp_category_line": "governance control",
+      "applies_to": [
+        "genai",
+        "predictive",
+        "agent"
+      ]
+    },
+    {
+      "id": "GEN-CHECKCOMPLIANCE",
+      "slug": "checkcompliance",
+      "title": "#CHECK COMPLIANCE",
+      "kind": "control",
+      "category": "general-controls",
+      "url": "https://owaspai.org/go/checkcompliance/",
+      "owasp_category_line": "governance control",
+      "applies_to": [
+        "genai",
+        "predictive",
+        "agent"
+      ]
+    },
+    {
+      "id": "GEN-SECEDUCATE",
+      "slug": "seceducate",
+      "title": "#SEC EDUCATE",
+      "kind": "control",
+      "category": "general-controls",
+      "url": "https://owaspai.org/go/seceducate/",
+      "owasp_category_line": "governance control",
+      "applies_to": [
+        "genai",
+        "predictive",
+        "agent"
+      ]
+    },
+    {
+      "id": "GEN-DATALIMIT",
+      "slug": "datalimit",
+      "title": "General controls for sensitive data limitation",
+      "kind": "control",
+      "category": "general-controls",
+      "url": "https://owaspai.org/go/datalimit/",
+      "owasp_category_line": "group of controls",
+      "applies_to": [
+        "genai",
+        "predictive",
+        "agent"
+      ]
+    },
+    {
+      "id": "GEN-DATAMINIMIZE",
+      "slug": "dataminimize",
+      "title": "#DATA MINIMIZE",
+      "kind": "control",
+      "category": "general-controls",
+      "url": "https://owaspai.org/go/dataminimize/",
+      "owasp_category_line": "development-time and runtime control",
+      "applies_to": [
+        "genai",
+        "predictive",
+        "agent"
+      ]
+    },
+    {
+      "id": "GEN-ALLOWEDDATA",
+      "slug": "alloweddata",
+      "title": "#ALLOWED DATA",
+      "kind": "control",
+      "category": "general-controls",
+      "url": "https://owaspai.org/go/alloweddata/",
+      "owasp_category_line": "development-time and runtime control",
+      "applies_to": [
+        "genai",
+        "predictive",
+        "agent"
+      ]
+    },
+    {
+      "id": "GEN-SHORTRETAIN",
+      "slug": "shortretain",
+      "title": "#SHORT RETAIN",
+      "kind": "control",
+      "category": "general-controls",
+      "url": "https://owaspai.org/go/shortretain/",
+      "owasp_category_line": "development-time and runtime control",
+      "applies_to": [
+        "genai",
+        "predictive",
+        "agent"
+      ]
+    },
+    {
+      "id": "GEN-OBFUSCATETRAININGDATA",
+      "slug": "obfuscatetrainingdata",
+      "title": "#OBFUSCATE TRAINING DATA",
+      "kind": "control",
+      "category": "general-controls",
+      "url": "https://owaspai.org/go/obfuscatetrainingdata/",
+      "owasp_category_line": "development-time AI engineer control",
+      "applies_to": [
+        "genai",
+        "predictive",
+        "agent"
+      ]
+    },
+    {
+      "id": "GEN-DISCRETE",
+      "slug": "discrete",
+      "title": "#DISCRETE",
+      "kind": "control",
+      "category": "general-controls",
+      "url": "https://owaspai.org/go/discrete/",
+      "owasp_category_line": "development-time and runtime control",
+      "applies_to": [
+        "genai",
+        "predictive",
+        "agent"
+      ]
+    },
+    {
+      "id": "GEN-LIMITUNWANTED",
+      "slug": "limitunwanted",
+      "title": "Controls to limit the effects of unwanted behaviour",
+      "kind": "control",
+      "category": "general-controls",
+      "url": "https://owaspai.org/go/limitunwanted/",
+      "owasp_category_line": "group of controls",
+      "applies_to": [
+        "genai",
+        "predictive",
+        "agent"
+      ]
+    },
+    {
+      "id": "GEN-OVERSIGHT",
+      "slug": "oversight",
+      "title": "#OVERSIGHT",
+      "kind": "control",
+      "category": "general-controls",
+      "url": "https://owaspai.org/go/oversight/",
+      "owasp_category_line": "runtime control",
+      "applies_to": [
+        "genai",
+        "predictive",
+        "agent"
+      ]
+    },
+    {
+      "id": "GEN-LEASTMODELPRIVILEGE",
+      "slug": "leastmodelprivilege",
+      "title": "#LEAST MODEL PRIVILEGE",
+      "kind": "control",
+      "category": "general-controls",
+      "url": "https://owaspai.org/go/leastmodelprivilege/",
+      "owasp_category_line": "runtime information security control",
+      "applies_to": [
+        "genai",
+        "predictive",
+        "agent"
+      ]
+    },
+    {
+      "id": "GEN-MODELALIGNMENT",
+      "slug": "modelalignment",
+      "title": "#MODEL ALIGNMENT",
+      "kind": "control",
+      "category": "general-controls",
+      "url": "https://owaspai.org/go/modelalignment/",
+      "owasp_category_line": "development-time and runtime AI engineer control",
+      "applies_to": [
+        "genai",
+        "predictive",
+        "agent"
+      ]
+    },
+    {
+      "id": "GEN-AITRANSPARENCY",
+      "slug": "aitransparency",
+      "title": "#AI TRANSPARENCY",
+      "kind": "control",
+      "category": "general-controls",
+      "url": "https://owaspai.org/go/aitransparency/",
+      "owasp_category_line": "governance and runtime control",
+      "applies_to": [
+        "genai",
+        "predictive",
+        "agent"
+      ]
+    },
+    {
+      "id": "GEN-CONTINUOUSVALIDATION",
+      "slug": "continuousvalidation",
+      "title": "#CONTINUOUS VALIDATION",
+      "kind": "control",
+      "category": "general-controls",
+      "url": "https://owaspai.org/go/continuousvalidation/",
+      "owasp_category_line": "development-time and runtime AI engineer control",
+      "applies_to": [
+        "genai",
+        "predictive",
+        "agent"
+      ]
+    },
+    {
+      "id": "GEN-EXPLAINABILITY",
+      "slug": "explainability",
+      "title": "#EXPLAINABILITY",
+      "kind": "control",
+      "category": "general-controls",
+      "url": "https://owaspai.org/go/explainability/",
+      "owasp_category_line": "runtime AI engineer control",
+      "applies_to": [
+        "genai",
+        "predictive",
+        "agent"
+      ]
+    },
+    {
+      "id": "GEN-UNWANTEDBIASTESTING",
+      "slug": "unwantedbiastesting",
+      "title": "#UNWANTED BIAS TESTING",
+      "kind": "control",
+      "category": "general-controls",
+      "url": "https://owaspai.org/go/unwantedbiastesting/",
+      "owasp_category_line": "development-time and runtime AI engineer control",
+      "applies_to": [
+        "genai",
+        "predictive",
+        "agent"
+      ]
+    },
+    {
+      "id": "CTRL-INPUT-MONITORUSE",
+      "slug": "monitoruse",
+      "title": "#MONITOR USE",
+      "kind": "control",
+      "category": "input-threats",
+      "url": "https://owaspai.org/go/monitoruse/",
+      "owasp_category_line": "runtime information security control for input threats",
+      "applies_to": [
+        "genai",
+        "predictive"
+      ]
+    },
+    {
+      "id": "CTRL-INPUT-RATELIMIT",
+      "slug": "ratelimit",
+      "title": "#RATE LIMIT",
+      "kind": "control",
+      "category": "input-threats",
+      "url": "https://owaspai.org/go/ratelimit/",
+      "owasp_category_line": "runtime information security control for input threats",
+      "applies_to": [
+        "genai",
+        "predictive"
+      ]
+    },
+    {
+      "id": "CTRL-INPUT-MODELACCESSCONTROL",
+      "slug": "modelaccesscontrol",
+      "title": "#MODEL ACCESS CONTROL",
+      "kind": "control",
+      "category": "input-threats",
+      "url": "https://owaspai.org/go/modelaccesscontrol/",
+      "owasp_category_line": "runtime information security control for input threats",
+      "applies_to": [
+        "genai",
+        "predictive"
+      ]
+    },
+    {
+      "id": "CTRL-INPUT-ANOMALOUSINPUTHANDLING",
+      "slug": "anomalousinputhandling",
+      "title": "#ANOMALOUS INPUT HANDLING",
+      "kind": "control",
+      "category": "input-threats",
+      "url": "https://owaspai.org/go/anomalousinputhandling/",
+      "owasp_category_line": "runtime AI engineer control for input threats",
+      "applies_to": [
+        "genai",
+        "predictive"
+      ]
+    },
+    {
+      "id": "CTRL-INPUT-UNWANTEDINPUTSERIESHANDLING",
+      "slug": "unwantedinputserieshandling",
+      "title": "#UNWANTED INPUT SERIES HANDLING",
+      "kind": "control",
+      "category": "input-threats",
+      "url": "https://owaspai.org/go/unwantedinputserieshandling/",
+      "owasp_category_line": "runtime AI engineer control for input threats",
+      "applies_to": [
+        "genai",
+        "predictive"
+      ]
+    },
+    {
+      "id": "CTRL-INPUT-OBSCURECONFIDENCE",
+      "slug": "obscureconfidence",
+      "title": "#OBSCURE CONFIDENCE",
+      "kind": "control",
+      "category": "input-threats",
+      "url": "https://owaspai.org/go/obscureconfidence/",
+      "owasp_category_line": "runtime AI engineer control for input threats",
+      "applies_to": [
+        "genai",
+        "predictive"
+      ]
+    },
+    {
+      "id": "CTRL-INPUT-EVASIONINPUTHANDLING",
+      "slug": "evasioninputhandling",
+      "title": "#EVASION INPUT HANDLING",
+      "kind": "control",
+      "category": "input-threats",
+      "url": "https://owaspai.org/go/evasioninputhandling/",
+      "owasp_category_line": "runtime AI engineer control for input threats",
+      "applies_to": [
+        "predictive",
+        "genai"
+      ]
+    },
+    {
+      "id": "CTRL-INPUT-EVASIONROBUSTMODEL",
+      "slug": "evasionrobustmodel",
+      "title": "#EVASION ROBUST MODEL",
+      "kind": "control",
+      "category": "input-threats",
+      "url": "https://owaspai.org/go/evasionrobustmodel/",
+      "owasp_category_line": "development-time AI engineer control for input threats",
+      "applies_to": [
+        "predictive",
+        "genai"
+      ]
+    },
+    {
+      "id": "CTRL-INPUT-TRAINADVERSARIAL",
+      "slug": "trainadversarial",
+      "title": "#TRAIN ADVERSARIAL",
+      "kind": "control",
+      "category": "input-threats",
+      "url": "https://owaspai.org/go/trainadversarial/",
+      "owasp_category_line": "development-time AI engineer control for input threats",
+      "applies_to": [
+        "predictive",
+        "genai"
+      ]
+    },
+    {
+      "id": "CTRL-INPUT-INPUTDISTORTION",
+      "slug": "inputdistortion",
+      "title": "#INPUT DISTORTION",
+      "kind": "control",
+      "category": "input-threats",
+      "url": "https://owaspai.org/go/inputdistortion/",
+      "owasp_category_line": "runtime AI engineer control for input threats",
+      "applies_to": [
+        "genai",
+        "predictive"
+      ]
+    },
+    {
+      "id": "CTRL-INPUT-ADVERSARIALROBUSTDISTILLATION",
+      "slug": "adversarialrobustdistillation",
+      "title": "#ADVERSARIAL ROBUST DISTILLATION",
+      "kind": "control",
+      "category": "input-threats",
+      "url": "https://owaspai.org/go/adversarialrobustdistillation/",
+      "owasp_category_line": "development-time AI engineer control for input threats",
+      "applies_to": [
+        "predictive",
+        "genai"
+      ]
+    },
+    {
+      "id": "CTRL-INPUT-PROMPTINJECTIONSEVENLAYERS",
+      "slug": "promptinjectionsevenlayers",
+      "title": "Seven layers of Prompt Injection protection",
+      "kind": "control",
+      "category": "input-threats",
+      "url": "https://owaspai.org/go/promptinjectionsevenlayers/",
+      "owasp_category_line": "discussion",
+      "applies_to": [
+        "genai"
+      ]
+    },
+    {
+      "id": "CTRL-INPUT-PROMPTINJECTIONIOHANDLING",
+      "slug": "promptinjectioniohandling",
+      "title": "#PROMPT INJECTION I/O HANDLING",
+      "kind": "control",
+      "category": "input-threats",
+      "url": "https://owaspai.org/go/promptinjectioniohandling/",
+      "owasp_category_line": "runtime AI engineer controls against input threats",
+      "applies_to": [
+        "genai"
+      ]
+    },
+    {
+      "id": "CTRL-INPUT-INPUTSEGREGATION",
+      "slug": "inputsegregation",
+      "title": "#INPUT SEGREGATION",
+      "kind": "control",
+      "category": "input-threats",
+      "url": "https://owaspai.org/go/inputsegregation/",
+      "owasp_category_line": "runtime information security control against input threats",
+      "applies_to": [
+        "genai",
+        "predictive",
+        "agent"
+      ]
+    },
+    {
+      "id": "CTRL-INPUT-SENSITIVEOUTPUTHANDLING",
+      "slug": "sensitiveoutputhandling",
+      "title": "#SENSITIVE OUTPUT HANDLING",
+      "kind": "control",
+      "category": "input-threats",
+      "url": "https://owaspai.org/go/sensitiveoutputhandling/",
+      "owasp_category_line": "runtime information security control for input threats",
+      "applies_to": [
+        "genai"
+      ]
+    },
+    {
+      "id": "CTRL-INPUT-SMALLMODEL",
+      "slug": "smallmodel",
+      "title": "#SMALL MODEL",
+      "kind": "control",
+      "category": "input-threats",
+      "url": "https://owaspai.org/go/smallmodel/",
+      "owasp_category_line": "development-time AI engineer control for input threats",
+      "applies_to": [
+        "genai"
+      ]
+    },
+    {
+      "id": "CTRL-INPUT-MODELWATERMARKING",
+      "slug": "modelwatermarking",
+      "title": "#MODEL WATERMARKING",
+      "kind": "control",
+      "category": "input-threats",
+      "url": "https://owaspai.org/go/modelwatermarking/",
+      "owasp_category_line": "development-time AI engineer control for input threats",
+      "applies_to": [
+        "genai",
+        "predictive"
+      ]
+    },
+    {
+      "id": "CTRL-INPUT-DOSINPUTVALIDATION",
+      "slug": "dosinputvalidation",
+      "title": "#DOS INPUT VALIDATION",
+      "kind": "control",
+      "category": "input-threats",
+      "url": "https://owaspai.org/go/dosinputvalidation/",
+      "owasp_category_line": "runtime information security control for input threats",
+      "applies_to": [
+        "genai",
+        "predictive"
+      ]
+    },
+    {
+      "id": "CTRL-INPUT-LIMITRESOURCES",
+      "slug": "limitresources",
+      "title": "#LIMIT RESOURCES",
+      "kind": "control",
+      "category": "input-threats",
+      "url": "https://owaspai.org/go/limitresources/",
+      "owasp_category_line": "runtime information security control for input threats",
+      "applies_to": [
+        "genai",
+        "predictive"
+      ]
+    },
+    {
+      "id": "CTRL-DEV-DEVSECURITY",
+      "slug": "devsecurity",
+      "title": "#DEV SECURITY",
+      "kind": "control",
+      "category": "dev-time",
+      "url": "https://owaspai.org/go/devsecurity/",
+      "owasp_category_line": "development-time information security control",
+      "applies_to": [
+        "genai",
+        "predictive"
+      ]
+    },
+    {
+      "id": "CTRL-DEV-SEGREGATEDATA",
+      "slug": "segregatedata",
+      "title": "#SEGREGATE DATA",
+      "kind": "control",
+      "category": "dev-time",
+      "url": "https://owaspai.org/go/segregatedata/",
+      "owasp_category_line": "development-time information security control",
+      "applies_to": [
+        "genai",
+        "predictive"
+      ]
+    },
+    {
+      "id": "CTRL-DEV-CONFCOMPUTE",
+      "slug": "confcompute",
+      "title": "#CONF COMPUTE",
+      "kind": "control",
+      "category": "dev-time",
+      "url": "https://owaspai.org/go/confcompute/",
+      "owasp_category_line": "development-time information security control",
+      "applies_to": [
+        "genai",
+        "predictive"
+      ]
+    },
+    {
+      "id": "CTRL-DEV-FEDERATEDLEARNING",
+      "slug": "federatedlearning",
+      "title": "#FEDERATED LEARNING",
+      "kind": "control",
+      "category": "dev-time",
+      "url": "https://owaspai.org/go/federatedlearning/",
+      "owasp_category_line": "development-time AI engineer control",
+      "applies_to": [
+        "genai",
+        "predictive"
+      ]
+    },
+    {
+      "id": "CTRL-DEV-SUPPLYCHAINMANAGE",
+      "slug": "supplychainmanage",
+      "title": "#SUPPLY CHAIN MANAGE",
+      "kind": "control",
+      "category": "dev-time",
+      "url": "https://owaspai.org/go/supplychainmanage/",
+      "owasp_category_line": "development-time information security control",
+      "applies_to": [
+        "genai",
+        "predictive"
+      ]
+    },
+    {
+      "id": "CTRL-DEV-MORETRAINDATA",
+      "slug": "moretraindata",
+      "title": "#MORE TRAIN DATA",
+      "kind": "control",
+      "category": "dev-time",
+      "url": "https://owaspai.org/go/moretraindata/",
+      "owasp_category_line": "development-time AI engineer control - pre-training",
+      "applies_to": [
+        "genai",
+        "predictive"
+      ]
+    },
+    {
+      "id": "CTRL-DEV-DATAQUALITYCONTROL",
+      "slug": "dataqualitycontrol",
+      "title": "#DATA QUALITY CONTROL",
+      "kind": "control",
+      "category": "dev-time",
+      "url": "https://owaspai.org/go/dataqualitycontrol/",
+      "owasp_category_line": "development-time AI engineer control - pre-training",
+      "applies_to": [
+        "genai",
+        "predictive"
+      ]
+    },
+    {
+      "id": "CTRL-DEV-TRAINDATADISTORTION",
+      "slug": "traindatadistortion",
+      "title": "#TRAIN DATA DISTORTION",
+      "kind": "control",
+      "category": "dev-time",
+      "url": "https://owaspai.org/go/traindatadistortion/",
+      "owasp_category_line": "development-time AI-engineer control - pre-training",
+      "applies_to": [
+        "genai",
+        "predictive"
+      ]
+    },
+    {
+      "id": "CTRL-DEV-POISONROBUSTMODEL",
+      "slug": "poisonrobustmodel",
+      "title": "#POISON ROBUST MODEL",
+      "kind": "control",
+      "category": "dev-time",
+      "url": "https://owaspai.org/go/poisonrobustmodel/",
+      "owasp_category_line": "development-time AI engineer control - post-training",
+      "applies_to": [
+        "genai",
+        "predictive"
+      ]
+    },
+    {
+      "id": "CTRL-DEV-TRAINADVERSARIAL",
+      "slug": "trainadversarial",
+      "title": "#TRAIN ADVERSARIAL",
+      "kind": "control",
+      "category": "dev-time",
+      "url": "https://owaspai.org/go/trainadversarial/",
+      "owasp_category_line": "development-time AI engineer control - pre-training",
+      "applies_to": [
+        "predictive",
+        "genai"
+      ]
+    },
+    {
+      "id": "CTRL-RUN-RUNTIMEMODELINTEGRITY",
+      "slug": "runtimemodelintegrity",
+      "title": "#RUNTIME MODEL INTEGRITY",
+      "kind": "control",
+      "category": "runtime",
+      "url": "https://owaspai.org/go/runtimemodelintegrity/",
+      "owasp_category_line": "runtime information security control against conventional security threats",
+      "applies_to": [
+        "genai",
+        "predictive"
+      ]
+    },
+    {
+      "id": "CTRL-RUN-RUNTIMEMODELIOINTEGRITY",
+      "slug": "runtimemodeliointegrity",
+      "title": "#RUNTIME MODEL IO INTEGRITY",
+      "kind": "control",
+      "category": "runtime",
+      "url": "https://owaspai.org/go/runtimemodeliointegrity/",
+      "owasp_category_line": "runtime information security control against conventional security threats",
+      "applies_to": [
+        "genai",
+        "predictive"
+      ]
+    },
+    {
+      "id": "CTRL-RUN-RUNTIMEMODELCONFIDENTIALITY",
+      "slug": "runtimemodelconfidentiality",
+      "title": "#RUNTIME MODEL CONFIDENTIALITY",
+      "kind": "control",
+      "category": "runtime",
+      "url": "https://owaspai.org/go/runtimemodelconfidentiality/",
+      "owasp_category_line": "runtime information security control against conventional security threats",
+      "applies_to": [
+        "genai",
+        "predictive"
+      ]
+    },
+    {
+      "id": "CTRL-RUN-MODELOBFUSCATION",
+      "slug": "modelobfuscation",
+      "title": "#MODEL OBFUSCATION",
+      "kind": "control",
+      "category": "runtime",
+      "url": "https://owaspai.org/go/modelobfuscation/",
+      "owasp_category_line": "runtime information security control against conventional security threats",
+      "applies_to": [
+        "genai",
+        "predictive"
+      ]
+    },
+    {
+      "id": "CTRL-RUN-ENCODEMODELOUTPUT",
+      "slug": "encodemodeloutput",
+      "title": "#ENCODE MODEL OUTPUT",
+      "kind": "control",
+      "category": "runtime",
+      "url": "https://owaspai.org/go/encodemodeloutput/",
+      "owasp_category_line": "runtime information security control against conventional security threats",
+      "applies_to": [
+        "genai"
+      ]
+    },
+    {
+      "id": "CTRL-RUN-MODELINPUTCONFIDENTIALITY",
+      "slug": "modelinputconfidentiality",
+      "title": "#MODEL INPUT CONFIDENTIALITY",
+      "kind": "control",
+      "category": "runtime",
+      "url": "https://owaspai.org/go/modelinputconfidentiality/",
+      "owasp_category_line": "runtime information security control against conventional security threats",
+      "applies_to": [
+        "genai",
+        "predictive"
+      ]
+    },
+    {
+      "id": "CTRL-RUN-AUGMENTATIONDATACONFIDENTIALITY",
+      "slug": "augmentationdataconfidentiality",
+      "title": "#AUGMENTATION DATA CONFIDENTIALITY",
+      "kind": "control",
+      "category": "runtime",
+      "url": "https://owaspai.org/go/augmentationdataconfidentiality/",
+      "owasp_category_line": "runtime information security control against conventional security threats",
+      "applies_to": [
+        "genai",
+        "predictive"
+      ]
+    },
+    {
+      "id": "CTRL-RUN-AUGMENTATIONDATAINTEGRITY",
+      "slug": "augmentationdataintegrity",
+      "title": "#AUGMENTATION DATA INTEGRITY",
+      "kind": "control",
+      "category": "runtime",
+      "url": "https://owaspai.org/go/augmentationdataintegrity/",
+      "owasp_category_line": "runtime information security control against conventional security threats",
+      "applies_to": [
+        "genai",
+        "predictive"
+      ]
+    },
+    {
+      "id": "TEST-TESTING",
+      "slug": "testing",
+      "title": "AI security testing",
+      "kind": "control",
+      "category": "testing",
+      "url": "https://owaspai.org/go/testing/",
+      "owasp_category_line": "discussion",
+      "applies_to": [
+        "genai",
+        "predictive"
+      ]
+    },
+    {
+      "id": "TEST-TESTINGPROMPTINJECTION",
+      "slug": "testingpromptinjection",
+      "title": "Testing against Prompt injection",
+      "kind": "control",
+      "category": "testing",
+      "url": "https://owaspai.org/go/testingpromptinjection/",
+      "owasp_category_line": "AI security test",
+      "applies_to": [
+        "genai"
+      ]
+    },
+    {
+      "id": "TEST-TESTINGTOOLSPREDICTIVEAI",
+      "slug": "testingtoolspredictiveai",
+      "title": "Open source Tools for Predictive AI Red Teaming",
+      "kind": "control",
+      "category": "testing",
+      "url": "https://owaspai.org/go/testingtoolspredictiveai/",
+      "owasp_category_line": "tool review",
+      "applies_to": [
+        "genai",
+        "predictive"
+      ]
+    },
+    {
+      "id": "TEST-TESTINGTOOLSGENAI",
+      "slug": "testingtoolsgenai",
+      "title": "Open source Tools for Generative AI Red Teaming",
+      "kind": "control",
+      "category": "testing",
+      "url": "https://owaspai.org/go/testingtoolsgenai/",
+      "owasp_category_line": "tool review",
+      "applies_to": [
+        "genai"
+      ]
+    },
+    {
+      "id": "PRIV-AIPRIVACY",
+      "slug": "aiprivacy",
+      "title": "AI privacy",
+      "kind": "control",
+      "category": "privacy",
+      "url": "https://owaspai.org/go/aiprivacy/",
+      "owasp_category_line": "discussion",
+      "applies_to": [
+        "genai",
+        "predictive",
+        "agent"
+      ]
+    },
+    {
+      "id": "GEN-AGENTICAITHREATS",
+      "slug": "agenticaithreats",
+      "title": "Agentic AI perspective",
+      "kind": "control",
+      "category": "general-controls",
+      "url": "https://owaspai.org/go/agenticaithreats/",
+      "owasp_category_line": "discussion",
+      "applies_to": [
+        "genai",
+        "predictive",
+        "agent"
+      ]
+    }
+  ],
+  "notes": [
+    "Every slug in this index has been verified against the live OWASP AI Exchange — each /go/{slug}/ permalink returns HTTP 200. The verification artifact is reference/snapshot/manifest.json (entries_failed: 0).",
+    "Categories were taken from the \"Category:\" line preceding each \"Permalink:\" block on the chapter pages. The \"kind\" field (threat|control) is derived from whether that line contains \"threat\" or \"control\".",
+    "applies_to is a conservative inference: we tag a model kind only when the slug/heading/chapter context suggests relevance. When in doubt, we tag the broader set rather than under-tag and miss a threat at audit time.",
+    "The OWASP AI Exchange explicitly notes that agentic AI does not introduce a separate threat class — it amplifies existing threats (especially indirect prompt injection, output handling, and oversight). applies_to=[\"agent\"] reflects this amplification, not a new threat."
+  ]
+}

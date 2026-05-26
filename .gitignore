@@ -1,0 +1,19 @@
+# Local cache (lives in $HOME by default, not the repo, but ignore just in case)
+.cache/
+
+# OS / editor cruft
+.DS_Store
+*.swp
+.idea/
+.vscode/
+
+# Node
+node_modules/
+npm-debug.log
+.pnpm-debug.log
+
+# Local audit artifacts (people running the skill in this repo)
+findings.json
+dashboard.html
+!examples/findings.json
+!examples/dashboard.html
