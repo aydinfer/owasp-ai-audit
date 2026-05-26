@@ -12,6 +12,10 @@ A drop-in skill folder for [Claude Code](https://claude.ai/code). Point Claude a
 - Recommended controls, also citing OWASP permalinks
 - A printable, self-contained HTML report — no servers, no external assets
 
+![Dashboard screenshot — the skill audited its own repo](docs/dashboard-screenshot.png)
+
+*The screenshot above is the actual dashboard the skill produced when run on its own repository — every category green, one bug found and fixed (see [v0.2.0 → v0.2.1](https://github.com/aydinfer/owasp-ai-audit/releases)).*
+
 ## Why grounding matters
 
 LLMs hallucinate threat categories, invent CVE numbers, and confidently mis-cite OWASP. This skill refuses to. Every finding cites a real permalink on owaspai.org. If the source can't be fetched and isn't in the bundled snapshot, the finding doesn't ship.
