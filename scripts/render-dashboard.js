@@ -23,6 +23,18 @@ const esc = (s) => String(s ?? '')
   .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
   .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 
+// Allow only http(s)/mailto absolute URLs and relative paths/fragments.
+// Reject javascript:, data:, vbscript:, file:, etc. — anything that could
+// turn a clicked link into script execution in the dashboard's origin.
+function safeUrl(u) {
+  if (u == null) return '#';
+  const s = String(u).trim();
+  if (s === '') return '#';
+  if (/^(https?:|mailto:)/i.test(s)) return s;
+  if (/^[\/#]/.test(s)) return s;
+  return '#';
+}
+
 const verdictRank = { CRITICAL: 5, HIGH: 4, MEDIUM: 3, LOW: 2, PASS: 1, 'N/A': 0 };
 const verdictColor = {
   CRITICAL: '#b00020', HIGH: '#d84315', MEDIUM: '#f9a825',
@@ -219,7 +231,7 @@ ${categories.map((c) => {
       <div class="finding">
         <div class="finding-head">
           <p class="finding-title">
-            <a href="${esc(f.threat_url)}" target="_blank" rel="noopener">${esc(f.threat_id || '')} — ${esc(extractTitleFromUrl(f.threat_url))}</a>
+            <a href="${esc(safeUrl(f.threat_url))}" target="_blank" rel="noopener">${esc(f.threat_id || '')} — ${esc(extractTitleFromUrl(f.threat_url))}</a>
           </p>
           <span class="verdict-badge" style="background: ${verdictColor[f.verdict] || '#999'};">${esc(f.verdict)}</span>
         </div>
@@ -234,7 +246,7 @@ ${categories.map((c) => {
             <strong>Recommended controls:</strong>
             <ul style="margin: 4px 0 0; padding-left: 20px;">
               ${f.recommended_controls.map((ctrl) => `
-                <li><a href="${esc(ctrl.url)}" target="_blank" rel="noopener">${esc(ctrl.control_id || ctrl.url)}</a> — ${esc(ctrl.summary || '')}</li>
+                <li><a href="${esc(safeUrl(ctrl.url))}" target="_blank" rel="noopener">${esc(ctrl.control_id || ctrl.url)}</a> — ${esc(ctrl.summary || '')}</li>
               `).join('')}
             </ul>
           </div>` : ''}
