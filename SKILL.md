@@ -34,11 +34,13 @@ This skill audits an AI system against the [OWASP AI Exchange](https://owaspai.o
 ### Step 2 — Load the taxonomy index
 
 Read `reference/taxonomy-index.json`. This lists every threat and control with:
-- `id` (e.g. `INPUT-PROMPT-INJECTION`)
+- `id` (e.g. `INPUT-PROMPTINJECTION`)
 - `slug` (e.g. `promptinjection`)
-- `url` (full permalink)
+- `kind` (`threat` or `control`)
+- `url` (full permalink — verified to return 200 against owaspai.org)
 - `category` (one of: `general-controls`, `input-threats`, `dev-time`, `runtime`, `testing`, `privacy`)
 - `applies_to` (e.g. `["genai", "predictive", "agent"]`)
+- `owasp_category_line` (the raw "Category:" string from the OWASP chapter page — useful when picking between similar entries)
 
 This index is the *map of what to look for*. Do not skip threats. Do not invent new ones.
 
@@ -126,7 +128,7 @@ In chat, give a 5-line summary:
   },
   "findings": [
     {
-      "threat_id": "INPUT-PROMPT-INJECTION",
+      "threat_id": "INPUT-PROMPTINJECTION",
       "threat_url": "https://owaspai.org/go/promptinjection/",
       "category": "input-threats",
       "verdict": "HIGH",
@@ -134,7 +136,7 @@ In chat, give a 5-line summary:
       "reasoning": "Direct concatenation without delimiter discipline or instruction hierarchy. No detection layer. No output validation. Exposed surface.",
       "recommended_controls": [
         {
-          "control_id": "CTRL-PROMPT-INJECTION-LAYERS",
+          "control_id": "CTRL-INPUT-PROMPTINJECTIONSEVENLAYERS",
           "url": "https://owaspai.org/go/promptinjectionsevenlayers/",
           "summary": "Apply layered prompt injection defence — input filtering, instruction hierarchy, output validation."
         }

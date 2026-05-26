@@ -1,6 +1,6 @@
 {
-  "audit_id": "demo-2026-05-20-001",
-  "timestamp": "2026-05-20T14:30:00Z",
+  "audit_id": "demo-2026-05-26-001",
+  "timestamp": "2026-05-26T14:30:00Z",
   "subject": {
     "type": "architecture",
     "identifier": "Example RAG-based customer support assistant"
@@ -13,12 +13,12 @@
   },
   "grounding": {
     "primary_source": "snapshot",
-    "snapshot_date": "2026-05-13",
-    "fetched_at": "2026-05-20T14:25:00Z"
+    "snapshot_date": "2026-05-26",
+    "fetched_at": "2026-05-26T14:25:00Z"
   },
   "findings": [
     {
-      "threat_id": "INPUT-PROMPT-INJECTION",
+      "threat_id": "INPUT-PROMPTINJECTION",
       "threat_url": "https://owaspai.org/go/promptinjection/",
       "category": "input-threats",
       "verdict": "HIGH",
@@ -26,14 +26,14 @@
       "reasoning": "Direct concatenation without delimiter discipline. No detection layer mentioned. No output validation. The retrieval step compounds risk because attacker-controlled content can also reach the prompt.",
       "recommended_controls": [
         {
-          "control_id": "CTRL-PROMPT-INJECTION-LAYERS",
+          "control_id": "CTRL-INPUT-PROMPTINJECTIONSEVENLAYERS",
           "url": "https://owaspai.org/go/promptinjectionsevenlayers/",
           "summary": "Apply layered prompt injection defence — input filtering, instruction hierarchy, output validation, content provenance."
         }
       ]
     },
     {
-      "threat_id": "INPUT-INDIRECT-PROMPT-INJECTION",
+      "threat_id": "INPUT-INDIRECTPROMPTINJECTION",
       "threat_url": "https://owaspai.org/go/indirectpromptinjection/",
       "category": "input-threats",
       "verdict": "HIGH",
@@ -41,74 +41,74 @@
       "reasoning": "Trusted-feeling sources (internal KB) are still injection vectors if any contributor is compromised or if any document contains untrusted content. The architecture treats KB content as trusted, which is the failure mode.",
       "recommended_controls": [
         {
-          "control_id": "CTRL-PROMPT-INJECTION-LAYERS",
+          "control_id": "CTRL-INPUT-PROMPTINJECTIONSEVENLAYERS",
           "url": "https://owaspai.org/go/promptinjectionsevenlayers/",
           "summary": "Treat retrieved content as untrusted. Sanitise, mark provenance, isolate from instructions."
         }
       ]
     },
     {
-      "threat_id": "INPUT-SENSITIVE-DISCLOSURE",
-      "threat_url": "https://owaspai.org/go/disclosureuseoutput/",
+      "threat_id": "INPUT-DISCLOSUREINOUTPUT",
+      "threat_url": "https://owaspai.org/go/disclosureinoutput/",
       "category": "input-threats",
       "verdict": "MEDIUM",
       "evidence": "System prompt contains operational details about internal tooling. No output filter for these details.",
       "reasoning": "Disclosable through prompt-leak attacks. Material risk but not catastrophic.",
       "recommended_controls": [
         {
-          "control_id": "CTRL-OUTPUT-FILTERING",
-          "url": "https://owaspai.org/go/limitunwanted/",
+          "control_id": "CTRL-INPUT-SENSITIVEOUTPUTHANDLING",
+          "url": "https://owaspai.org/go/sensitiveoutputhandling/",
           "summary": "Output filtering and redaction layer for sensitive operational details."
         }
       ]
     },
     {
-      "threat_id": "DEV-SUPPLY-CHAIN",
-      "threat_url": "https://owaspai.org/go/supplychainmanage/",
+      "threat_id": "DEV-SUPPLYMODELPOISON",
+      "threat_url": "https://owaspai.org/go/supplymodelpoison/",
       "category": "dev-time",
       "verdict": "MEDIUM",
       "evidence": "Architecture references using an open-source embedding model from HuggingFace. No mention of signature verification, SBOM, or provenance tracking.",
       "reasoning": "Third-party model with no integrity verification. Mitigation: model is widely-used and well-known, but no controls listed.",
       "recommended_controls": [
         {
-          "control_id": "CTRL-SUPPLY-CHAIN",
+          "control_id": "CTRL-DEV-SUPPLYCHAINMANAGE",
           "url": "https://owaspai.org/go/supplychainmanage/",
           "summary": "Model SBOM, signature verification, pinned versions, periodic re-validation."
         }
       ]
     },
     {
-      "threat_id": "RUN-AUGMENTATION-MANIPULATION",
-      "threat_url": "https://owaspai.org/go/augmentationmanipulation/",
+      "threat_id": "RUN-AUGMENTATIONDATAMANIPULATION",
+      "threat_url": "https://owaspai.org/go/augmentationdatamanipulation/",
       "category": "runtime",
       "verdict": "HIGH",
       "evidence": "Knowledge base is editable by support staff (per Section 2.4). No two-person review on KB changes. Embeddings re-indexed automatically on KB change.",
       "reasoning": "A single insider or compromised account can poison the retrieval surface for the entire user base. Auto re-indexing removes a natural delay window for detection.",
       "recommended_controls": [
         {
-          "control_id": "CTRL-RAG-INTEGRITY",
-          "url": "https://owaspai.org/go/augmentationmanipulation/",
+          "control_id": "RUN-AUGMENTATIONDATAINTEGRITY",
+          "url": "https://owaspai.org/go/augmentationdataintegrity/",
           "summary": "Review workflow on KB changes, signed content, anomaly detection on retrieval distributions."
         }
       ]
     },
     {
-      "threat_id": "RUN-OUTPUT-INJECTION",
-      "threat_url": "https://owaspai.org/go/outputinjection/",
+      "threat_id": "RUN-OUTPUTCONTAINSCONVENTIONALINJECTION",
+      "threat_url": "https://owaspai.org/go/outputcontainsconventionalinjection/",
       "category": "runtime",
       "verdict": "MEDIUM",
       "evidence": "LLM output rendered as Markdown in the support agent's UI. No mention of HTML escaping or link validation.",
       "reasoning": "Markdown rendering of attacker-influenced output can result in XSS, phishing links, or malformed UI. Risk depends on Markdown renderer config.",
       "recommended_controls": [
         {
-          "control_id": "CTRL-OUTPUT-HANDLING",
-          "url": "https://owaspai.org/go/outputinjection/",
+          "control_id": "RUN-ENCODEMODELOUTPUT",
+          "url": "https://owaspai.org/go/encodemodeloutput/",
           "summary": "Escape output, restrict Markdown features, validate links against allowlist."
         }
       ]
     },
     {
-      "threat_id": "GEN-GOVERNANCE",
+      "threat_id": "GEN-GOVERNANCECONTROLS",
       "threat_url": "https://owaspai.org/go/governancecontrols/",
       "category": "general-controls",
       "verdict": "MEDIUM",
@@ -116,38 +116,43 @@
       "reasoning": "Governance gaps. Not exploitable directly but compounds every other risk.",
       "recommended_controls": [
         {
-          "control_id": "CTRL-AI-GOVERNANCE",
-          "url": "https://owaspai.org/go/governancecontrols/",
-          "summary": "AI governance: model registry, prompt versioning, incident response, change management."
+          "control_id": "GEN-AIPROGRAM",
+          "url": "https://owaspai.org/go/aiprogram/",
+          "summary": "AI program: model registry, prompt versioning, incident response, change management."
         }
       ]
     },
     {
-      "threat_id": "PRIV-MINIMIZATION",
-      "threat_url": "https://owaspai.org/go/dataminimisation/",
+      "threat_id": "PRIV-AIPRIVACY",
+      "threat_url": "https://owaspai.org/go/aiprivacy/",
       "category": "privacy",
       "verdict": "LOW",
       "evidence": "User messages are logged with full content for 30 days. PII not redacted before logging.",
       "reasoning": "Necessary for debugging but excessive retention period and no minimisation. Hygiene issue.",
       "recommended_controls": [
         {
-          "control_id": "CTRL-DATA-MIN",
-          "url": "https://owaspai.org/go/dataminimisation/",
+          "control_id": "GEN-DATAMINIMIZE",
+          "url": "https://owaspai.org/go/dataminimize/",
           "summary": "Shorten retention, redact PII before logging, document lawful basis."
+        },
+        {
+          "control_id": "GEN-SHORTRETAIN",
+          "url": "https://owaspai.org/go/shortretain/",
+          "summary": "Apply retention-period controls aligned with the lawful basis of processing."
         }
       ]
     },
     {
-      "threat_id": "TEST-ADVERSARIAL",
-      "threat_url": "https://owaspai.org/go/adversarialsimulation/",
+      "threat_id": "TEST-TESTINGPROMPTINJECTION",
+      "threat_url": "https://owaspai.org/go/testingpromptinjection/",
       "category": "testing",
       "verdict": "MEDIUM",
       "evidence": "Architecture document does not mention any red-teaming, adversarial simulation, or jailbreak testing process.",
       "reasoning": "No evidence the system has been adversarially tested. For a public-facing LLM application this is a material gap.",
       "recommended_controls": [
         {
-          "control_id": "CTRL-RED-TEAM",
-          "url": "https://owaspai.org/go/adversarialsimulation/",
+          "control_id": "TEST-TESTING",
+          "url": "https://owaspai.org/go/testing/",
           "summary": "Establish adversarial testing cadence: jailbreak corpus, automated probes, human red team before major releases."
         }
       ]
@@ -160,6 +165,6 @@
     "runtime": "RED",
     "testing": "AMBER",
     "privacy": "GREEN",
-    "overall": "Critical"
+    "overall": "Concerning"
   }
 }
