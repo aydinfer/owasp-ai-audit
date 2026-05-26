@@ -27,9 +27,24 @@ The index is generated from the six OWASP AI Exchange chapter pages (`/docs/1_ge
 1. Refetch the relevant chapter page(s)
 2. Edit `reference/taxonomy-index.json` to reflect the change, preserving the schema (`id`, `slug`, `title`, `kind`, `category`, `url`, `applies_to`)
 3. Run `node scripts/snapshot-update.js` — should be silent success
-4. Commit both the index change and the regenerated snapshot
+4. Run `node scripts/reground-applies-to.js` if a section's content has changed in a way that affects `applies_to`
+5. Commit both the index change and the regenerated snapshot
 
 Do not hand-edit the snapshot files directly — they're a build artifact.
+
+### About `applies_to`
+
+The `applies_to` field on each entry (`genai` / `predictive` / `agent`) is derived by [`scripts/reground-applies-to.js`](scripts/reground-applies-to.js). The script:
+
+1. Fetches the six live chapter pages
+2. Extracts each slug's section (text between its own Permalink block and the next)
+3. Pattern-matches the section text for explicit kind signals (`LLM`, `prompt`, `classifier`, `evasion`, `agentic`, `MCP`, etc.)
+4. Applies a small set of slug-specific overrides for canonical attack/control families where prose alone is too generic (e.g., evasion is the predictive-ML attack family by construction; prompt injection is GenAI/agent by construction)
+5. Defaults un-distinguished sections to `[genai, predictive]`; never adds `agent` without an explicit signal
+
+This is a heuristic with traceable rules, not a manual reading of every page. If you think a tag is wrong, the right fix order is: open an issue with the slug and the OWASP language you're citing → adjust the OVERRIDES list in [`scripts/reground-applies-to.js`](scripts/reground-applies-to.js) → re-run and commit both the script and the regenerated `applies_to` values.
+
+Run `node scripts/reground-applies-to.js --dry-run --verbose` to preview changes without writing.
 
 ## Verdict-rule changes
 

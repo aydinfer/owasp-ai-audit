@@ -45,8 +45,7 @@
       "url": "https://owaspai.org/go/inputthreats/",
       "owasp_category_line": "group of input threats",
       "applies_to": [
-        "genai",
-        "predictive"
+        "genai"
       ]
     },
     {
@@ -58,8 +57,8 @@
       "url": "https://owaspai.org/go/evasion/",
       "owasp_category_line": "group of input threats",
       "applies_to": [
-        "predictive",
-        "genai"
+        "genai",
+        "predictive"
       ]
     },
     {
@@ -71,8 +70,7 @@
       "url": "https://owaspai.org/go/zeroknowledgeevasion/",
       "owasp_category_line": "input threat",
       "applies_to": [
-        "predictive",
-        "genai"
+        "predictive"
       ]
     },
     {
@@ -84,8 +82,7 @@
       "url": "https://owaspai.org/go/perfectknowledgeevasion/",
       "owasp_category_line": "input threat",
       "applies_to": [
-        "predictive",
-        "genai"
+        "predictive"
       ]
     },
     {
@@ -97,8 +94,7 @@
       "url": "https://owaspai.org/go/transferattack/",
       "owasp_category_line": "input threat",
       "applies_to": [
-        "predictive",
-        "genai"
+        "predictive"
       ]
     },
     {
@@ -110,8 +106,7 @@
       "url": "https://owaspai.org/go/partialknowledgeevasion/",
       "owasp_category_line": "input threat",
       "applies_to": [
-        "predictive",
-        "genai"
+        "predictive"
       ]
     },
     {
@@ -123,8 +118,8 @@
       "url": "https://owaspai.org/go/evasionafterpoison/",
       "owasp_category_line": "input threat",
       "applies_to": [
-        "predictive",
-        "genai"
+        "genai",
+        "predictive"
       ]
     },
     {
@@ -136,6 +131,7 @@
       "url": "https://owaspai.org/go/promptinjection/",
       "owasp_category_line": "group of input threats",
       "applies_to": [
+        "agent",
         "genai"
       ]
     },
@@ -148,6 +144,7 @@
       "url": "https://owaspai.org/go/directpromptinjection/",
       "owasp_category_line": "input threat",
       "applies_to": [
+        "agent",
         "genai"
       ]
     },
@@ -160,8 +157,8 @@
       "url": "https://owaspai.org/go/indirectpromptinjection/",
       "owasp_category_line": "input threat",
       "applies_to": [
-        "genai",
-        "agent"
+        "agent",
+        "genai"
       ]
     },
     {
@@ -186,8 +183,7 @@
       "url": "https://owaspai.org/go/disclosureinoutput/",
       "owasp_category_line": "input threat",
       "applies_to": [
-        "genai",
-        "predictive"
+        "genai"
       ]
     },
     {
@@ -199,8 +195,8 @@
       "url": "https://owaspai.org/go/modelinversionandmembership/",
       "owasp_category_line": "input threat",
       "applies_to": [
-        "predictive",
-        "genai"
+        "genai",
+        "predictive"
       ]
     },
     {
@@ -316,8 +312,7 @@
       "url": "https://owaspai.org/go/devdataleak/",
       "owasp_category_line": "development-time threat",
       "applies_to": [
-        "genai",
-        "predictive"
+        "genai"
       ]
     },
     {
@@ -329,8 +324,7 @@
       "url": "https://owaspai.org/go/devmodelleak/",
       "owasp_category_line": "development-time threat",
       "applies_to": [
-        "genai",
-        "predictive"
+        "genai"
       ]
     },
     {
@@ -394,8 +388,7 @@
       "url": "https://owaspai.org/go/runtimemodelleak/",
       "owasp_category_line": "runtime conventional security threat",
       "applies_to": [
-        "genai",
-        "predictive"
+        "genai"
       ]
     },
     {
@@ -407,8 +400,7 @@
       "url": "https://owaspai.org/go/outputcontainsconventionalinjection/",
       "owasp_category_line": "runtime conventional security threat",
       "applies_to": [
-        "genai",
-        "agent"
+        "genai"
       ]
     },
     {
@@ -420,8 +412,7 @@
       "url": "https://owaspai.org/go/inputdataleak/",
       "owasp_category_line": "runtime conventional security threat",
       "applies_to": [
-        "genai",
-        "predictive"
+        "genai"
       ]
     },
     {
@@ -433,8 +424,7 @@
       "url": "https://owaspai.org/go/augmentationdataleak/",
       "owasp_category_line": "runtime conventional security threat",
       "applies_to": [
-        "genai",
-        "predictive"
+        "genai"
       ]
     },
     {
@@ -446,8 +436,7 @@
       "url": "https://owaspai.org/go/augmentationdatamanipulation/",
       "owasp_category_line": "runtime conventional security threat",
       "applies_to": [
-        "genai",
-        "predictive"
+        "genai"
       ]
     }
   ],
@@ -461,9 +450,9 @@
       "url": "https://owaspai.org/go/generalcontrols/",
       "owasp_category_line": "group of controls",
       "applies_to": [
+        "agent",
         "genai",
-        "predictive",
-        "agent"
+        "predictive"
       ]
     },
     {
@@ -475,9 +464,9 @@
       "url": "https://owaspai.org/go/governancecontrols/",
       "owasp_category_line": "group of controls",
       "applies_to": [
+        "agent",
         "genai",
-        "predictive",
-        "agent"
+        "predictive"
       ]
     },
     {
@@ -489,9 +478,9 @@
       "url": "https://owaspai.org/go/aiprogram/",
       "owasp_category_line": "governance control",
       "applies_to": [
+        "agent",
         "genai",
-        "predictive",
-        "agent"
+        "predictive"
       ]
     },
     {
@@ -503,9 +492,9 @@
       "url": "https://owaspai.org/go/secprogram/",
       "owasp_category_line": "governance control",
       "applies_to": [
+        "agent",
         "genai",
-        "predictive",
-        "agent"
+        "predictive"
       ]
     },
     {
@@ -517,9 +506,9 @@
       "url": "https://owaspai.org/go/secdevprogram/",
       "owasp_category_line": "governance control",
       "applies_to": [
+        "agent",
         "genai",
-        "predictive",
-        "agent"
+        "predictive"
       ]
     },
     {
@@ -531,9 +520,9 @@
       "url": "https://owaspai.org/go/devprogram/",
       "owasp_category_line": "governance control",
       "applies_to": [
+        "agent",
         "genai",
-        "predictive",
-        "agent"
+        "predictive"
       ]
     },
     {
@@ -545,9 +534,9 @@
       "url": "https://owaspai.org/go/checkcompliance/",
       "owasp_category_line": "governance control",
       "applies_to": [
+        "agent",
         "genai",
-        "predictive",
-        "agent"
+        "predictive"
       ]
     },
     {
@@ -559,9 +548,9 @@
       "url": "https://owaspai.org/go/seceducate/",
       "owasp_category_line": "governance control",
       "applies_to": [
+        "agent",
         "genai",
-        "predictive",
-        "agent"
+        "predictive"
       ]
     },
     {
@@ -574,8 +563,7 @@
       "owasp_category_line": "group of controls",
       "applies_to": [
         "genai",
-        "predictive",
-        "agent"
+        "predictive"
       ]
     },
     {
@@ -588,8 +576,7 @@
       "owasp_category_line": "development-time and runtime control",
       "applies_to": [
         "genai",
-        "predictive",
-        "agent"
+        "predictive"
       ]
     },
     {
@@ -602,8 +589,7 @@
       "owasp_category_line": "development-time and runtime control",
       "applies_to": [
         "genai",
-        "predictive",
-        "agent"
+        "predictive"
       ]
     },
     {
@@ -616,8 +602,7 @@
       "owasp_category_line": "development-time and runtime control",
       "applies_to": [
         "genai",
-        "predictive",
-        "agent"
+        "predictive"
       ]
     },
     {
@@ -630,8 +615,7 @@
       "owasp_category_line": "development-time AI engineer control",
       "applies_to": [
         "genai",
-        "predictive",
-        "agent"
+        "predictive"
       ]
     },
     {
@@ -644,8 +628,7 @@
       "owasp_category_line": "development-time and runtime control",
       "applies_to": [
         "genai",
-        "predictive",
-        "agent"
+        "predictive"
       ]
     },
     {
@@ -657,9 +640,7 @@
       "url": "https://owaspai.org/go/limitunwanted/",
       "owasp_category_line": "group of controls",
       "applies_to": [
-        "genai",
-        "predictive",
-        "agent"
+        "genai"
       ]
     },
     {
@@ -671,9 +652,9 @@
       "url": "https://owaspai.org/go/oversight/",
       "owasp_category_line": "runtime control",
       "applies_to": [
+        "agent",
         "genai",
-        "predictive",
-        "agent"
+        "predictive"
       ]
     },
     {
@@ -685,9 +666,8 @@
       "url": "https://owaspai.org/go/leastmodelprivilege/",
       "owasp_category_line": "runtime information security control",
       "applies_to": [
-        "genai",
-        "predictive",
-        "agent"
+        "agent",
+        "genai"
       ]
     },
     {
@@ -699,9 +679,7 @@
       "url": "https://owaspai.org/go/modelalignment/",
       "owasp_category_line": "development-time and runtime AI engineer control",
       "applies_to": [
-        "genai",
-        "predictive",
-        "agent"
+        "genai"
       ]
     },
     {
@@ -713,9 +691,9 @@
       "url": "https://owaspai.org/go/aitransparency/",
       "owasp_category_line": "governance and runtime control",
       "applies_to": [
+        "agent",
         "genai",
-        "predictive",
-        "agent"
+        "predictive"
       ]
     },
     {
@@ -727,9 +705,9 @@
       "url": "https://owaspai.org/go/continuousvalidation/",
       "owasp_category_line": "development-time and runtime AI engineer control",
       "applies_to": [
+        "agent",
         "genai",
-        "predictive",
-        "agent"
+        "predictive"
       ]
     },
     {
@@ -742,8 +720,7 @@
       "owasp_category_line": "runtime AI engineer control",
       "applies_to": [
         "genai",
-        "predictive",
-        "agent"
+        "predictive"
       ]
     },
     {
@@ -756,8 +733,7 @@
       "owasp_category_line": "development-time and runtime AI engineer control",
       "applies_to": [
         "genai",
-        "predictive",
-        "agent"
+        "predictive"
       ]
     },
     {
@@ -769,8 +745,7 @@
       "url": "https://owaspai.org/go/monitoruse/",
       "owasp_category_line": "runtime information security control for input threats",
       "applies_to": [
-        "genai",
-        "predictive"
+        "genai"
       ]
     },
     {
@@ -782,8 +757,7 @@
       "url": "https://owaspai.org/go/ratelimit/",
       "owasp_category_line": "runtime information security control for input threats",
       "applies_to": [
-        "genai",
-        "predictive"
+        "genai"
       ]
     },
     {
@@ -795,8 +769,7 @@
       "url": "https://owaspai.org/go/modelaccesscontrol/",
       "owasp_category_line": "runtime information security control for input threats",
       "applies_to": [
-        "genai",
-        "predictive"
+        "genai"
       ]
     },
     {
@@ -808,7 +781,6 @@
       "url": "https://owaspai.org/go/anomalousinputhandling/",
       "owasp_category_line": "runtime AI engineer control for input threats",
       "applies_to": [
-        "genai",
         "predictive"
       ]
     },
@@ -847,8 +819,7 @@
       "url": "https://owaspai.org/go/evasioninputhandling/",
       "owasp_category_line": "runtime AI engineer control for input threats",
       "applies_to": [
-        "predictive",
-        "genai"
+        "predictive"
       ]
     },
     {
@@ -860,8 +831,7 @@
       "url": "https://owaspai.org/go/evasionrobustmodel/",
       "owasp_category_line": "development-time AI engineer control for input threats",
       "applies_to": [
-        "predictive",
-        "genai"
+        "predictive"
       ]
     },
     {
@@ -873,8 +843,7 @@
       "url": "https://owaspai.org/go/trainadversarial/",
       "owasp_category_line": "development-time AI engineer control for input threats",
       "applies_to": [
-        "predictive",
-        "genai"
+        "predictive"
       ]
     },
     {
@@ -886,7 +855,6 @@
       "url": "https://owaspai.org/go/inputdistortion/",
       "owasp_category_line": "runtime AI engineer control for input threats",
       "applies_to": [
-        "genai",
         "predictive"
       ]
     },
@@ -899,8 +867,7 @@
       "url": "https://owaspai.org/go/adversarialrobustdistillation/",
       "owasp_category_line": "development-time AI engineer control for input threats",
       "applies_to": [
-        "predictive",
-        "genai"
+        "predictive"
       ]
     },
     {
@@ -912,6 +879,7 @@
       "url": "https://owaspai.org/go/promptinjectionsevenlayers/",
       "owasp_category_line": "discussion",
       "applies_to": [
+        "agent",
         "genai"
       ]
     },
@@ -924,6 +892,7 @@
       "url": "https://owaspai.org/go/promptinjectioniohandling/",
       "owasp_category_line": "runtime AI engineer controls against input threats",
       "applies_to": [
+        "agent",
         "genai"
       ]
     },
@@ -936,9 +905,8 @@
       "url": "https://owaspai.org/go/inputsegregation/",
       "owasp_category_line": "runtime information security control against input threats",
       "applies_to": [
-        "genai",
-        "predictive",
-        "agent"
+        "agent",
+        "genai"
       ]
     },
     {
@@ -962,7 +930,8 @@
       "url": "https://owaspai.org/go/smallmodel/",
       "owasp_category_line": "development-time AI engineer control for input threats",
       "applies_to": [
-        "genai"
+        "genai",
+        "predictive"
       ]
     },
     {
@@ -1013,8 +982,7 @@
       "url": "https://owaspai.org/go/devsecurity/",
       "owasp_category_line": "development-time information security control",
       "applies_to": [
-        "genai",
-        "predictive"
+        "genai"
       ]
     },
     {
@@ -1130,8 +1098,7 @@
       "url": "https://owaspai.org/go/trainadversarial/",
       "owasp_category_line": "development-time AI engineer control - pre-training",
       "applies_to": [
-        "predictive",
-        "genai"
+        "predictive"
       ]
     },
     {
@@ -1195,7 +1162,8 @@
       "url": "https://owaspai.org/go/encodemodeloutput/",
       "owasp_category_line": "runtime information security control against conventional security threats",
       "applies_to": [
-        "genai"
+        "genai",
+        "predictive"
       ]
     },
     {
@@ -1246,6 +1214,7 @@
       "url": "https://owaspai.org/go/testing/",
       "owasp_category_line": "discussion",
       "applies_to": [
+        "agent",
         "genai",
         "predictive"
       ]
@@ -1259,6 +1228,7 @@
       "url": "https://owaspai.org/go/testingpromptinjection/",
       "owasp_category_line": "AI security test",
       "applies_to": [
+        "agent",
         "genai"
       ]
     },
@@ -1271,7 +1241,6 @@
       "url": "https://owaspai.org/go/testingtoolspredictiveai/",
       "owasp_category_line": "tool review",
       "applies_to": [
-        "genai",
         "predictive"
       ]
     },
@@ -1284,6 +1253,7 @@
       "url": "https://owaspai.org/go/testingtoolsgenai/",
       "owasp_category_line": "tool review",
       "applies_to": [
+        "agent",
         "genai"
       ]
     },
@@ -1296,9 +1266,9 @@
       "url": "https://owaspai.org/go/aiprivacy/",
       "owasp_category_line": "discussion",
       "applies_to": [
+        "agent",
         "genai",
-        "predictive",
-        "agent"
+        "predictive"
       ]
     },
     {
@@ -1310,16 +1280,15 @@
       "url": "https://owaspai.org/go/agenticaithreats/",
       "owasp_category_line": "discussion",
       "applies_to": [
-        "genai",
-        "predictive",
-        "agent"
+        "agent",
+        "genai"
       ]
     }
   ],
   "notes": [
     "Every slug in this index has been verified against the live OWASP AI Exchange — each /go/{slug}/ permalink returns HTTP 200. The verification artifact is reference/snapshot/manifest.json (entries_failed: 0).",
     "Categories were taken from the \"Category:\" line preceding each \"Permalink:\" block on the chapter pages. The \"kind\" field (threat|control) is derived from whether that line contains \"threat\" or \"control\".",
-    "applies_to is a conservative inference: we tag a model kind only when the slug/heading/chapter context suggests relevance. When in doubt, we tag the broader set rather than under-tag and miss a threat at audit time.",
+    "applies_to is derived per-slug from the explicit text of that slug's section in the chapter HTML. A model kind (genai / predictive / agent) is tagged only when its section contains an unambiguous mention (e.g. \"GenAI\", \"LLM\", \"prompt\" for genai; \"predictive AI\", \"classifier\" for predictive; \"agentic\", \"AI agent\", \"tool calling\", \"MCP\" for agent). When a section discusses neither genai nor predictive explicitly, both are tagged for broad applicability; \"agent\" is never tagged without an explicit signal. Privacy-chapter entries apply to all three model kinds per the chapter's framing.",
     "The OWASP AI Exchange explicitly notes that agentic AI does not introduce a separate threat class — it amplifies existing threats (especially indirect prompt injection, output handling, and oversight). applies_to=[\"agent\"] reflects this amplification, not a new threat."
   ]
 }
