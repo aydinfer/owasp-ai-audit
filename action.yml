@@ -51,14 +51,30 @@ runs:
       with:
         node-version: '22'
 
+    - name: Enumerate AI surfaces (AST)
+      id: surfaces
+      shell: bash
+      run: |
+        SURFACES="$RUNNER_TEMP/owasp-ai-surfaces.json"
+        if node "$GITHUB_ACTION_PATH/scripts/enumerate-ai-surfaces.js" "${{ inputs.target }}" --out "$SURFACES"; then
+          echo "surfaces=$SURFACES" >> "$GITHUB_OUTPUT"
+        else
+          echo "::warning::AST enumerator failed; run-audit will fall back to regex detectors."
+        fi
+
     - name: Run static screen
       id: screen
       shell: bash
       run: |
         FINDINGS="$RUNNER_TEMP/owasp-ai-findings.json"
         DASHBOARD="$RUNNER_TEMP/owasp-ai-dashboard.html"
+        ARGS=()
+        if [ -n "${{ steps.surfaces.outputs.surfaces }}" ]; then
+          ARGS+=(--surfaces "${{ steps.surfaces.outputs.surfaces }}")
+        fi
         set +e
         node "$GITHUB_ACTION_PATH/scripts/run-audit.js" "${{ inputs.target }}" \
+          "${ARGS[@]}" \
           --fail-on "${{ inputs.fail-on }}" \
           --out "$FINDINGS" \
           --dashboard "$DASHBOARD"
@@ -89,6 +105,7 @@ runs:
         path: |
           ${{ steps.screen.outputs.findings }}
           ${{ steps.screen.outputs.dashboard }}
+          ${{ steps.surfaces.outputs.surfaces }}
         if-no-files-found: warn
 
     - name: Enforce gate

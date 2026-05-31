@@ -70,6 +70,18 @@ The composite Action is a *static first-pass screen*, not the audit. Keep that c
 
 Surface discovery prefers the deterministic enumerator (`scripts/enumerate-ai-surfaces.js`, v0.4.0+) when a `surfaces.json` is available and falls back to the regex detectors otherwise.
 
+## The AI-surface enumerator (`scripts/enumerate-ai-surfaces.js`)
+
+The enumerator is a deterministic, AST-based catalogue of AI surfaces (Step 1.5 of the workflow). Rules for extending it:
+
+1. **Queries, not line regex, for discovery.** Detectors live in `scripts/lib/ai-surface-detectors/<language>.js` as `{ kind, query, test }` tuples — a tree-sitter S-expression that captures the surface node and a discriminating node, plus a `test(caps)` over the captured *node text*. Matching on AST nodes is what stops strings, comments, and look-alikes (Vitest `test()`, readline `prompt`) from false-positiving. Don't reintroduce raw-line scanning here; that's what the CI runner's regex *fallback* is for.
+2. **Add a fixture and a decoy.** A new detector needs a fixture under `tests/fixtures/` proving it fires *and* a decoy proving a similarly-named non-AI construct does **not**. `tests/enumerate.test.js` asserts both.
+3. **`kind` vocabulary is shared.** Surfaces use the kinds in `SURFACE_KINDS` (`llm-call`, `prompt-construction`, `tool-definition`, `rag-embeddings`, `auth`, `rate-limit`); the CI runner maps a subset of these to taxonomy threats. Adding a new kind means updating both.
+
+### Vendored tree-sitter parsers
+
+`scripts/lib/parsers/` holds the tree-sitter runtime and grammar `.wasm`, vendored deliberately so there is **no runtime dependency and no install step** — the same supply-chain posture as the rest of the skill. The runtime and grammars must share a parser ABI; the pinned pair is `web-tree-sitter@0.20.8` + `tree-sitter-wasms@0.1.13` (ABI 14). If you bump one, bump both, regenerate `CHECKSUMS.txt`, and re-run `node --test tests/enumerate.test.js`. See [`scripts/lib/parsers/README.md`](scripts/lib/parsers/README.md).
+
 ## Releasing
 
 - Patch (`v0.2.x`): bug fixes, snapshot refreshes, minor renderer polish

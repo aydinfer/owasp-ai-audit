@@ -96,6 +96,20 @@ Because findings are ungraded, the `fail-on` gate is conservative: an `UNKNOWN` 
 
 The Action runs on Node 22 with zero third-party runtime dependencies (Node stdlib + `curl` + `jq`), in keeping with the skill's supply-chain posture.
 
+## Deterministic AI-surface enumerator
+
+Before the audit reasons about anything, it statically catalogues every AI surface in a codebase:
+
+```bash
+node scripts/enumerate-ai-surfaces.js path/to/repo --out surfaces.json
+```
+
+This parses each TypeScript / TSX / JavaScript / Python / Go file with a vendored tree-sitter grammar and matches **structural queries** — LLM call sites, prompt construction, tool/function definitions, embedding/RAG calls, auth surfaces, rate-limit sites — emitting a `surfaces.json` where each entry carries the file, line range, kind, name, enclosing `callers`, and an evidence excerpt. Because detection runs on the AST and not on raw text, it doesn't trip on strings, comments, or look-alikes (Vitest's `test()`, readline's `prompt`).
+
+Why it matters: the [benchmark run](benchmarks/skill-issues.md) found the real attack surface routinely lived in files too large to read end-to-end (a 5204-line `middleware.py`, an 11806-line `router.py`). Enumerating surfaces first anchors every finding to a detected node instead of to whatever fit in context. Both the GitHub Action and the interactive [SKILL.md](SKILL.md) workflow (Step 1.5) use it; the CI runner falls back to regex detectors only if the vendored runtime can't load.
+
+The tree-sitter runtime and grammar `.wasm` files are vendored, pinned and checksummed under [`scripts/lib/parsers/`](scripts/lib/parsers/) — no `npm install`, no runtime dependency. See that directory's README for versions and provenance.
+
 ## Install
 
 ```bash
@@ -166,10 +180,16 @@ owasp-ai-audit/
 ├── scripts/
 │   ├── lib/
 │   │   ├── sanitize.js                   # esc(), safeUrl() — used by the renderer
-│   │   └── extract.js                    # htmlToText(), extractSections() — used by the regrounder
+│   │   ├── extract.js                    # htmlToText(), extractSections() — used by the regrounder
+│   │   ├── static-detectors.js           # regex AI-surface detectors (CI runner fallback)
+│   │   ├── audit-summary.js              # findings.json → Markdown summary (PR comment)
+│   │   ├── ai-surface-detectors.js       # language registry for the AST enumerator
+│   │   ├── ai-surface-detectors/         # per-language tree-sitter detector sets
+│   │   └── parsers/                      # vendored tree-sitter runtime + grammar .wasm
 │   ├── fetch-threat.sh                   # Cascaded fetch (memory → cache → live → snapshot)
 │   ├── snapshot-update.js                # Refreshes bundled snapshot from owaspai.org
 │   ├── reground-applies-to.js            # Re-derives applies_to from live chapter content
+│   ├── enumerate-ai-surfaces.js          # Deterministic AST catalogue of AI surfaces → surfaces.json
 │   ├── run-audit.js                      # Non-interactive CI runner (static first-pass screen)
 │   ├── pr-comment.js                     # Posts the screen summary as a PR comment
 │   └── render-dashboard.js               # findings.json → dashboard.html

@@ -27,6 +27,7 @@
  *   --out <path>        findings.json output (default ./findings.json)
  *   --dashboard <path>  dashboard.html output (default ./dashboard.html)
  *   --surfaces <path>   pre-computed surfaces.json (from enumerate-ai-surfaces)
+ *   --no-enumerate      skip the AST enumerator; use the regex detectors
  *   --no-fetch          skip fetch-threat.sh; cite straight from the index
  *                       (used by tests for hermetic, network-free runs)
  *   --no-dashboard      write findings.json only
@@ -61,7 +62,7 @@ function parseArgs(argv) {
   const opts = {
     target: null, failOn: 'NONE',
     out: 'findings.json', dashboard: 'dashboard.html',
-    surfaces: null, fetch: true, renderDashboard: true
+    surfaces: null, enumerate: true, fetch: true, renderDashboard: true
   };
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
@@ -69,6 +70,7 @@ function parseArgs(argv) {
     else if (a === '--out') opts.out = argv[++i];
     else if (a === '--dashboard') opts.dashboard = argv[++i];
     else if (a === '--surfaces') opts.surfaces = argv[++i];
+    else if (a === '--no-enumerate') opts.enumerate = false;
     else if (a === '--no-fetch') opts.fetch = false;
     else if (a === '--no-dashboard') opts.renderDashboard = false;
     else if (!a.startsWith('-') && !opts.target) opts.target = a;
@@ -76,21 +78,34 @@ function parseArgs(argv) {
   return opts;
 }
 
-// Load surfaces from a Move-B surfaces.json if given, else scan with the
-// v1 regex detectors. Both yield a flat list of { file, line, kind, ... }.
-function loadSurfaces(opts) {
+// Normalise a surfaces.json entry list to the flat shape the runner uses.
+function normalizeSurfaces(list) {
+  return list.map((s) => ({
+    file: s.file,
+    line: s.line ?? s.line_start ?? 0,
+    kind: s.kind,
+    evidence_excerpt: s.evidence_excerpt || s.name || ''
+  }));
+}
+
+// Discover AI surfaces, preferring (in order): a pre-built surfaces.json, the
+// deterministic AST enumerator, then the regex detectors. The enumerator is
+// the accurate path; the regex detectors are the dependency-light fallback for
+// environments where the vendored tree-sitter runtime can't load.
+async function loadSurfaces(opts) {
   if (opts.surfaces && fs.existsSync(opts.surfaces)) {
     const doc = JSON.parse(fs.readFileSync(opts.surfaces, 'utf8'));
     const list = Array.isArray(doc) ? doc : (doc.surfaces || []);
-    return {
-      source: 'enumerator',
-      surfaces: list.map((s) => ({
-        file: s.file,
-        line: s.line ?? s.line_start ?? 0,
-        kind: s.kind,
-        evidence_excerpt: s.evidence_excerpt || s.name || ''
-      }))
-    };
+    return { source: 'enumerator', surfaces: normalizeSurfaces(list) };
+  }
+  if (opts.enumerate) {
+    try {
+      const { enumerateDir } = require('./enumerate-ai-surfaces');
+      const doc = await enumerateDir(opts.target);
+      return { source: 'enumerator', surfaces: normalizeSurfaces(doc.surfaces) };
+    } catch (e) {
+      console.error(`enumerator unavailable (${e.message}); falling back to regex detectors.`);
+    }
   }
   return { source: 'regex', ...scanDir(opts.target) };
 }
@@ -127,7 +142,7 @@ function dominantGrounding(sources) {
   return 'index';
 }
 
-function main() {
+async function main() {
   const opts = parseArgs(process.argv.slice(2));
   if (!opts.target) {
     console.error('usage: run-audit.js <target> [--fail-on LEVEL] [--out f] [--dashboard f] [--surfaces f] [--no-fetch]');
@@ -146,7 +161,7 @@ function main() {
   const bySlug = {};
   for (const e of [...index.threats, ...(index.controls || [])]) bySlug[e.slug] = e;
 
-  const { source: surfaceSource, surfaces } = loadSurfaces(opts);
+  const { source: surfaceSource, surfaces } = await loadSurfaces(opts);
   const kinds = new Set(surfaces.map((s) => s.kind));
   const { categories, threatSlugs, threatKinds, threatControls } = scopeFromKinds(kinds);
 
@@ -256,4 +271,4 @@ function gateTripped(findings, failOn) {
 
 module.exports = { gateTripped, parseArgs };
 
-if (require.main === module) main();
+if (require.main === module) main().catch((e) => { console.error('Fatal:', e); process.exit(1); });

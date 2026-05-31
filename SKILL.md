@@ -31,6 +31,18 @@ This skill audits an AI system against the [OWASP AI Exchange](https://owaspai.o
 - **Text/markdown describing a system** → architecture audit mode
 - **Ambiguous** → ask once. Do not guess.
 
+### Step 1.5 — Enumerate AI surfaces (codebase inputs)
+
+If the input is a codebase, run the deterministic AST enumerator *before* scope filtering:
+
+```bash
+node scripts/enumerate-ai-surfaces.js <target> --out surfaces.json
+```
+
+Load `surfaces.json`. It is a structural catalogue of every AI surface tree-sitter could find — LLM call sites, prompt construction, tool/function definitions, embedding/RAG calls, auth surfaces, and rate-limit sites — each with a file, line range, kind, name, enclosing `callers`, and an evidence excerpt. Running it first means findings are anchored to *detected nodes* rather than to whatever fit in the context window — the recurring miss in `benchmarks/skill-issues.md` was real sinks hiding in 5000-line files.
+
+**Every subsequent finding on a codebase must cite a surface from `surfaces.json` (file:line) as its evidence anchor.** If a threat applies but the enumerator found no surface for it, say so explicitly — do not invent a location. The enumerator *complements* Deep Trace; it does not replace reading the implicated files end-to-end (Hard rule 5). It is dependency-free: the tree-sitter runtime and grammar `.wasm` files are vendored under `scripts/lib/parsers/`.
+
 ### Step 2 — Load the taxonomy index
 
 Read `reference/taxonomy-index.json`. This lists every threat and control with:
@@ -154,6 +166,37 @@ In chat, give a 5-line summary:
   }
 }
 ```
+
+## surfaces.json schema (codebase inputs)
+
+Produced by `scripts/enumerate-ai-surfaces.js` (Step 1.5). Deterministic and dependency-free — the tree-sitter runtime and grammar `.wasm` files are vendored under `scripts/lib/parsers/`.
+
+```json
+{
+  "tool": "enumerate-ai-surfaces",
+  "schema_version": 1,
+  "target": "/abs/path/to/codebase",
+  "generated_at": "2026-05-31T20:00:00Z",
+  "parsers": { "runtime": "web-tree-sitter@0.20.8", "grammars": "tree-sitter-wasms@0.1.13" },
+  "counts_by_kind": {
+    "llm-call": 2, "prompt-construction": 2, "tool-definition": 1,
+    "rag-embeddings": 1, "auth": 0, "rate-limit": 0
+  },
+  "surfaces": [
+    {
+      "file": "app/chat.ts",
+      "line_start": 7,
+      "line_end": 9,
+      "kind": "llm-call",
+      "name": "streamText",
+      "callers": ["chat"],
+      "evidence_excerpt": "return streamText({"
+    }
+  ]
+}
+```
+
+`kind` is one of `llm-call`, `prompt-construction`, `tool-definition`, `rag-embeddings`, `auth`, `rate-limit`. Languages covered: TypeScript, TSX, JavaScript, Python, Go. Detection runs on AST nodes — not raw text — so strings, comments, and look-alike identifiers (Vitest's `test()`, readline's `prompt`) do not false-positive.
 
 ## What this skill does not do
 

@@ -1,0 +1,5 @@
+# Vendored tree-sitter parser artifacts: binary, and excluded from language
+# stats / diffs so they don't dominate the repo's reported composition.
+*.wasm binary
+scripts/lib/parsers/** linguist-vendored
+scripts/lib/parsers/tree-sitter.js linguist-vendored

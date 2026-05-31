@@ -15,5 +15,6 @@ npm-debug.log
 # Local audit artifacts (people running the skill in this repo)
 findings.json
 dashboard.html
+surfaces.json
 !examples/findings.json
 !examples/dashboard.html
