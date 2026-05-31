@@ -4,7 +4,7 @@ Thanks for considering a contribution. The shape of this project is intentionall
 
 ## Principles
 
-1. **Live ground truth over invention.** Every threat reference in [`reference/taxonomy-index.json`](reference/taxonomy-index.json) must resolve to HTTP 200 on `owaspai.org`. The verification is automated — see below.
+1. **Live ground truth over invention.** Every threat reference in [`reference/taxonomy-index.json`](reference/taxonomy-index.json) must resolve to HTTP 200 on `owaspai.org`. Note the `/go/{slug}/` URLs are 302 redirects to chapter anchors, so any check must follow redirects (`curl -L`) — a no-follow `curl -I` sees the 302, not the 200. The verification is automated — see below.
 2. **No third-party runtime deps.** The skill runs against Node's stdlib, plus `curl` and `jq`. Adding an npm dependency is a significant change; please open an issue first.
 3. **Deep Trace before opinion.** Don't propose verdict-rule changes from a sample of one audit. Run the skill against several systems first and bring the data.
 

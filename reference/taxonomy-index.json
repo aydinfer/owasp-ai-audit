@@ -2,7 +2,7 @@
   "version": "0.2.0",
   "source": "https://owaspai.org/",
   "last_reviewed": "2026-05-26",
-  "build_method": "Extracted from live owaspai.org chapter pages. Every entry verified to return HTTP 200 by scripts/snapshot-update.js. Categories taken from the \"Category:\" line preceding each \"Permalink:\" block on the chapter pages.",
+  "build_method": "Extracted from live owaspai.org chapter pages. Every entry verified to resolve to HTTP 200 by scripts/snapshot-update.js — the /go/{slug}/ permalinks are 302 redirects to chapter anchors, so verification follows redirects (a no-follow check sees the 302, not the 200). Categories taken from the \"Category:\" line preceding each \"Permalink:\" block on the chapter pages.",
   "categories": {
     "general-controls": {
       "title": "General Controls",
@@ -1286,7 +1286,7 @@
     }
   ],
   "notes": [
-    "Every slug in this index has been verified against the live OWASP AI Exchange — each /go/{slug}/ permalink returns HTTP 200. The verification artifact is reference/snapshot/manifest.json (entries_failed: 0).",
+    "Every slug in this index has been verified against the live OWASP AI Exchange — each /go/{slug}/ permalink is a 302 redirect to its chapter anchor (e.g. promptinjection -> /docs/2_threats_through_use/#22-prompt-injection) that resolves to HTTP 200 when redirects are followed. curl -L and the bundled scripts (fetch-threat.sh, snapshot-update.js, reground-applies-to.js) follow redirects automatically; a no-follow check (curl -I) will see the 302. The verification artifact is reference/snapshot/manifest.json (entries_failed: 0).",
     "Categories were taken from the \"Category:\" line preceding each \"Permalink:\" block on the chapter pages. The \"kind\" field (threat|control) is derived from whether that line contains \"threat\" or \"control\".",
     "applies_to is derived per-slug from the explicit text of that slug's section in the chapter HTML. A model kind (genai / predictive / agent) is tagged only when its section contains an unambiguous mention (e.g. \"GenAI\", \"LLM\", \"prompt\" for genai; \"predictive AI\", \"classifier\" for predictive; \"agentic\", \"AI agent\", \"tool calling\", \"MCP\" for agent). When a section discusses neither genai nor predictive explicitly, both are tagged for broad applicability; \"agent\" is never tagged without an explicit signal. Privacy-chapter entries apply to all three model kinds per the chapter's framing.",
     "The OWASP AI Exchange explicitly notes that agentic AI does not introduce a separate threat class — it amplifies existing threats (especially indirect prompt injection, output handling, and oversight). applies_to=[\"agent\"] reflects this amplification, not a new threat."

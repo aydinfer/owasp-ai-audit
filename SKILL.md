@@ -37,7 +37,7 @@ Read `reference/taxonomy-index.json`. This lists every threat and control with:
 - `id` (e.g. `INPUT-PROMPTINJECTION`)
 - `slug` (e.g. `promptinjection`)
 - `kind` (`threat` or `control`)
-- `url` (full permalink — verified to return 200 against owaspai.org)
+- `url` (the `/go/{slug}/` permalink — a 302 redirect to its chapter anchor that resolves to HTTP 200; any verification must follow redirects, e.g. `curl -L`, as the bundled scripts do)
 - `category` (one of: `general-controls`, `input-threats`, `dev-time`, `runtime`, `testing`, `privacy`)
 - `applies_to` (e.g. `["genai", "predictive", "agent"]`)
 - `owasp_category_line` (the raw "Category:" string from the OWASP chapter page — useful when picking between similar entries)
