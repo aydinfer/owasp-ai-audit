@@ -21,6 +21,8 @@ const https = require('node:https');
 const REPO_ROOT = path.resolve(__dirname, '..');
 const INDEX_PATH = path.join(REPO_ROOT, 'reference', 'taxonomy-index.json');
 const SNAPSHOT_DIR = path.join(REPO_ROOT, 'reference', 'snapshot');
+const CROSSREF_PATH = path.join(REPO_ROOT, 'reference', 'cross-references.json');
+const ATLAS_DATA_URL = 'https://raw.githubusercontent.com/mitre-atlas/atlas-data/main/dist/ATLAS.yaml';
 
 const args = new Set(process.argv.slice(2));
 const VERBOSE = args.has('--verbose');
@@ -81,6 +83,53 @@ function htmlToText(html) {
     .trim();
 }
 
+// Validate reference/cross-references.json: every cited ATLAS id must exist in
+// the authoritative MITRE atlas-data dataset (the atlas.mitre.org pages are
+// client-rendered and 404 to non-browser clients, so a naive 200-check is
+// meaningless — verifying IDs against the dataset is a stronger guarantee), and
+// every distinct NIST publication URL must return 200.
+async function validateCrossReferences() {
+  if (!fs.existsSync(CROSSREF_PATH)) {
+    vlog('  no cross-references.json; skipping cross-reference validation');
+    return { ok: 0, failed: 0, failures: [] };
+  }
+  const cr = JSON.parse(fs.readFileSync(CROSSREF_PATH, 'utf8'));
+  const failures = [];
+  let ok = 0;
+
+  // Collect cited ATLAS ids and distinct NIST urls.
+  const atlasIds = new Set();
+  const nistUrls = new Set();
+  for (const slug of Object.keys(cr.map || {})) {
+    for (const a of cr.map[slug].atlas || []) atlasIds.add(a.id);
+    for (const n of cr.map[slug].nist || []) nistUrls.add(n.url);
+  }
+
+  // ATLAS: fetch the dataset and check every id is present.
+  log(`Validating ${atlasIds.size} ATLAS id(s) against ${ATLAS_DATA_URL} …`);
+  try {
+    const { body } = await fetchUrl(ATLAS_DATA_URL);
+    const present = new Set([...body.matchAll(/id:\s*(AML\.(?:T|M)\d+(?:\.\d+)?)\s*$/gm)].map((m) => m[1]));
+    for (const id of atlasIds) {
+      if (present.has(id)) { ok += 1; }
+      else { failures.push({ kind: 'atlas', id, error: 'id not in atlas-data dataset' }); console.error(`  FAIL  ATLAS ${id} not in dataset`); }
+    }
+  } catch (e) {
+    failures.push({ kind: 'atlas', url: ATLAS_DATA_URL, error: String(e.message || e) });
+    console.error(`  FAIL  could not fetch ATLAS dataset: ${e.message || e}`);
+  }
+
+  // NIST: every distinct publication URL must return 200.
+  log(`Validating ${nistUrls.size} NIST publication URL(s) …`);
+  for (const url of nistUrls) {
+    try { await fetchUrl(url); ok += 1; vlog(`  ok  ${url}`); }
+    catch (e) { failures.push({ kind: 'nist', url, error: String(e.message || e) }); console.error(`  FAIL  NIST ${url}  ${e.message || e}`); }
+  }
+
+  log(`Cross-references: ${ok} ok, ${failures.length} failed.`);
+  return { ok, failed: failures.length, failures };
+}
+
 async function main() {
   if (!fs.existsSync(INDEX_PATH)) {
     console.error(`taxonomy index not found at ${INDEX_PATH}`);
@@ -130,6 +179,9 @@ async function main() {
     }
   }
 
+  // Validate cross-references (ATLAS ids + NIST urls) alongside the OWASP set.
+  const xref = await validateCrossReferences();
+
   // Write a manifest
   const manifest = {
     generated_at: fetchedAt,
@@ -137,15 +189,17 @@ async function main() {
     entries_total: entries.length,
     entries_ok: ok,
     entries_failed: failed,
-    failures
+    failures,
+    cross_references: { ok: xref.ok, failed: xref.failed, failures: xref.failures }
   };
   if (!DRY_RUN) {
     fs.writeFileSync(path.join(SNAPSHOT_DIR, 'manifest.json'),
                      JSON.stringify(manifest, null, 2) + '\n');
   }
 
-  log(`Done. ${ok} ok, ${failed} failed.`);
-  process.exit(failed > 0 ? 1 : 0);
+  const totalFailed = failed + xref.failed;
+  log(`Done. ${ok} ok, ${failed} failed (OWASP); ${xref.ok} ok, ${xref.failed} failed (cross-refs).`);
+  process.exit(totalFailed > 0 ? 1 : 0);
 }
 
 main().catch((e) => {

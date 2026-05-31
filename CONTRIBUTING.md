@@ -82,6 +82,19 @@ The enumerator is a deterministic, AST-based catalogue of AI surfaces (Step 1.5 
 
 `scripts/lib/parsers/` holds the tree-sitter runtime and grammar `.wasm`, vendored deliberately so there is **no runtime dependency and no install step** — the same supply-chain posture as the rest of the skill. The runtime and grammars must share a parser ABI; the pinned pair is `web-tree-sitter@0.20.8` + `tree-sitter-wasms@0.1.13` (ABI 14). If you bump one, bump both, regenerate `CHECKSUMS.txt`, and re-run `node --test tests/enumerate.test.js`. See [`scripts/lib/parsers/README.md`](scripts/lib/parsers/README.md).
 
+## Cross-references (OWASP → MITRE ATLAS + NIST)
+
+[`reference/cross-references.json`](reference/cross-references.json) maps an OWASP slug to the MITRE ATLAS techniques/mitigations and NIST AI 100-2 sections describing the **same** phenomenon. OWASP stays the primary citation; these are additive anchors for compliance and threat-intel audiences.
+
+The bar for adding a cross-reference is deliberately high: **the secondary source must describe the same threat phenomenon, not merely the same vague theme.** "Both mention training data" is not a mapping. "OWASP `indirectpromptinjection` and ATLAS `AML.T0051.001` both describe an LLM ingesting attacker-controlled content from a retrieved/third-party source" is. When unsure, leave it out — a missing anchor is honest; a loose one is noise that erodes trust in every other citation.
+
+Rules (enforced by `tests/cross-references.test.js` and `scripts/snapshot-update.js`):
+
+- Every map key must be a slug already in `taxonomy-index.json`.
+- Every entry needs at least one ATLAS or NIST anchor.
+- **ATLAS ids must exist in the authoritative [`atlas-data`](https://github.com/mitre-atlas/atlas-data) dataset** — `snapshot-update.js` verifies this on every run. The `atlas.mitre.org` technique/mitigation pages are client-rendered and 404 to `curl`/CI, so we verify ids against the dataset rather than a naive 200-check — the same lesson the OWASP `/go/` 302 redirects taught this repo. Technique ids cite `/techniques/{id}`; mitigation ids cite `/mitigations/{id}`.
+- NIST refs name the taxonomy's attack-class section (e.g. "Predictive AI — Evasion Attacks and Mitigations") and point at the e2025 publication URL, which returns 200. Don't cite a subsection number you can't verify.
+
 ## Releasing
 
 - Patch (`v0.2.x`): bug fixes, snapshot refreshes, minor renderer polish

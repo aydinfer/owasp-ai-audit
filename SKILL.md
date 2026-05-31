@@ -87,6 +87,7 @@ For each threat, decide one of: `CRITICAL | HIGH | MEDIUM | LOW | PASS | N/A`. R
 - **Reasoning** — why this severity, not the next one up or down
 - **Citation** — the owaspai.org permalink the threat came from
 - **Recommended control** — pulled from the OWASP control catalogue, citing its own permalink
+- **Cross-references (additive)** — if `reference/cross-references.json` has an entry for the cited OWASP slug, include its MITRE ATLAS technique IDs and NIST AI 100-2 sections on the finding as `cross_references`. These are *additive* secondary anchors for compliance/threat-intel audiences — OWASP stays primary, they never replace it. If there's no curated entry, omit the field; don't invent ATLAS/NIST mappings.
 
 For codebase audits, follow Deep Trace: read affected files end-to-end before writing the finding. No grep-only conclusions.
 
@@ -152,7 +153,11 @@ In chat, give a 5-line summary:
           "url": "https://owaspai.org/go/promptinjectionsevenlayers/",
           "summary": "Apply layered prompt injection defence — input filtering, instruction hierarchy, output validation."
         }
-      ]
+      ],
+      "cross_references": {
+        "atlas": [{ "id": "AML.T0051", "url": "https://atlas.mitre.org/techniques/AML.T0051" }],
+        "nist": [{ "section": "Generative AI — Prompt Injection (Direct & Indirect)", "url": "https://csrc.nist.gov/pubs/ai/100/2/e2025/final" }]
+      }
     }
   ],
   "rollup": {

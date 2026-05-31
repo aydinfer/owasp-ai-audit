@@ -1,0 +1,224 @@
+{
+  "schema_version": 1,
+  "note": "Hand-curated map from an OWASP AI Exchange slug to the MITRE ATLAS techniques/mitigations and NIST AI 100-2e2025 sections that describe the SAME threat phenomenon. OWASP stays the primary citation; these are additive secondary anchors for compliance and threat-intel audiences. A cross-reference is added only when the secondary source describes the same phenomenon — not merely the same vague theme.",
+  "sources": {
+    "owasp": "https://owaspai.org/",
+    "atlas": {
+      "site": "https://atlas.mitre.org/",
+      "data": "https://raw.githubusercontent.com/mitre-atlas/atlas-data/main/dist/ATLAS.yaml",
+      "id_verification": "atlas.mitre.org technique/mitigation pages are client-rendered and return HTTP 404 to non-browser clients (curl/CI), so a naive 200-check is meaningless — exactly the lesson the OWASP /go/ 302 redirects already taught this repo. Instead, snapshot-update.js verifies every cited ATLAS id exists in the authoritative atlas-data ATLAS.yaml dataset, which is a stronger guarantee than a rendered page."
+    },
+    "nist": {
+      "pub": "https://csrc.nist.gov/pubs/ai/100/2/e2025/final",
+      "section_note": "NIST refs name the taxonomy's attack-class section (e.g. 'Predictive AI — Evasion Attacks and Mitigations') and point at the publication landing page, which returns 200. Exact subsection numbers are not cited because they could not be machine-verified from the encrypted-CMap PDF in an offline build."
+    }
+  },
+  "map": {
+    "promptinjection": {
+      "atlas": [{ "id": "AML.T0051", "name": "LLM Prompt Injection", "url": "https://atlas.mitre.org/techniques/AML.T0051" }],
+      "nist": [{ "section": "Generative AI — Prompt Injection (Direct & Indirect)", "url": "https://csrc.nist.gov/pubs/ai/100/2/e2025/final" }]
+    },
+    "directpromptinjection": {
+      "atlas": [
+        { "id": "AML.T0051.000", "name": "LLM Prompt Injection: Direct", "url": "https://atlas.mitre.org/techniques/AML.T0051.000" },
+        { "id": "AML.T0054", "name": "LLM Jailbreak", "url": "https://atlas.mitre.org/techniques/AML.T0054" }
+      ],
+      "nist": [{ "section": "Generative AI — Direct Prompt Injection Attacks and Mitigations", "url": "https://csrc.nist.gov/pubs/ai/100/2/e2025/final" }]
+    },
+    "indirectpromptinjection": {
+      "atlas": [
+        { "id": "AML.T0051.001", "name": "LLM Prompt Injection: Indirect", "url": "https://atlas.mitre.org/techniques/AML.T0051.001" },
+        { "id": "AML.T0070", "name": "RAG Poisoning", "url": "https://atlas.mitre.org/techniques/AML.T0070" },
+        { "id": "AML.T0071", "name": "False RAG Entry Injection", "url": "https://atlas.mitre.org/techniques/AML.T0071" }
+      ],
+      "nist": [{ "section": "Generative AI — Indirect Prompt Injection Attacks and Mitigations", "url": "https://csrc.nist.gov/pubs/ai/100/2/e2025/final" }]
+    },
+    "evasion": {
+      "atlas": [
+        { "id": "AML.T0015", "name": "Evade AI Model", "url": "https://atlas.mitre.org/techniques/AML.T0015" },
+        { "id": "AML.T0043", "name": "Craft Adversarial Data", "url": "https://atlas.mitre.org/techniques/AML.T0043" }
+      ],
+      "nist": [{ "section": "Predictive AI — Evasion Attacks and Mitigations", "url": "https://csrc.nist.gov/pubs/ai/100/2/e2025/final" }]
+    },
+    "perfectknowledgeevasion": {
+      "atlas": [{ "id": "AML.T0043", "name": "Craft Adversarial Data", "url": "https://atlas.mitre.org/techniques/AML.T0043" }],
+      "nist": [{ "section": "Predictive AI — Evasion Attacks and Mitigations (white-box)", "url": "https://csrc.nist.gov/pubs/ai/100/2/e2025/final" }]
+    },
+    "partialknowledgeevasion": {
+      "atlas": [{ "id": "AML.T0043", "name": "Craft Adversarial Data", "url": "https://atlas.mitre.org/techniques/AML.T0043" }],
+      "nist": [{ "section": "Predictive AI — Evasion Attacks and Mitigations (gray-box)", "url": "https://csrc.nist.gov/pubs/ai/100/2/e2025/final" }]
+    },
+    "zeroknowledgeevasion": {
+      "atlas": [
+        { "id": "AML.T0043", "name": "Craft Adversarial Data", "url": "https://atlas.mitre.org/techniques/AML.T0043" },
+        { "id": "AML.T0005", "name": "Create Proxy AI Model", "url": "https://atlas.mitre.org/techniques/AML.T0005" }
+      ],
+      "nist": [{ "section": "Predictive AI — Evasion Attacks and Mitigations (black-box)", "url": "https://csrc.nist.gov/pubs/ai/100/2/e2025/final" }]
+    },
+    "transferattack": {
+      "atlas": [
+        { "id": "AML.T0005", "name": "Create Proxy AI Model", "url": "https://atlas.mitre.org/techniques/AML.T0005" },
+        { "id": "AML.T0043", "name": "Craft Adversarial Data", "url": "https://atlas.mitre.org/techniques/AML.T0043" }
+      ],
+      "nist": [{ "section": "Predictive AI — Evasion Attacks (transferability)", "url": "https://csrc.nist.gov/pubs/ai/100/2/e2025/final" }]
+    },
+    "evasionafterpoison": {
+      "atlas": [
+        { "id": "AML.T0020", "name": "Poison Training Data", "url": "https://atlas.mitre.org/techniques/AML.T0020" },
+        { "id": "AML.T0015", "name": "Evade AI Model", "url": "https://atlas.mitre.org/techniques/AML.T0015" }
+      ],
+      "nist": [{ "section": "Predictive AI — Poisoning Attacks (backdoor) and Evasion", "url": "https://csrc.nist.gov/pubs/ai/100/2/e2025/final" }]
+    },
+    "datapoison": {
+      "atlas": [
+        { "id": "AML.T0020", "name": "Poison Training Data", "url": "https://atlas.mitre.org/techniques/AML.T0020" },
+        { "id": "AML.T0019", "name": "Publish Poisoned Datasets", "url": "https://atlas.mitre.org/techniques/AML.T0019" }
+      ],
+      "nist": [{ "section": "Predictive AI — Poisoning Attacks and Mitigations (data poisoning)", "url": "https://csrc.nist.gov/pubs/ai/100/2/e2025/final" }]
+    },
+    "modelpoison": {
+      "atlas": [
+        { "id": "AML.T0018", "name": "Manipulate AI Model", "url": "https://atlas.mitre.org/techniques/AML.T0018" },
+        { "id": "AML.T0058", "name": "Publish Poisoned Models", "url": "https://atlas.mitre.org/techniques/AML.T0058" }
+      ],
+      "nist": [{ "section": "Predictive AI — Poisoning Attacks and Mitigations (model poisoning)", "url": "https://csrc.nist.gov/pubs/ai/100/2/e2025/final" }]
+    },
+    "devmodelpoison": {
+      "atlas": [
+        { "id": "AML.T0018", "name": "Manipulate AI Model", "url": "https://atlas.mitre.org/techniques/AML.T0018" },
+        { "id": "AML.T0058", "name": "Publish Poisoned Models", "url": "https://atlas.mitre.org/techniques/AML.T0058" }
+      ],
+      "nist": [{ "section": "Predictive AI — Poisoning Attacks and Mitigations (model poisoning)", "url": "https://csrc.nist.gov/pubs/ai/100/2/e2025/final" }]
+    },
+    "supplymodelpoison": {
+      "atlas": [
+        { "id": "AML.T0010", "name": "AI Supply Chain Compromise", "url": "https://atlas.mitre.org/techniques/AML.T0010" },
+        { "id": "AML.T0058", "name": "Publish Poisoned Models", "url": "https://atlas.mitre.org/techniques/AML.T0058" }
+      ],
+      "nist": [{ "section": "Generative AI — Supply Chain Attacks and Mitigations", "url": "https://csrc.nist.gov/pubs/ai/100/2/e2025/final" }]
+    },
+    "runtimemodelpoison": {
+      "atlas": [
+        { "id": "AML.T0018", "name": "Manipulate AI Model", "url": "https://atlas.mitre.org/techniques/AML.T0018" },
+        { "id": "AML.T0031", "name": "Erode AI Model Integrity", "url": "https://atlas.mitre.org/techniques/AML.T0031" }
+      ],
+      "nist": [{ "section": "Predictive AI — Poisoning Attacks and Mitigations", "url": "https://csrc.nist.gov/pubs/ai/100/2/e2025/final" }]
+    },
+    "modelinversionandmembership": {
+      "atlas": [
+        { "id": "AML.T0024", "name": "Exfiltration via AI Inference API", "url": "https://atlas.mitre.org/techniques/AML.T0024" },
+        { "id": "AML.T0057", "name": "LLM Data Leakage", "url": "https://atlas.mitre.org/techniques/AML.T0057" }
+      ],
+      "nist": [{ "section": "Predictive AI — Privacy Attacks and Mitigations (membership inference / data reconstruction)", "url": "https://csrc.nist.gov/pubs/ai/100/2/e2025/final" }]
+    },
+    "modelexfiltration": {
+      "atlas": [
+        { "id": "AML.T0024", "name": "Exfiltration via AI Inference API", "url": "https://atlas.mitre.org/techniques/AML.T0024" },
+        { "id": "AML.T0044", "name": "Full AI Model Access", "url": "https://atlas.mitre.org/techniques/AML.T0044" }
+      ],
+      "nist": [{ "section": "Predictive AI — Privacy Attacks and Mitigations (model extraction)", "url": "https://csrc.nist.gov/pubs/ai/100/2/e2025/final" }]
+    },
+    "disclosureinoutput": {
+      "atlas": [
+        { "id": "AML.T0057", "name": "LLM Data Leakage", "url": "https://atlas.mitre.org/techniques/AML.T0057" },
+        { "id": "AML.T0056", "name": "Extract LLM System Prompt", "url": "https://atlas.mitre.org/techniques/AML.T0056" }
+      ],
+      "nist": [{ "section": "Generative AI — Data Extraction / Information Disclosure", "url": "https://csrc.nist.gov/pubs/ai/100/2/e2025/final" }]
+    },
+    "disclosureuse": {
+      "atlas": [{ "id": "AML.T0057", "name": "LLM Data Leakage", "url": "https://atlas.mitre.org/techniques/AML.T0057" }],
+      "nist": [{ "section": "Generative AI — Data Extraction / Information Disclosure", "url": "https://csrc.nist.gov/pubs/ai/100/2/e2025/final" }]
+    },
+    "inputdataleak": {
+      "atlas": [
+        { "id": "AML.T0024", "name": "Exfiltration via AI Inference API", "url": "https://atlas.mitre.org/techniques/AML.T0024" },
+        { "id": "AML.T0057", "name": "LLM Data Leakage", "url": "https://atlas.mitre.org/techniques/AML.T0057" }
+      ],
+      "nist": [{ "section": "Predictive AI — Privacy Attacks and Mitigations", "url": "https://csrc.nist.gov/pubs/ai/100/2/e2025/final" }]
+    },
+    "airesourceexhaustion": {
+      "atlas": [
+        { "id": "AML.T0029", "name": "Denial of AI Service", "url": "https://atlas.mitre.org/techniques/AML.T0029" },
+        { "id": "AML.T0034", "name": "Cost Harvesting", "url": "https://atlas.mitre.org/techniques/AML.T0034" },
+        { "id": "AML.T0046", "name": "Spamming AI System with Chaff Data", "url": "https://atlas.mitre.org/techniques/AML.T0046" }
+      ],
+      "nist": [{ "section": "Availability Breakdowns (resource exhaustion / energy-latency)", "url": "https://csrc.nist.gov/pubs/ai/100/2/e2025/final" }]
+    },
+    "outputcontainsconventionalinjection": {
+      "atlas": [
+        { "id": "AML.T0077", "name": "LLM Response Rendering", "url": "https://atlas.mitre.org/techniques/AML.T0077" },
+        { "id": "AML.T0067", "name": "LLM Trusted Output Components Manipulation", "url": "https://atlas.mitre.org/techniques/AML.T0067" }
+      ],
+      "nist": [{ "section": "Generative AI — Abuse / Integrity Violations (downstream injection)", "url": "https://csrc.nist.gov/pubs/ai/100/2/e2025/final" }]
+    },
+    "augmentationdatamanipulation": {
+      "atlas": [
+        { "id": "AML.T0070", "name": "RAG Poisoning", "url": "https://atlas.mitre.org/techniques/AML.T0070" },
+        { "id": "AML.T0071", "name": "False RAG Entry Injection", "url": "https://atlas.mitre.org/techniques/AML.T0071" }
+      ],
+      "nist": [{ "section": "Generative AI — Indirect Prompt Injection (RAG)", "url": "https://csrc.nist.gov/pubs/ai/100/2/e2025/final" }]
+    },
+    "augmentationdataleak": {
+      "atlas": [
+        { "id": "AML.T0082", "name": "RAG Credential Harvesting", "url": "https://atlas.mitre.org/techniques/AML.T0082" },
+        { "id": "AML.T0064", "name": "Gather RAG-Indexed Targets", "url": "https://atlas.mitre.org/techniques/AML.T0064" }
+      ],
+      "nist": [{ "section": "Generative AI — Data Extraction (RAG)", "url": "https://csrc.nist.gov/pubs/ai/100/2/e2025/final" }]
+    },
+    "devdataleak": {
+      "atlas": [
+        { "id": "AML.T0036", "name": "Data from Information Repositories", "url": "https://atlas.mitre.org/techniques/AML.T0036" },
+        { "id": "AML.T0037", "name": "Data from Local System", "url": "https://atlas.mitre.org/techniques/AML.T0037" }
+      ],
+      "nist": [{ "section": "Predictive AI — Privacy Attacks and Mitigations (training-data leak)", "url": "https://csrc.nist.gov/pubs/ai/100/2/e2025/final" }]
+    },
+    "runtimemodelleak": {
+      "atlas": [
+        { "id": "AML.T0044", "name": "Full AI Model Access", "url": "https://atlas.mitre.org/techniques/AML.T0044" },
+        { "id": "AML.T0024", "name": "Exfiltration via AI Inference API", "url": "https://atlas.mitre.org/techniques/AML.T0024" }
+      ],
+      "nist": [{ "section": "Predictive AI — Privacy Attacks and Mitigations (model extraction)", "url": "https://csrc.nist.gov/pubs/ai/100/2/e2025/final" }]
+    },
+    "promptinjectionsevenlayers": {
+      "atlas": [
+        { "id": "AML.M0020", "name": "Generative AI Guardrails", "url": "https://atlas.mitre.org/mitigations/AML.M0020" },
+        { "id": "AML.M0021", "name": "Generative AI Guidelines", "url": "https://atlas.mitre.org/mitigations/AML.M0021" },
+        { "id": "AML.M0033", "name": "Input and Output Validation for AI Agent Components", "url": "https://atlas.mitre.org/mitigations/AML.M0033" }
+      ],
+      "nist": [{ "section": "Generative AI — Prompt Injection Mitigations", "url": "https://csrc.nist.gov/pubs/ai/100/2/e2025/final" }]
+    },
+    "inputsegregation": {
+      "atlas": [
+        { "id": "AML.M0030", "name": "Restrict AI Agent Tool Invocation on Untrusted Data", "url": "https://atlas.mitre.org/mitigations/AML.M0030" },
+        { "id": "AML.M0033", "name": "Input and Output Validation for AI Agent Components", "url": "https://atlas.mitre.org/mitigations/AML.M0033" }
+      ],
+      "nist": [{ "section": "Generative AI — Indirect Prompt Injection Mitigations", "url": "https://csrc.nist.gov/pubs/ai/100/2/e2025/final" }]
+    },
+    "promptinjectioniohandling": {
+      "atlas": [
+        { "id": "AML.M0033", "name": "Input and Output Validation for AI Agent Components", "url": "https://atlas.mitre.org/mitigations/AML.M0033" },
+        { "id": "AML.M0015", "name": "Adversarial Input Detection", "url": "https://atlas.mitre.org/mitigations/AML.M0015" }
+      ],
+      "nist": [{ "section": "Generative AI — Prompt Injection Mitigations", "url": "https://csrc.nist.gov/pubs/ai/100/2/e2025/final" }]
+    },
+    "ratelimit": {
+      "atlas": [{ "id": "AML.M0004", "name": "Restrict Number of AI Model Queries", "url": "https://atlas.mitre.org/mitigations/AML.M0004" }],
+      "nist": [{ "section": "Availability Breakdowns — Mitigations (rate limiting)", "url": "https://csrc.nist.gov/pubs/ai/100/2/e2025/final" }]
+    },
+    "leastmodelprivilege": {
+      "atlas": [
+        { "id": "AML.M0026", "name": "Privileged AI Agent Permissions Configuration", "url": "https://atlas.mitre.org/mitigations/AML.M0026" },
+        { "id": "AML.M0028", "name": "AI Agent Tools Permissions Configuration", "url": "https://atlas.mitre.org/mitigations/AML.M0028" }
+      ],
+      "nist": [{ "section": "Generative AI — Agent / Mitigations (least privilege)", "url": "https://csrc.nist.gov/pubs/ai/100/2/e2025/final" }]
+    },
+    "oversight": {
+      "atlas": [{ "id": "AML.M0029", "name": "Human In-the-Loop for AI Agent Actions", "url": "https://atlas.mitre.org/mitigations/AML.M0029" }],
+      "nist": [{ "section": "Generative AI — Mitigations (human oversight)", "url": "https://csrc.nist.gov/pubs/ai/100/2/e2025/final" }]
+    },
+    "modelalignment": {
+      "atlas": [{ "id": "AML.M0022", "name": "Generative AI Model Alignment", "url": "https://atlas.mitre.org/mitigations/AML.M0022" }],
+      "nist": [{ "section": "Generative AI — Mitigations (alignment)", "url": "https://csrc.nist.gov/pubs/ai/100/2/e2025/final" }]
+    }
+  }
+}

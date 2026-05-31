@@ -110,6 +110,12 @@ Why it matters: the [benchmark run](benchmarks/skill-issues.md) found the real a
 
 The tree-sitter runtime and grammar `.wasm` files are vendored, pinned and checksummed under [`scripts/lib/parsers/`](scripts/lib/parsers/) — no `npm install`, no runtime dependency. See that directory's README for versions and provenance.
 
+## Multi-source grounding (OWASP + MITRE ATLAS + NIST)
+
+OWASP AI Exchange stays the **primary** citation, but a finding that maps to other authoritative catalogues now cites them too. [`reference/cross-references.json`](reference/cross-references.json) is a hand-curated map from an OWASP slug to the [MITRE ATLAS](https://atlas.mitre.org/) techniques/mitigations and [NIST AI 100-2e2025](https://csrc.nist.gov/pubs/ai/100/2/e2025/final) sections that describe the *same* phenomenon — the secondary anchors compliance and threat-intel audiences expect. The dashboard renders them as a second citation line under each finding (e.g. `Also: ATLAS AML.T0051.001 · NIST: Generative AI — Indirect Prompt Injection`).
+
+These are additive, never replacements, and curated conservatively (same phenomenon, not same theme — see CONTRIBUTING). `scripts/snapshot-update.js` verifies every cited ATLAS id against the authoritative [`atlas-data`](https://github.com/mitre-atlas/atlas-data) dataset and every NIST URL by HTTP — alongside the OWASP set, on every run.
+
 ## Install
 
 ```bash
@@ -175,6 +181,7 @@ owasp-ai-audit/
 ├── action.yml                            # Composite GitHub Action (CI static screen)
 ├── reference/
 │   ├── taxonomy-index.json               # Map of OWASP AI threats + controls + permalinks
+│   ├── cross-references.json             # OWASP slug → MITRE ATLAS + NIST AI 100-2 anchors
 │   ├── verdict-rules.md                  # Explicit severity assignment rules
 │   └── snapshot/                         # Offline fallback (auto-refreshed weekly)
 ├── scripts/

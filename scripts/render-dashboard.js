@@ -117,6 +117,9 @@ const html = `<!doctype html>
   .finding dl { margin: 8px 0 0; display: grid; grid-template-columns: 120px 1fr; gap: 4px 12px; font-size: 14px; }
   .finding dt { color: var(--muted); font-weight: 600; }
   .finding dd { margin: 0; }
+  .finding .xrefs { margin: 2px 0 6px; font-size: 12px; color: var(--muted); }
+  .finding .xrefs a { color: var(--accent); text-decoration: none; }
+  .finding .xrefs a:hover { text-decoration: underline; }
   .finding .controls { margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--border); font-size: 13px; }
   .finding .controls a { color: var(--accent); }
   .category-section { margin-top: 24px; }
@@ -223,6 +226,11 @@ ${categories.map((c) => {
           </p>
           <span class="verdict-badge" style="background: ${verdictColor[f.verdict] || '#999'};">${esc(f.verdict)}</span>
         </div>
+        ${(f.cross_references && ((f.cross_references.atlas || []).length || (f.cross_references.nist || []).length)) ? `
+          <div class="xrefs">Also: ${[
+            ...(f.cross_references.atlas || []).map((a) => `<a href="${esc(safeUrl(a.url))}" target="_blank" rel="noopener">ATLAS ${esc(a.id)}</a>`),
+            ...(f.cross_references.nist || []).map((n) => `<a href="${esc(safeUrl(n.url))}" target="_blank" rel="noopener">NIST: ${esc(n.section)}</a>`)
+          ].join(' · ')}</div>` : ''}
         <dl>
           <dt>Evidence</dt>
           <dd>${esc(f.evidence || '—')}</dd>

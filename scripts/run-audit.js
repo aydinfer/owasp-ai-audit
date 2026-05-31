@@ -42,6 +42,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { execFileSync } = require('node:child_process');
 const { scanDir, scopeFromKinds } = require('./lib/static-detectors');
+const crossRefs = require('./lib/cross-references');
 
 const REPO_ROOT = path.resolve(__dirname, '..');
 const INDEX_PATH = path.join(REPO_ROOT, 'reference', 'taxonomy-index.json');
@@ -193,7 +194,7 @@ async function main() {
       };
     });
 
-    findings.push({
+    const finding = {
       threat_id: entry.id,
       threat_url: cite.url,
       category: entry.category,
@@ -204,7 +205,11 @@ async function main() {
         'Severity is not graded: a non-LLM pass cannot judge isolation, validation, or exposure. ' +
         'Run the full SKILL.md workflow in Claude Code to assign a verdict.',
       recommended_controls: controls
-    });
+    };
+    // Additive secondary citations (MITRE ATLAS + NIST AI 100-2), if curated.
+    const xrefs = crossRefs.lookup(slug);
+    if (xrefs) finding.cross_references = xrefs;
+    findings.push(finding);
   }
 
   // Rollup: a category with ungraded surfaces is "needs review" (AMBER).
