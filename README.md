@@ -119,13 +119,17 @@ owasp-ai-audit/
 │   ├── verdict-rules.md                  # Explicit severity assignment rules
 │   └── snapshot/                         # Offline fallback (auto-refreshed weekly)
 ├── scripts/
+│   ├── lib/
+│   │   ├── sanitize.js                   # esc(), safeUrl() — used by the renderer
+│   │   └── extract.js                    # htmlToText(), extractSections() — used by the regrounder
 │   ├── fetch-threat.sh                   # Cascaded fetch (memory → cache → live → snapshot)
 │   ├── snapshot-update.js                # Refreshes bundled snapshot from owaspai.org
+│   ├── reground-applies-to.js            # Re-derives applies_to from live chapter content
 │   └── render-dashboard.js               # findings.json → dashboard.html
-├── templates/                            # Currently empty; renderer is self-contained
 ├── examples/
 │   ├── findings.json                     # Sample findings (RAG support assistant)
 │   └── dashboard.html                    # Rendered example dashboard
+├── tests/                                # Unit tests (node:test, no deps)
 └── .github/workflows/
     └── snapshot-refresh.yml              # Weekly snapshot refresh PR
 ```

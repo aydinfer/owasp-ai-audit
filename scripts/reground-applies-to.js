@@ -36,6 +36,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const https = require('node:https');
+const { extractSections } = require('./lib/extract');
 
 const REPO_ROOT = path.resolve(__dirname, '..');
 const INDEX_PATH = path.join(REPO_ROOT, 'reference', 'taxonomy-index.json');
@@ -78,40 +79,6 @@ function fetchUrl(url) {
     req.on('error', reject);
     req.on('timeout', () => req.destroy(new Error(`timeout fetching ${url}`)));
   });
-}
-
-function htmlToText(html) {
-  return html
-    .replace(/<script[\s\S]*?<\/script>/gi, '')
-    .replace(/<style[\s\S]*?<\/style>/gi, '')
-    .replace(/<!--[\s\S]*?-->/g, '')
-    .replace(/<[^>]+>/g, ' ')
-    .replace(/&nbsp;/g, ' ')
-    .replace(/&amp;/g, '&')
-    .replace(/&ldquo;|&rdquo;/g, '"')
-    .replace(/&#39;|&rsquo;|&lsquo;/g, "'")
-    .replace(/&ndash;|&mdash;/g, '-')
-    .replace(/\s+/g, ' ')
-    .trim();
-}
-
-function extractSections(html, chapterCat) {
-  const sections = [];
-  const permalinkRe = /Category:\s*[^<\n]+?\s*<br>\s*Permalink:\s*<a\s+href=https:\/\/owaspai\.org\/go\/([a-zA-Z0-9_-]+)\//g;
-  const matches = [];
-  let m;
-  while ((m = permalinkRe.exec(html)) !== null) {
-    matches.push({ slug: m[1], blockStart: m.index, blockEnd: m.index + m[0].length });
-  }
-  for (let i = 0; i < matches.length; i++) {
-    const end = (i + 1 < matches.length) ? matches[i + 1].blockStart : html.length;
-    sections.push({
-      slug: matches[i].slug,
-      chapter: chapterCat,
-      text: htmlToText(html.slice(matches[i].blockEnd, end))
-    });
-  }
-  return sections;
 }
 
 const GENAI_PATTERNS = [

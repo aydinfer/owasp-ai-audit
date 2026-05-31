@@ -1,0 +1,24 @@
+name: tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Unit tests
+        run: node --test tests/*.test.js
+      - name: Renderer end-to-end
+        run: |
+          node scripts/render-dashboard.js examples/findings.json /tmp/dashboard.html
+          test -s /tmp/dashboard.html
+          ! grep -q 'href="javascript:' /tmp/dashboard.html

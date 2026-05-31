@@ -10,6 +10,7 @@
 
 const fs = require('node:fs');
 const path = require('node:path');
+const { esc, safeUrl } = require('./lib/sanitize');
 
 const [,, inPath, outPath] = process.argv;
 if (!inPath || !outPath) {
@@ -18,22 +19,6 @@ if (!inPath || !outPath) {
 }
 
 const findings = JSON.parse(fs.readFileSync(inPath, 'utf8'));
-
-const esc = (s) => String(s ?? '')
-  .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-  .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-
-// Allow only http(s)/mailto absolute URLs and relative paths/fragments.
-// Reject javascript:, data:, vbscript:, file:, etc. — anything that could
-// turn a clicked link into script execution in the dashboard's origin.
-function safeUrl(u) {
-  if (u == null) return '#';
-  const s = String(u).trim();
-  if (s === '') return '#';
-  if (/^(https?:|mailto:)/i.test(s)) return s;
-  if (/^[\/#]/.test(s)) return s;
-  return '#';
-}
 
 const verdictRank = { CRITICAL: 5, HIGH: 4, MEDIUM: 3, LOW: 2, PASS: 1, 'N/A': 0 };
 const verdictColor = {

@@ -11,14 +11,18 @@ Thanks for considering a contribution. The shape of this project is intentionall
 ## Local checks before opening a PR
 
 ```bash
-# 1. Every taxonomy entry must resolve against the live source
+# 1. Unit tests for the security-critical helpers (esc/safeUrl) and the
+#    chapter parser (htmlToText/extractSections) — no third-party deps.
+node --test tests/*.test.js
+
+# 2. Every taxonomy entry must resolve against the live source
 node scripts/snapshot-update.js
 
-# 2. The example dashboard should still render
+# 3. The example dashboard should still render
 node scripts/render-dashboard.js examples/findings.json examples/dashboard.html
 ```
 
-Both should exit 0 with no errors. The snapshot script prints a summary at the end (`Done. N ok, 0 failed.`) — `0 failed` is required.
+All three should exit 0 with no errors. The snapshot script prints a summary at the end (`Done. N ok, 0 failed.`) — `0 failed` is required. The tests need Node 18+ (built-in test runner).
 
 ## Updating the taxonomy index
 
