@@ -20,18 +20,20 @@ if (!inPath || !outPath) {
 
 const findings = JSON.parse(fs.readFileSync(inPath, 'utf8'));
 
-const verdictRank = { CRITICAL: 5, HIGH: 4, MEDIUM: 3, LOW: 2, PASS: 1, 'N/A': 0 };
+const verdictRank = { CRITICAL: 5, HIGH: 4, MEDIUM: 3, LOW: 2, UNKNOWN: 1.5, PASS: 1, 'N/A': 0 };
 const verdictColor = {
   CRITICAL: '#b00020', HIGH: '#d84315', MEDIUM: '#f9a825',
-  LOW: '#9e9d24', PASS: '#2e7d32', 'N/A': '#607d8b'
+  LOW: '#9e9d24', UNKNOWN: '#455a64', PASS: '#2e7d32', 'N/A': '#607d8b'
 };
 const rollupColor = { RED: '#b00020', AMBER: '#f9a825', GREEN: '#2e7d32' };
 const postureLabel = {
   Critical: '#b00020', Concerning: '#d84315',
-  Acceptable: '#f9a825', Strong: '#2e7d32'
+  Acceptable: '#f9a825', Strong: '#2e7d32',
+  'Needs Review': '#455a64', 'No AI surface detected': '#607d8b'
 };
 
-const counts = { CRITICAL: 0, HIGH: 0, MEDIUM: 0, LOW: 0, PASS: 0, 'N/A': 0 };
+const verdictOrder = ['CRITICAL', 'HIGH', 'MEDIUM', 'LOW', 'UNKNOWN', 'PASS', 'N/A'];
+const counts = { CRITICAL: 0, HIGH: 0, MEDIUM: 0, LOW: 0, UNKNOWN: 0, PASS: 0, 'N/A': 0 };
 for (const f of findings.findings || []) {
   counts[f.verdict] = (counts[f.verdict] || 0) + 1;
 }
@@ -60,7 +62,8 @@ const groundingMode = findings.grounding?.primary_source || 'unknown';
 const groundingNote = {
   live: 'Findings grounded in live content fetched from owaspai.org at audit time.',
   cache: 'Findings grounded in recently cached content from owaspai.org (within 7-day TTL).',
-  snapshot: 'Live fetch failed. Findings grounded in bundled snapshot. Refresh snapshot or check connectivity.'
+  snapshot: 'Live fetch failed. Findings grounded in bundled snapshot. Refresh snapshot or check connectivity.',
+  index: 'Citations resolved from the bundled taxonomy index; no live fetch performed this run.'
 }[groundingMode] || 'Grounding mode unknown.';
 
 const html = `<!doctype html>
@@ -160,7 +163,7 @@ const html = `<!doctype html>
   <div class="card">
     <h3>Findings by severity</h3>
     <div class="counts">
-      ${['CRITICAL','HIGH','MEDIUM','LOW','PASS','N/A'].map((v) => `
+      ${verdictOrder.map((v) => `
         <div class="count-pill" style="background: ${verdictColor[v]};">
           ${esc(v)}: ${counts[v] || 0}
         </div>`).join('')}
@@ -241,6 +244,7 @@ ${categories.map((c) => {
 }).join('')}
 
 <footer class="report-foot">
+  ${findings.footer_note ? `<p style="padding: 10px 12px; background: #eceff1; border-left: 3px solid #455a64; border-radius: 4px; color: var(--ink);"><strong>Note:</strong> ${esc(findings.footer_note)}</p>` : ''}
   <p><strong>Grounding:</strong> ${esc(groundingNote)}</p>
   <p><strong>Snapshot date:</strong> ${esc(findings.grounding?.snapshot_date || 'n/a')} · <strong>Audit run:</strong> ${esc(findings.grounding?.fetched_at || '—')}</p>
   <p><strong>Audit ID:</strong> <code>${esc(findings.audit_id || '—')}</code></p>

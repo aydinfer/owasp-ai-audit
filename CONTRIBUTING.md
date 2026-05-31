@@ -11,8 +11,9 @@ Thanks for considering a contribution. The shape of this project is intentionall
 ## Local checks before opening a PR
 
 ```bash
-# 1. Unit tests for the security-critical helpers (esc/safeUrl) and the
-#    chapter parser (htmlToText/extractSections) — no third-party deps.
+# 1. Unit tests for the security-critical helpers (esc/safeUrl), the chapter
+#    parser (htmlToText/extractSections), and the CI runner's static detectors
+#    + fail-on gate (run-audit) — no third-party deps.
 node --test tests/*.test.js
 
 # 2. Every taxonomy entry must resolve against the live source
@@ -57,6 +58,17 @@ Run `node scripts/reground-applies-to.js --dry-run --verbose` to preview changes
 ## Snapshot refresh PRs
 
 The GitHub Action at `.github/workflows/snapshot-refresh.yml` opens a weekly PR with the refreshed snapshot. These should auto-merge on green. If one shows a *taxonomy* drift (a slug that no longer resolves), the PR will fail — that's the signal to update the index, not to skip the validation.
+
+## The non-interactive CI runner (`action.yml` + `scripts/run-audit.js`)
+
+The composite Action is a *static first-pass screen*, not the audit. Keep that contract intact:
+
+1. **It never grades severity.** Every finding `run-audit.js` writes is `UNKNOWN`. Severity judgements require the LLM-driven SKILL.md workflow. A PR that makes the runner emit `HIGH`/`MEDIUM`/etc. from static signals alone will not be accepted — it would manufacture false confidence.
+2. **Detectors map to real slugs.** Every `threats`/`controls` entry in [`scripts/lib/static-detectors.js`](scripts/lib/static-detectors.js) must exist in `taxonomy-index.json`; the `scopeFromKinds` test enforces this. Add a detector by adding a `SIGNALS` entry (kind, regexes, categories, threat slugs, control slugs) and a fixture that proves it fires *and* a decoy proving it doesn't false-positive.
+3. **No third-party runtime deps.** `run-audit.js` and `pr-comment.js` use only Node stdlib (plus the existing `fetch-threat.sh`, which needs `curl`/`jq`). The PR comment posts via stdlib `https`, not a GitHub Action SDK.
+4. **`fail-on` is conservative by construction.** An `UNKNOWN` is treated as worst-case for gating (it can't be cleared below a threshold statically), so any non-`NONE` level trips when ungraded surfaces exist. Don't "soften" this into a silent never-fail gate.
+
+Surface discovery prefers the deterministic enumerator (`scripts/enumerate-ai-surfaces.js`, v0.4.0+) when a `surfaces.json` is available and falls back to the regex detectors otherwise.
 
 ## Releasing
 

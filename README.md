@@ -52,6 +52,50 @@ Take the HIGH and CRITICAL findings from dashboard.html and propose patches.
 
 That's normal Claude Code — the audit happens to give you a structured, cited starting point.
 
+## Use as a CI check
+
+Beyond the interactive skill, this repo ships a **composite GitHub Action** that runs a non-interactive *static first-pass screen* on every PR. Add it to a workflow:
+
+```yaml
+# .github/workflows/owasp-ai-audit.yml
+name: OWASP AI Audit
+on: [pull_request]
+permissions:
+  contents: read
+  pull-requests: write   # only needed for comment-pr
+jobs:
+  screen:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: aydinfer/owasp-ai-audit@v0.3.0
+        with:
+          target: .
+          fail-on: HIGH        # NONE | LOW | MEDIUM | HIGH | CRITICAL
+          comment-pr: true     # post the screen summary as a PR comment
+```
+
+What it does, and — importantly — what it does *not* do:
+
+- It statically catalogues the AI surfaces in `target` (LLM call sites, prompt construction, tool/function defs, embedding/RAG calls, rate-limit sites), maps each to the OWASP AI Exchange threats it implicates, and fetches a live `/go/{slug}/` citation for every one.
+- It writes a `findings.json` + `dashboard.html` and (on PR events) posts a summary comment.
+- **It does not grade severity.** A non-LLM pass can't judge whether input is isolated, output is validated, or a surface is actually exposed — so every finding it writes is `UNKNOWN`. The Action's job is to surface *presence* and *citations*, then point you at the real audit.
+
+Because findings are ungraded, the `fail-on` gate is conservative: an `UNKNOWN` is treated as *"could be anything up to CRITICAL"* and so trips **any** threshold other than `NONE`. Set `fail-on: NONE` (the default) for a report-only screen, or any level to block PRs until a human runs the full [SKILL.md](SKILL.md) workflow in Claude Code. The PR comment it posts looks like:
+
+> ### OWASP AI Audit — static first-pass screen
+>
+> **Overall posture:** Needs Review  
+> **Findings (8):** UNKNOWN: 8
+>
+> **Top findings**
+> - `UNKNOWN` [INPUT-DIRECTPROMPTINJECTION](https://owaspai.org/go/directpromptinjection/) — 4 static surface(s): `app/chat.ts:7` …
+> - `UNKNOWN` [RUN-AUGMENTATIONDATALEAK](https://owaspai.org/go/augmentationdataleak/) — `lib/rag.ts:9` …
+>
+> _First-pass static screen — surfaces presence and citations, not severity. Run the full SKILL.md audit in Claude Code for verdicts._
+
+The Action runs on Node 22 with zero third-party runtime dependencies (Node stdlib + `curl` + `jq`), in keeping with the skill's supply-chain posture.
+
 ## Install
 
 ```bash
@@ -114,6 +158,7 @@ input
 ```
 owasp-ai-audit/
 ├── SKILL.md                              # The skill instructions Claude reads
+├── action.yml                            # Composite GitHub Action (CI static screen)
 ├── reference/
 │   ├── taxonomy-index.json               # Map of OWASP AI threats + controls + permalinks
 │   ├── verdict-rules.md                  # Explicit severity assignment rules
@@ -125,6 +170,8 @@ owasp-ai-audit/
 │   ├── fetch-threat.sh                   # Cascaded fetch (memory → cache → live → snapshot)
 │   ├── snapshot-update.js                # Refreshes bundled snapshot from owaspai.org
 │   ├── reground-applies-to.js            # Re-derives applies_to from live chapter content
+│   ├── run-audit.js                      # Non-interactive CI runner (static first-pass screen)
+│   ├── pr-comment.js                     # Posts the screen summary as a PR comment
 │   └── render-dashboard.js               # findings.json → dashboard.html
 ├── examples/
 │   ├── findings.json                     # Sample findings (RAG support assistant)

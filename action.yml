@@ -1,0 +1,99 @@
+name: 'OWASP AI Audit (static screen)'
+description: >-
+  First-pass static screen that catalogues the AI surfaces in a repo, maps them
+  to OWASP AI Exchange threats with live permalink citations, renders a
+  dashboard, and optionally comments on the PR. Not a full audit — it surfaces
+  presence and citations; severity grading requires the SKILL.md workflow inside
+  Claude Code.
+author: 'aydinfer'
+branding:
+  icon: 'shield'
+  color: 'blue'
+
+inputs:
+  target:
+    description: 'Directory to scan (relative to the workspace).'
+    required: false
+    default: '.'
+  fail-on:
+    description: >-
+      NONE | LOW | MEDIUM | HIGH | CRITICAL. The static screen only emits UNKNOWN
+      findings; an UNKNOWN cannot be cleared below a threshold by static means,
+      so any value other than NONE makes the action fail when ungraded AI
+      surfaces are present. Default NONE = report-only (never blocks the build).
+    required: false
+    default: 'NONE'
+  comment-pr:
+    description: 'Post the screen summary as a PR comment (pull_request events only).'
+    required: false
+    default: 'true'
+  github-token:
+    description: 'Token used to post the PR comment.'
+    required: false
+    default: ${{ github.token }}
+
+outputs:
+  findings-path:
+    description: 'Path to the generated findings.json.'
+    value: ${{ steps.screen.outputs.findings }}
+  dashboard-path:
+    description: 'Path to the generated dashboard.html.'
+    value: ${{ steps.screen.outputs.dashboard }}
+  gate-tripped:
+    description: 'true if the fail-on gate tripped.'
+    value: ${{ steps.screen.outputs.gate_tripped }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Set up Node
+      uses: actions/setup-node@v6
+      with:
+        node-version: '22'
+
+    - name: Run static screen
+      id: screen
+      shell: bash
+      run: |
+        FINDINGS="$RUNNER_TEMP/owasp-ai-findings.json"
+        DASHBOARD="$RUNNER_TEMP/owasp-ai-dashboard.html"
+        set +e
+        node "$GITHUB_ACTION_PATH/scripts/run-audit.js" "${{ inputs.target }}" \
+          --fail-on "${{ inputs.fail-on }}" \
+          --out "$FINDINGS" \
+          --dashboard "$DASHBOARD"
+        EXIT=$?
+        set -e
+        {
+          echo "findings=$FINDINGS"
+          echo "dashboard=$DASHBOARD"
+          echo "exit=$EXIT"
+          echo "gate_tripped=$([ "$EXIT" = "2" ] && echo true || echo false)"
+        } >> "$GITHUB_OUTPUT"
+        if [ "$EXIT" != "0" ] && [ "$EXIT" != "2" ]; then
+          echo "::error::run-audit failed with exit $EXIT"
+          exit "$EXIT"
+        fi
+
+    - name: Comment on PR
+      if: ${{ inputs.comment-pr == 'true' && github.event_name == 'pull_request' }}
+      shell: bash
+      env:
+        GITHUB_TOKEN: ${{ inputs.github-token }}
+      run: node "$GITHUB_ACTION_PATH/scripts/pr-comment.js" "${{ steps.screen.outputs.findings }}"
+
+    - name: Upload dashboard
+      uses: actions/upload-artifact@v4
+      with:
+        name: owasp-ai-audit-dashboard
+        path: |
+          ${{ steps.screen.outputs.findings }}
+          ${{ steps.screen.outputs.dashboard }}
+        if-no-files-found: warn
+
+    - name: Enforce gate
+      if: ${{ steps.screen.outputs.gate_tripped == 'true' }}
+      shell: bash
+      run: |
+        echo "::error::owasp-ai-audit fail-on=${{ inputs.fail-on }} gate tripped — ungraded AI surfaces present. Run the full SKILL.md audit in Claude Code."
+        exit 1
