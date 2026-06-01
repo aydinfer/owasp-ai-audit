@@ -2,6 +2,20 @@
 
 > A Claude Code skill that audits AI systems against the [OWASP AI Exchange](https://owaspai.org/) threat taxonomy. Grounded in live content. Cites every finding. Produces a self-contained HTML dashboard that prints to PDF.
 
+## Why this exists
+
+**Most LLM-driven security audits lie — not on purpose, by construction.** You point a model at your codebase, ask "is this AI system safe?", and it writes a confident report that checked a handful of things, missed most of the taxonomy, found one scary-looking issue, and stamped the whole thing "Acceptable." It *looks* thorough. Nothing in the process forces it to admit how little it actually examined.
+
+That's not hypothetical — it's exactly how this project's own v0.x behaved. Its first real run graded **8 of 97** threat entries, read **~5%** of the files, and labelled the result "Acceptable." A highlights reel wearing the costume of a complete audit.
+
+**v1.0.0 is a contract change that makes that dishonesty impossible.** The design rests on three ideas:
+
+1. **Completeness is structural, not optional.** An audit isn't "some findings" — it's an explicit verdict on *every applicable* taxonomy entry, driven through eight mandatory layers, each with a coverage score. Silence on an applicable threat is a measured failure, not a clean result.
+2. **The posture is capped by what you actually looked at.** If your weakest layer is under 70%, the report says **"Screen only — not an audit"** on page one, in the biggest type — no matter how clean the findings list looks. You cannot dress up a partial look as a clean bill of health.
+3. **The model writes the verdicts; the tool does the math.** Left to grade itself, an LLM fudges (in testing it called three AMBER categories "Acceptable"). So the rollup, the posture, and the severity caps are computed *deterministically in code*, and severity is bounded by how it was evidenced — reasoning alone caps at MEDIUM, a written probe at HIGH, an *executed* probe at CRITICAL. A hand-edited number can't survive it.
+
+The result is an audit that is honest about its own limits — which is the only kind worth trusting. The rest of this README is the **what** and the **how**.
+
 ## What this is
 
 A drop-in skill folder for [Claude Code](https://claude.ai/code). Point Claude at a codebase or paste an architecture description, ask for an OWASP AI audit, and get back:
@@ -12,9 +26,9 @@ A drop-in skill folder for [Claude Code](https://claude.ai/code). Point Claude a
 - Every threat reference linked to its `owaspai.org/go/{slug}/` permalink; recommended controls likewise
 - A traffic-light dashboard across the six OWASP AI Exchange categories — a printable, self-contained HTML report, no servers, no external assets
 
-## Completeness by construction (v1.0.0)
+## How it works: completeness by construction
 
-v0.x was a highlights reel: on its first real run it graded a handful of entries, read a fraction of the files, and still labelled the result "Acceptable." v1.0.0 makes that dishonesty pattern impossible. An audit is driven through **eight ordered, mandatory layers**, each with a coverage formula:
+Concretely, an audit is driven through **eight ordered, mandatory layers**, each with a coverage formula:
 
 | | Layer | Coverage |
 |---|---|---|
@@ -184,7 +198,7 @@ Run an OWASP AI audit on it.
 
 The skill detects the input type, scopes the audit, fetches threat content (cached or live), produces findings, and renders a dashboard. Open the dashboard in any browser and use **Print → Save as PDF** to share.
 
-## How it works
+## The run pipeline, end to end
 
 The full audit (inside Claude Code) is driven through the eight mandatory layers — completeness is the control flow, not an afterthought:
 
