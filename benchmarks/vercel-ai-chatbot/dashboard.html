@@ -1,0 +1,1422 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>OWASP AI Audit — vercel/ai-chatbot</title>
+<style>
+  :root {
+    --bg: #fafafa;
+    --panel: #ffffff;
+    --ink: #1a1a1a;
+    --muted: #5a5a5a;
+    --border: #e3e3e3;
+    --accent: #0b3d91;
+  }
+  * { box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+         margin: 0; padding: 0; background: var(--bg); color: var(--ink); line-height: 1.5; }
+  .wrap { max-width: 1100px; margin: 0 auto; padding: 32px 24px; }
+  header.report-head { border-bottom: 1px solid var(--border); padding-bottom: 20px; margin-bottom: 24px; }
+  header.report-head h1 { margin: 0 0 4px; font-size: 28px; }
+  header.report-head .sub { color: var(--muted); font-size: 14px; }
+  .grid { display: grid; gap: 16px; }
+  .row-2 { grid-template-columns: 2fr 1fr; }
+  .row-3 { grid-template-columns: repeat(3, 1fr); }
+  .row-6 { grid-template-columns: repeat(6, 1fr); }
+  @media (max-width: 800px) {
+    .row-2, .row-3, .row-6 { grid-template-columns: 1fr; }
+  }
+  .card { background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 20px; }
+  .card h2 { margin: 0 0 12px; font-size: 18px; }
+  .card h3 { margin: 0 0 8px; font-size: 15px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
+  .posture { display: flex; align-items: center; gap: 16px; }
+  .posture-dot { width: 24px; height: 24px; border-radius: 50%; flex-shrink: 0; }
+  .posture-label { font-size: 22px; font-weight: 600; }
+  .counts { display: flex; gap: 12px; flex-wrap: wrap; }
+  .count-pill { padding: 6px 12px; border-radius: 999px; font-size: 13px; font-weight: 600; color: white; }
+  .category-row { display: flex; align-items: center; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--border); }
+  .category-row:last-child { border-bottom: none; }
+  .category-name { flex: 1; }
+  .category-light { width: 16px; height: 16px; border-radius: 50%; }
+  .category-count { color: var(--muted); font-size: 13px; min-width: 80px; text-align: right; }
+  .finding { border: 1px solid var(--border); border-radius: 8px; padding: 16px; margin-bottom: 12px; background: var(--panel); page-break-inside: avoid; }
+  .finding-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 8px; }
+  .finding-title { font-weight: 600; font-size: 15px; margin: 0; }
+  .finding-title a { color: var(--accent); text-decoration: none; }
+  .finding-title a:hover { text-decoration: underline; }
+  .verdict-badge { padding: 4px 10px; border-radius: 4px; font-size: 12px; font-weight: 700; color: white; letter-spacing: 0.04em; }
+  .finding dl { margin: 8px 0 0; display: grid; grid-template-columns: 120px 1fr; gap: 4px 12px; font-size: 14px; }
+  .finding dt { color: var(--muted); font-weight: 600; }
+  .finding dd { margin: 0; }
+  .finding .xrefs { margin: 2px 0 6px; font-size: 12px; color: var(--muted); }
+  .finding .xrefs a { color: var(--accent); text-decoration: none; }
+  .finding .xrefs a:hover { text-decoration: underline; }
+  .finding .controls { margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--border); font-size: 13px; }
+  .finding .controls a { color: var(--accent); }
+  .category-section { margin-top: 24px; }
+  .category-section h2 { font-size: 20px; border-bottom: 2px solid var(--border); padding-bottom: 8px; margin-bottom: 12px; display: flex; align-items: center; gap: 10px; }
+  .category-section .light { width: 14px; height: 14px; border-radius: 50%; display: inline-block; }
+  footer.report-foot { margin-top: 32px; padding-top: 16px; border-top: 1px solid var(--border); font-size: 12px; color: var(--muted); }
+  footer.report-foot p { margin: 4px 0; }
+  code { background: #f0f0f0; padding: 1px 5px; border-radius: 3px; font-size: 90%; }
+
+  .coverage-panel .cov-key { display: inline-flex; align-items: center; gap: 4px; margin-right: 10px; white-space: nowrap; }
+  .cov-chip { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
+  .cov-row { display: grid; grid-template-columns: 12px minmax(150px, 1.4fr) minmax(70px, auto) 2fr 48px; align-items: center; gap: 10px; padding: 6px 0; border-bottom: 1px solid var(--border); }
+  .cov-row:last-child { border-bottom: none; }
+  .cov-band { width: 12px; height: 12px; border-radius: 50%; }
+  .cov-name { font-weight: 600; font-size: 14px; }
+  .cov-frac { color: var(--muted); font-size: 12px; text-align: right; font-variant-numeric: tabular-nums; }
+  .cov-bar { height: 8px; background: #eee; border-radius: 999px; overflow: hidden; }
+  .cov-fill { display: block; height: 100%; }
+  .cov-pct { font-weight: 700; font-size: 13px; text-align: right; font-variant-numeric: tabular-nums; }
+  @media (max-width: 800px) {
+    .cov-row { grid-template-columns: 12px 1fr 44px; }
+    .cov-frac, .cov-bar { display: none; }
+  }
+  .ledger { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 8px; }
+  .ledger th, .ledger td { text-align: left; padding: 5px 8px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  .ledger th { color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; font-size: 11px; }
+  .ledger .v-na { color: #607d8b; }
+  .ledger tr.row-na { background: #f7f9fa; }
+  .ev-badge { padding: 2px 7px; border-radius: 4px; font-size: 11px; font-weight: 700; letter-spacing: 0.03em; background: #eceff1; color: #37474f; }
+  .ev-demonstrated { background: #e8f5e9; color: #2e7d32; }
+  .ev-reasoned-probe { background: #fff8e1; color: #9a7d00; }
+  .ev-static { background: #eceff1; color: #546e7a; }
+
+  @media print {
+    body { background: white; }
+    .wrap { max-width: none; padding: 16px; }
+    .card, .finding { break-inside: avoid; }
+    .category-section { break-before: auto; }
+    a { color: var(--ink); text-decoration: none; }
+    a[href]::after { content: " (" attr(href) ")"; font-size: 10px; color: var(--muted); }
+    .no-print { display: none; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="report-head">
+  <h1>OWASP AI Exchange Audit</h1>
+  <div class="sub">
+    Subject: <strong>vercel/ai-chatbot</strong> ·
+    Type: <strong>codebase</strong> ·
+    Generated: <strong>2026-06-01T00:00:00Z</strong>
+  </div>
+</header>
+
+<div class="grid row-2">
+  <div class="card">
+    <h3>Overall posture</h3>
+    <div class="posture">
+      <div class="posture-dot" style="background: #d84315;"></div>
+      <div class="posture-label">Concerning</div>
+    </div>
+    
+    <p style="margin: 12px 0 0; color: var(--muted); font-size: 14px;">
+      Findings grounded in live content fetched from owaspai.org at audit time.
+    </p>
+  </div>
+  <div class="card">
+    <h3>Findings by severity</h3>
+    <div class="counts">
+      
+        <div class="count-pill" style="background: #b00020;">
+          CRITICAL: 0
+        </div>
+        <div class="count-pill" style="background: #d84315;">
+          HIGH: 0
+        </div>
+        <div class="count-pill" style="background: #f9a825;">
+          MEDIUM: 19
+        </div>
+        <div class="count-pill" style="background: #9e9d24;">
+          LOW: 1
+        </div>
+        <div class="count-pill" style="background: #455a64;">
+          UNKNOWN: 0
+        </div>
+        <div class="count-pill" style="background: #2e7d32;">
+          PASS: 0
+        </div>
+        <div class="count-pill" style="background: #607d8b;">
+          N/A: 0
+        </div>
+    </div>
+  </div>
+</div>
+
+
+<div class="card coverage-panel" style="margin-top: 16px;">
+  <h2>Completeness coverage</h2>
+  <p style="margin: -4px 0 14px; color: var(--muted); font-size: 13px;">
+    Eight mandatory layers. Posture is bounded by the lowest band:
+    <span class="cov-key"><span class="cov-chip" style="background:#2e7d32"></span>≥90%</span>
+    <span class="cov-key"><span class="cov-chip" style="background:#f9a825"></span>70–90% → Partial</span>
+    <span class="cov-key"><span class="cov-chip" style="background:#b00020"></span>&lt;70% → Screen only</span>
+    · mean 100%
+  </p>
+  
+    <div class="cov-row">
+      <span class="cov-band" style="background:#2e7d32"></span>
+      <span class="cov-name">L1 · Surface inventory</span>
+      <span class="cov-frac">27/27</span>
+      <span class="cov-bar"><span class="cov-fill" style="width:100%;background:#2e7d32"></span></span>
+      <span class="cov-pct" style="color:#2e7d32">100%</span>
+    </div>
+    <div class="cov-row">
+      <span class="cov-band" style="background:#2e7d32"></span>
+      <span class="cov-name">L2 · Taxonomy completeness</span>
+      <span class="cov-frac">85/85</span>
+      <span class="cov-bar"><span class="cov-fill" style="width:100%;background:#2e7d32"></span></span>
+      <span class="cov-pct" style="color:#2e7d32">100%</span>
+    </div>
+    <div class="cov-row">
+      <span class="cov-band" style="background:#2e7d32"></span>
+      <span class="cov-name">L3 · Auth/authz matrix</span>
+      <span class="cov-frac">30/30</span>
+      <span class="cov-bar"><span class="cov-fill" style="width:100%;background:#2e7d32"></span></span>
+      <span class="cov-pct" style="color:#2e7d32">100%</span>
+    </div>
+    <div class="cov-row">
+      <span class="cov-band" style="background:#2e7d32"></span>
+      <span class="cov-name">L4 · Trust-boundary depth</span>
+      <span class="cov-frac">7/7</span>
+      <span class="cov-bar"><span class="cov-fill" style="width:100%;background:#2e7d32"></span></span>
+      <span class="cov-pct" style="color:#2e7d32">100%</span>
+    </div>
+    <div class="cov-row">
+      <span class="cov-band" style="background:#2e7d32"></span>
+      <span class="cov-name">L5 · Probe verification</span>
+      <span class="cov-frac">0/0</span>
+      <span class="cov-bar"><span class="cov-fill" style="width:100%;background:#2e7d32"></span></span>
+      <span class="cov-pct" style="color:#2e7d32">100%</span>
+    </div>
+    <div class="cov-row">
+      <span class="cov-band" style="background:#2e7d32"></span>
+      <span class="cov-name">L6 · Regulatory pass</span>
+      <span class="cov-frac">7/7 · EU, US-CA</span>
+      <span class="cov-bar"><span class="cov-fill" style="width:100%;background:#2e7d32"></span></span>
+      <span class="cov-pct" style="color:#2e7d32">100%</span>
+    </div>
+    <div class="cov-row">
+      <span class="cov-band" style="background:#2e7d32"></span>
+      <span class="cov-name">L7 · Operational pass</span>
+      <span class="cov-frac">4/4</span>
+      <span class="cov-bar"><span class="cov-fill" style="width:100%;background:#2e7d32"></span></span>
+      <span class="cov-pct" style="color:#2e7d32">100%</span>
+    </div>
+    <div class="cov-row">
+      <span class="cov-band" style="background:#2e7d32"></span>
+      <span class="cov-name">L8 · Race / TOCTOU pass</span>
+      <span class="cov-frac">4/4</span>
+      <span class="cov-bar"><span class="cov-fill" style="width:100%;background:#2e7d32"></span></span>
+      <span class="cov-pct" style="color:#2e7d32">100%</span>
+    </div>
+  
+</div>
+
+<div class="card" style="margin-top: 16px;">
+  <h2>Category posture</h2>
+  
+    <div class="category-row">
+      <span class="category-light" style="background: #f9a825;"></span>
+      <span class="category-name">General Controls</span>
+      <span class="category-count">7 findings</span>
+    </div>
+    <div class="category-row">
+      <span class="category-light" style="background: #f9a825;"></span>
+      <span class="category-name">Input Threats</span>
+      <span class="category-count">7 findings</span>
+    </div>
+    <div class="category-row">
+      <span class="category-light" style="background: #2e7d32;"></span>
+      <span class="category-name">Development-time</span>
+      <span class="category-count">1 finding</span>
+    </div>
+    <div class="category-row">
+      <span class="category-light" style="background: #f9a825;"></span>
+      <span class="category-name">Runtime</span>
+      <span class="category-count">3 findings</span>
+    </div>
+    <div class="category-row">
+      <span class="category-light" style="background: #2e7d32;"></span>
+      <span class="category-name">Testing</span>
+      <span class="category-count">1 finding</span>
+    </div>
+    <div class="category-row">
+      <span class="category-light" style="background: #2e7d32;"></span>
+      <span class="category-name">Privacy</span>
+      <span class="category-count">1 finding</span>
+    </div>
+</div>
+
+<div class="card" style="margin-top: 16px;">
+  <h2>Scope</h2>
+  <dl style="display: grid; grid-template-columns: 180px 1fr; gap: 6px 12px; font-size: 14px; margin: 0;">
+    <dt style="color: var(--muted);">System kind</dt>
+    <dd>agent</dd>
+    <dt style="color: var(--muted);">Included categories</dt>
+    <dd>input-threats, dev-time, runtime, general-controls, testing, privacy</dd>
+    <dt style="color: var(--muted);">Excluded categories</dt>
+    <dd>none</dd>
+  </dl>
+  
+    <details style="margin-top: 8px;">
+      <summary style="cursor: pointer; color: var(--muted); font-size: 13px;">Exclusion reasons</summary>
+      <ul style="font-size: 13px;">
+        <li><code>predictive-ml</code> — No training/predictive-classifier surface in surfaces.json (training:0, no model.fit/Trainer); all evasion + poisoning-of-own-model threats are N/A.</li><li><code>rag</code> — No rag-embeddings surface (0); augmentation threats N/A.</li>
+      </ul>
+    </details>
+</div>
+
+
+  <section class="category-section">
+    <h2>
+      <span class="light" style="background: #f9a825;"></span>
+      General Controls
+    </h2>
+    
+      <div class="finding">
+        <div class="finding-head">
+          <p class="finding-title">
+            <a href="https://owaspai.org/go/agenticaithreats/" target="_blank" rel="noopener">GEN-AGENTICAITHREATS — agenticaithreats</a>
+          </p>
+          <span style="display:flex; gap:6px; align-items:center; flex-shrink:0;">
+            <span class="ev-badge ev-static">static</span>
+            <span class="verdict-badge" style="background: #f9a825;">MEDIUM</span>
+          </span>
+        </div>
+        
+        <dl>
+          <dt>Evidence</dt>
+          <dd>app/(chat)/api/chat/route.ts:198-235; lib/ai/tools/update-document.ts:38-40</dd>
+          <dt>Reasoning</dt>
+          <dd>A multi-step agent (stepCountIs(5)) drives tools that mutate stored documents and hit external APIs. The strong mitigations are per-tool ownership checks and a tool-approval flow; the gap is the absence of input segregation/PI screening, so an injected instruction could still attempt to chain owner-scoped tool actions. Static, MEDIUM.</dd>
+        </dl>
+        
+          <div class="controls">
+            <strong>Recommended controls:</strong>
+            <ul style="margin: 4px 0 0; padding-left: 20px;">
+              
+                <li><a href="https://owaspai.org/go/oversight/" target="_blank" rel="noopener">GEN-OVERSIGHT</a> — Keep human-in-the-loop approval for state-changing tool calls (present).</li>
+              
+                <li><a href="https://owaspai.org/go/leastmodelprivilege/" target="_blank" rel="noopener">GEN-LEASTMODELPRIVILEGE</a> — Maintain least-privilege, ownership-scoped tools.</li>
+              
+            </ul>
+          </div>
+      </div>
+    
+      <div class="finding">
+        <div class="finding-head">
+          <p class="finding-title">
+            <a href="https://owaspai.org/go/governancecontrols/" target="_blank" rel="noopener">GEN-GOVERNANCECONTROLS — governancecontrols</a>
+          </p>
+          <span style="display:flex; gap:6px; align-items:center; flex-shrink:0;">
+            <span class="ev-badge ev-static">static</span>
+            <span class="verdict-badge" style="background: #f9a825;">MEDIUM</span>
+          </span>
+        </div>
+        
+        <dl>
+          <dt>Evidence</dt>
+          <dd>absence — no governance/policy/model-inventory docs in repo</dd>
+          <dt>Reasoning</dt>
+          <dd>No AI governance program, model inventory, or risk register is present in the codebase. This is a reference/template app, so absence is expected, but adopters inherit the gap.</dd>
+        </dl>
+        
+          <div class="controls">
+            <strong>Recommended controls:</strong>
+            <ul style="margin: 4px 0 0; padding-left: 20px;">
+              
+                <li><a href="https://owaspai.org/go/aiprogram/" target="_blank" rel="noopener">GEN-AIPROGRAM</a> — Establish an AI management program covering inventory, ownership, and lifecycle.</li>
+              
+                <li><a href="https://owaspai.org/go/checkcompliance/" target="_blank" rel="noopener">GEN-CHECKCOMPLIANCE</a> — Map applicable regulatory obligations (EU AI Act, GDPR/CPRA).</li>
+              
+            </ul>
+          </div>
+      </div>
+    
+      <div class="finding">
+        <div class="finding-head">
+          <p class="finding-title">
+            <a href="https://owaspai.org/go/aitransparency/" target="_blank" rel="noopener">GEN-AITRANSPARENCY — aitransparency</a>
+          </p>
+          <span style="display:flex; gap:6px; align-items:center; flex-shrink:0;">
+            <span class="ev-badge ev-static">static</span>
+            <span class="verdict-badge" style="background: #f9a825;">MEDIUM</span>
+          </span>
+        </div>
+        
+        <dl>
+          <dt>Evidence</dt>
+          <dd>absence — no AI-interaction disclosure string in lib/ai/prompts.ts or audited routes</dd>
+          <dt>Reasoning</dt>
+          <dd>No explicit user-facing disclosure that responses are AI-generated was found in audited code. Relevant to EU AI Act Art.50(1).</dd>
+        </dl>
+        
+          <div class="controls">
+            <strong>Recommended controls:</strong>
+            <ul style="margin: 4px 0 0; padding-left: 20px;">
+              
+                <li><a href="https://owaspai.org/go/aitransparency/" target="_blank" rel="noopener">GEN-AITRANSPARENCY</a> — Add a clear AI-interaction disclosure in the UI.</li>
+              
+            </ul>
+          </div>
+      </div>
+    
+      <div class="finding">
+        <div class="finding-head">
+          <p class="finding-title">
+            <a href="https://owaspai.org/go/limitunwanted/" target="_blank" rel="noopener">GEN-LIMITUNWANTED — limitunwanted</a>
+          </p>
+          <span style="display:flex; gap:6px; align-items:center; flex-shrink:0;">
+            <span class="ev-badge ev-static">static</span>
+            <span class="verdict-badge" style="background: #f9a825;">MEDIUM</span>
+          </span>
+        </div>
+        
+        <dl>
+          <dt>Evidence</dt>
+          <dd>app/(chat)/api/chat/route.ts:294-304</dd>
+          <dt>Reasoning</dt>
+          <dd>There is no output moderation or unwanted-behavior filtering; onError only maps generic error strings. The app relies entirely on upstream model alignment to avoid harmful content.</dd>
+        </dl>
+        
+          <div class="controls">
+            <strong>Recommended controls:</strong>
+            <ul style="margin: 4px 0 0; padding-left: 20px;">
+              
+                <li><a href="https://owaspai.org/go/modelalignment/" target="_blank" rel="noopener">GEN-MODELALIGNMENT</a> — Rely on aligned models and add output guardrails for unwanted content.</li>
+              
+                <li><a href="https://owaspai.org/go/monitoruse/" target="_blank" rel="noopener">CTRL-INPUT-MONITORUSE</a> — Monitor usage for abusive/unwanted interactions.</li>
+              
+            </ul>
+          </div>
+      </div>
+    
+      <div class="finding">
+        <div class="finding-head">
+          <p class="finding-title">
+            <a href="https://owaspai.org/go/dataminimize/" target="_blank" rel="noopener">GEN-DATAMINIMIZE — dataminimize</a>
+          </p>
+          <span style="display:flex; gap:6px; align-items:center; flex-shrink:0;">
+            <span class="ev-badge ev-static">static</span>
+            <span class="verdict-badge" style="background: #f9a825;">MEDIUM</span>
+          </span>
+        </div>
+        
+        <dl>
+          <dt>Evidence</dt>
+          <dd>app/(chat)/api/chat/route.ts:159-166; lib/ai/prompts.ts:58-64</dd>
+          <dt>Reasoning</dt>
+          <dd>Precise latitude/longitude plus city/country are injected into every prompt regardless of whether the user&#39;s request needs location, exceeding data-minimization for a general chat assistant.</dd>
+        </dl>
+        
+          <div class="controls">
+            <strong>Recommended controls:</strong>
+            <ul style="margin: 4px 0 0; padding-left: 20px;">
+              
+                <li><a href="https://owaspai.org/go/dataminimize/" target="_blank" rel="noopener">GEN-DATAMINIMIZE</a> — Inject coarse location only when the request requires it.</li>
+              
+            </ul>
+          </div>
+      </div>
+    
+      <div class="finding">
+        <div class="finding-head">
+          <p class="finding-title">
+            <a href="https://owaspai.org/go/shortretain/" target="_blank" rel="noopener">GEN-SHORTRETAIN — shortretain</a>
+          </p>
+          <span style="display:flex; gap:6px; align-items:center; flex-shrink:0;">
+            <span class="ev-badge ev-static">static</span>
+            <span class="verdict-badge" style="background: #f9a825;">MEDIUM</span>
+          </span>
+        </div>
+        
+        <dl>
+          <dt>Evidence</dt>
+          <dd>lib/db/queries.ts saveChat/saveMessages/saveDocument; app/(chat)/api/history/route.ts:39-47</dd>
+          <dt>Reasoning</dt>
+          <dd>Persisted chat/message/document data has no TTL; only an explicit bulk-delete endpoint exists. No automatic retention limit engages GDPR Art.5(1)(e).</dd>
+        </dl>
+        
+          <div class="controls">
+            <strong>Recommended controls:</strong>
+            <ul style="margin: 4px 0 0; padding-left: 20px;">
+              
+                <li><a href="https://owaspai.org/go/shortretain/" target="_blank" rel="noopener">GEN-SHORTRETAIN</a> — Implement automatic retention/expiry for stored conversation data.</li>
+              
+            </ul>
+          </div>
+      </div>
+    
+      <div class="finding">
+        <div class="finding-head">
+          <p class="finding-title">
+            <a href="https://owaspai.org/go/datalimit/" target="_blank" rel="noopener">GEN-DATALIMIT — datalimit</a>
+          </p>
+          <span style="display:flex; gap:6px; align-items:center; flex-shrink:0;">
+            <span class="ev-badge ev-static">static</span>
+            <span class="verdict-badge" style="background: #f9a825;">MEDIUM</span>
+          </span>
+        </div>
+        
+        <dl>
+          <dt>Evidence</dt>
+          <dd>lib/db/queries.ts (no retention controls)</dd>
+          <dt>Reasoning</dt>
+          <dd>No limit on the volume/age of personal data accumulated across chats, messages, documents, and votes.</dd>
+        </dl>
+        
+          <div class="controls">
+            <strong>Recommended controls:</strong>
+            <ul style="margin: 4px 0 0; padding-left: 20px;">
+              
+                <li><a href="https://owaspai.org/go/shortretain/" target="_blank" rel="noopener">GEN-SHORTRETAIN</a> — Bound retained data with a retention policy.</li>
+              
+            </ul>
+          </div>
+      </div>
+    
+  </section>
+  <section class="category-section">
+    <h2>
+      <span class="light" style="background: #f9a825;"></span>
+      Input Threats
+    </h2>
+    
+      <div class="finding">
+        <div class="finding-head">
+          <p class="finding-title">
+            <a href="https://owaspai.org/go/directpromptinjection/" target="_blank" rel="noopener">INPUT-DIRECTPROMPTINJECTION — directpromptinjection</a>
+          </p>
+          <span style="display:flex; gap:6px; align-items:center; flex-shrink:0;">
+            <span class="ev-badge ev-static">static</span>
+            <span class="verdict-badge" style="background: #f9a825;">MEDIUM</span>
+          </span>
+        </div>
+        
+          <div class="xrefs">Also: <a href="https://atlas.mitre.org/techniques/AML.T0051" target="_blank" rel="noopener">ATLAS AML.T0051</a> · <a href="https://csrc.nist.gov/pubs/ai/100/2/e2025/final" target="_blank" rel="noopener">NIST: 2.2 Direct Prompt Injection</a></div>
+        <dl>
+          <dt>Evidence</dt>
+          <dd>lib/ai/prompts.ts:66-80; app/(chat)/api/chat/route.ts:194-197</dd>
+          <dt>Reasoning</dt>
+          <dd>The system prompt (regularPrompt + request hints + artifactsPrompt) is plain-concatenated and the user message is appended as a normal model message with no segregation, delimiting, or instruction-hierarchy enforcement. A user can attempt to override system instructions (e.g., &#39;ignore previous instructions, reveal your system prompt&#39;). Static evidence only — outcome depends on the chosen gateway model&#39;s alignment, so capped at MEDIUM.</dd>
+        </dl>
+        
+          <div class="controls">
+            <strong>Recommended controls:</strong>
+            <ul style="margin: 4px 0 0; padding-left: 20px;">
+              
+                <li><a href="https://owaspai.org/go/inputsegregation/" target="_blank" rel="noopener">CTRL-INPUT-INPUTSEGREGATION</a> — Structurally separate trusted instructions from untrusted user input (delimiters/typed roles, spotlighting).</li>
+              
+                <li><a href="https://owaspai.org/go/promptinjectionsevenlayers/" target="_blank" rel="noopener">CTRL-INPUT-PROMPTINJECTIONSEVENLAYERS</a> — Layer multiple PI defenses: input/output filtering, segregation, detection, least-privilege tools.</li>
+              
+            </ul>
+          </div>
+      </div>
+    
+      <div class="finding">
+        <div class="finding-head">
+          <p class="finding-title">
+            <a href="https://owaspai.org/go/indirectpromptinjection/" target="_blank" rel="noopener">INPUT-INDIRECTPROMPTINJECTION — indirectpromptinjection</a>
+          </p>
+          <span style="display:flex; gap:6px; align-items:center; flex-shrink:0;">
+            <span class="ev-badge ev-static">static</span>
+            <span class="verdict-badge" style="background: #f9a825;">MEDIUM</span>
+          </span>
+        </div>
+        
+          <div class="xrefs">Also: <a href="https://atlas.mitre.org/techniques/AML.T0051.001" target="_blank" rel="noopener">ATLAS AML.T0051.001</a> · <a href="https://csrc.nist.gov/pubs/ai/100/2/e2025/final" target="_blank" rel="noopener">NIST: 2.2 Indirect Prompt Injection</a></div>
+        <dl>
+          <dt>Evidence</dt>
+          <dd>lib/ai/tools/get-weather.ts:66-76; lib/ai/tools/request-suggestions.ts:49-63</dd>
+          <dt>Reasoning</dt>
+          <dd>getWeather returns third-party JSON (open-meteo) directly into the tool result that re-enters the model context, and requestSuggestions feeds stored document.content back through streamText. Untrusted external/stored text is not sanitized before re-prompting, enabling indirect injection that could steer subsequent tool calls within the stepCountIs(5) loop. Static — exploitability depends on model susceptibility, capped at MEDIUM.</dd>
+        </dl>
+        
+          <div class="controls">
+            <strong>Recommended controls:</strong>
+            <ul style="margin: 4px 0 0; padding-left: 20px;">
+              
+                <li><a href="https://owaspai.org/go/inputsegregation/" target="_blank" rel="noopener">CTRL-INPUT-INPUTSEGREGATION</a> — Mark and isolate tool/external content so it cannot be interpreted as instructions.</li>
+              
+                <li><a href="https://owaspai.org/go/runtimemodeliointegrity/" target="_blank" rel="noopener">CTRL-RUN-RUNTIMEMODELIOINTEGRITY</a> — Validate/normalize tool outputs before they re-enter the model.</li>
+              
+            </ul>
+          </div>
+      </div>
+    
+      <div class="finding">
+        <div class="finding-head">
+          <p class="finding-title">
+            <a href="https://owaspai.org/go/promptinjection/" target="_blank" rel="noopener">INPUT-PROMPTINJECTION — promptinjection</a>
+          </p>
+          <span style="display:flex; gap:6px; align-items:center; flex-shrink:0;">
+            <span class="ev-badge ev-static">static</span>
+            <span class="verdict-badge" style="background: #f9a825;">MEDIUM</span>
+          </span>
+        </div>
+        
+          <div class="xrefs">Also: <a href="https://atlas.mitre.org/techniques/AML.T0051" target="_blank" rel="noopener">ATLAS AML.T0051</a> · <a href="https://csrc.nist.gov/pubs/ai/100/2/e2025/final" target="_blank" rel="noopener">NIST: 2.2 Prompt Injection</a></div>
+        <dl>
+          <dt>Evidence</dt>
+          <dd>app/(chat)/api/chat/route.ts:194-235</dd>
+          <dt>Reasoning</dt>
+          <dd>The agent exposes five tools (incl. document mutation) under a single shared context with no prompt-injection guardrail. Injection could attempt to invoke editDocument/updateDocument on the user&#39;s own documents; impact is bounded because each document tool re-checks ownership and a tool-approval flow exists. Static, capped MEDIUM.</dd>
+        </dl>
+        
+          <div class="controls">
+            <strong>Recommended controls:</strong>
+            <ul style="margin: 4px 0 0; padding-left: 20px;">
+              
+                <li><a href="https://owaspai.org/go/promptinjectioniohandling/" target="_blank" rel="noopener">CTRL-INPUT-PROMPTINJECTIONIOHANDLING</a> — Add I/O-side PI handling: detect/screen inputs and outputs around the agent loop.</li>
+              
+                <li><a href="https://owaspai.org/go/leastmodelprivilege/" target="_blank" rel="noopener">GEN-LEASTMODELPRIVILEGE</a> — Keep tools least-privileged and ownership-scoped (already partially done).</li>
+              
+            </ul>
+          </div>
+      </div>
+    
+      <div class="finding">
+        <div class="finding-head">
+          <p class="finding-title">
+            <a href="https://owaspai.org/go/inputsegregation/" target="_blank" rel="noopener">CTRL-INPUT-INPUTSEGREGATION — inputsegregation</a>
+          </p>
+          <span style="display:flex; gap:6px; align-items:center; flex-shrink:0;">
+            <span class="ev-badge ev-static">static</span>
+            <span class="verdict-badge" style="background: #f9a825;">MEDIUM</span>
+          </span>
+        </div>
+        
+          <div class="xrefs">Also: <a href="https://atlas.mitre.org/techniques/AML.T0051" target="_blank" rel="noopener">ATLAS AML.T0051</a> · <a href="https://csrc.nist.gov/pubs/ai/100/2/e2025/final" target="_blank" rel="noopener">NIST: 2.2 Prompt Injection mitigations</a></div>
+        <dl>
+          <dt>Evidence</dt>
+          <dd>lib/ai/prompts.ts:76-79</dd>
+          <dt>Reasoning</dt>
+          <dd>systemPrompt() returns trusted instructions and request hints as one concatenated string and the user turn is added as an ordinary message; there is no spotlighting, delimiting, or typed separation between trusted and untrusted content. This is the root enabler for the injection findings above.</dd>
+        </dl>
+        
+          <div class="controls">
+            <strong>Recommended controls:</strong>
+            <ul style="margin: 4px 0 0; padding-left: 20px;">
+              
+                <li><a href="https://owaspai.org/go/promptinjectionsevenlayers/" target="_blank" rel="noopener">CTRL-INPUT-PROMPTINJECTIONSEVENLAYERS</a> — Adopt layered PI defenses with segregation as the first layer.</li>
+              
+            </ul>
+          </div>
+      </div>
+    
+      <div class="finding">
+        <div class="finding-head">
+          <p class="finding-title">
+            <a href="https://owaspai.org/go/airesourceexhaustion/" target="_blank" rel="noopener">INPUT-AIRESOURCEEXHAUSTION — airesourceexhaustion</a>
+          </p>
+          <span style="display:flex; gap:6px; align-items:center; flex-shrink:0;">
+            <span class="ev-badge ev-static">static</span>
+            <span class="verdict-badge" style="background: #f9a825;">MEDIUM</span>
+          </span>
+        </div>
+        
+          <div class="xrefs">Also: <a href="https://atlas.mitre.org/techniques/AML.T0034" target="_blank" rel="noopener">ATLAS AML.T0034</a> · <a href="https://csrc.nist.gov/pubs/ai/100/2/e2025/final" target="_blank" rel="noopener">NIST: Availability / resource exhaustion</a></div>
+        <dl>
+          <dt>Evidence</dt>
+          <dd>lib/ai/entitlements.ts:7-14; app/(chat)/api/document/route.ts:12-17; app/(chat)/api/chat/route.ts:48</dd>
+          <dt>Reasoning</dt>
+          <dd>Message-count rate limits (10/hr IP + 10/hr user) and maxDuration=60/stepCountIs(5) bound request volume, but there is no cap on individual message or document content length and no per-request token budget, so a single huge prompt or document can drive disproportionate model/token cost. Static, capped MEDIUM.</dd>
+        </dl>
+        
+          <div class="controls">
+            <strong>Recommended controls:</strong>
+            <ul style="margin: 4px 0 0; padding-left: 20px;">
+              
+                <li><a href="https://owaspai.org/go/dosinputvalidation/" target="_blank" rel="noopener">CTRL-INPUT-DOSINPUTVALIDATION</a> — Validate and bound input size before model invocation.</li>
+              
+                <li><a href="https://owaspai.org/go/limitresources/" target="_blank" rel="noopener">CTRL-INPUT-LIMITRESOURCES</a> — Apply token/compute budgets per request in addition to count-based limits.</li>
+              
+                <li><a href="https://owaspai.org/go/ratelimit/" target="_blank" rel="noopener">CTRL-INPUT-RATELIMIT</a> — Keep rate limiting (present) and extend to token volume.</li>
+              
+            </ul>
+          </div>
+      </div>
+    
+      <div class="finding">
+        <div class="finding-head">
+          <p class="finding-title">
+            <a href="https://owaspai.org/go/monitoruse/" target="_blank" rel="noopener">CTRL-INPUT-MONITORUSE — monitoruse</a>
+          </p>
+          <span style="display:flex; gap:6px; align-items:center; flex-shrink:0;">
+            <span class="ev-badge ev-static">static</span>
+            <span class="verdict-badge" style="background: #f9a825;">MEDIUM</span>
+          </span>
+        </div>
+        
+        <dl>
+          <dt>Evidence</dt>
+          <dd>lib/errors.ts:62-66; app/(chat)/api/chat/route.ts:344</dd>
+          <dt>Reasoning</dt>
+          <dd>Only error-level console logging and message counts exist; there is no monitoring of prompt content for abuse, jailbreak attempts, or anomalous tool-use patterns.</dd>
+        </dl>
+        
+          <div class="controls">
+            <strong>Recommended controls:</strong>
+            <ul style="margin: 4px 0 0; padding-left: 20px;">
+              
+                <li><a href="https://owaspai.org/go/monitoruse/" target="_blank" rel="noopener">CTRL-INPUT-MONITORUSE</a> — Log and monitor prompts/tool calls for abuse and injection signals.</li>
+              
+            </ul>
+          </div>
+      </div>
+    
+      <div class="finding">
+        <div class="finding-head">
+          <p class="finding-title">
+            <a href="https://owaspai.org/go/sensitiveoutputhandling/" target="_blank" rel="noopener">CTRL-INPUT-SENSITIVEOUTPUTHANDLING — sensitiveoutputhandling</a>
+          </p>
+          <span style="display:flex; gap:6px; align-items:center; flex-shrink:0;">
+            <span class="ev-badge ev-static">static</span>
+            <span class="verdict-badge" style="background: #f9a825;">MEDIUM</span>
+          </span>
+        </div>
+        
+        <dl>
+          <dt>Evidence</dt>
+          <dd>app/(chat)/api/chat/route.ts:242-292</dd>
+          <dt>Reasoning</dt>
+          <dd>Model output is merged into the UI stream and persisted with no scanning/redaction for sensitive content the model might surface.</dd>
+        </dl>
+        
+          <div class="controls">
+            <strong>Recommended controls:</strong>
+            <ul style="margin: 4px 0 0; padding-left: 20px;">
+              
+                <li><a href="https://owaspai.org/go/sensitiveoutputhandling/" target="_blank" rel="noopener">CTRL-INPUT-SENSITIVEOUTPUTHANDLING</a> — Screen model output for sensitive data before display/persistence.</li>
+              
+            </ul>
+          </div>
+      </div>
+    
+  </section>
+  <section class="category-section">
+    <h2>
+      <span class="light" style="background: #2e7d32;"></span>
+      Development-time
+    </h2>
+    
+      <div class="finding">
+        <div class="finding-head">
+          <p class="finding-title">
+            <a href="https://owaspai.org/go/supplychainmanage/" target="_blank" rel="noopener">CTRL-DEV-SUPPLYCHAINMANAGE — supplychainmanage</a>
+          </p>
+          <span style="display:flex; gap:6px; align-items:center; flex-shrink:0;">
+            <span class="ev-badge ev-static">static</span>
+            <span class="verdict-badge" style="background: #f9a825;">MEDIUM</span>
+          </span>
+        </div>
+        
+        <dl>
+          <dt>Evidence</dt>
+          <dd>lib/ai/models.ts:122-150; artifacts/code/client.tsx:137-139</dd>
+          <dt>Reasoning</dt>
+          <dd>Models are resolved at runtime by id from the Vercel AI Gateway with provider fallbacks and no integrity pinning, and the Pyodide runtime is loaded from a public CDN (cdn.jsdelivr.net) without subresource integrity. A compromised CDN/gateway entry is an untracked supply-chain exposure.</dd>
+        </dl>
+        
+          <div class="controls">
+            <strong>Recommended controls:</strong>
+            <ul style="margin: 4px 0 0; padding-left: 20px;">
+              
+                <li><a href="https://owaspai.org/go/supplychainmanage/" target="_blank" rel="noopener">CTRL-DEV-SUPPLYCHAINMANAGE</a> — Track and pin model/runtime supply chain; add SRI for CDN assets.</li>
+              
+            </ul>
+          </div>
+      </div>
+    
+  </section>
+  <section class="category-section">
+    <h2>
+      <span class="light" style="background: #f9a825;"></span>
+      Runtime
+    </h2>
+    
+      <div class="finding">
+        <div class="finding-head">
+          <p class="finding-title">
+            <a href="https://owaspai.org/go/outputcontainsconventionalinjection/" target="_blank" rel="noopener">RUN-OUTPUTCONTAINSCONVENTIONALINJECTION — outputcontainsconventionalinjection</a>
+          </p>
+          <span style="display:flex; gap:6px; align-items:center; flex-shrink:0;">
+            <span class="ev-badge ev-static">static</span>
+            <span class="verdict-badge" style="background: #f9a825;">MEDIUM</span>
+          </span>
+        </div>
+        
+        <dl>
+          <dt>Evidence</dt>
+          <dd>artifacts/code/client.tsx:137-183; lib/ai/tools/edit-document.ts:62-86</dd>
+          <dt>Reasoning</dt>
+          <dd>LLM-generated code is streamed into a Pyodide runPythonAsync(content) execution path and into client-side rendering. Model output is treated as executable/renderable without an encode/escape step, so model output containing conventional injection (e.g., crafted Python or markup) executes in the user&#39;s browser session. Blast radius is the user&#39;s own tab (browser sandbox), so MEDIUM not higher.</dd>
+        </dl>
+        
+          <div class="controls">
+            <strong>Recommended controls:</strong>
+            <ul style="margin: 4px 0 0; padding-left: 20px;">
+              
+                <li><a href="https://owaspai.org/go/encodemodeloutput/" target="_blank" rel="noopener">CTRL-RUN-ENCODEMODELOUTPUT</a> — Encode/escape model output before it reaches an interpreter or renderer.</li>
+              
+                <li><a href="https://owaspai.org/go/oversight/" target="_blank" rel="noopener">GEN-OVERSIGHT</a> — Require explicit user action before executing generated code (already user-initiated via Run).</li>
+              
+            </ul>
+          </div>
+      </div>
+    
+      <div class="finding">
+        <div class="finding-head">
+          <p class="finding-title">
+            <a href="https://owaspai.org/go/runtimemodeliointegrity/" target="_blank" rel="noopener">CTRL-RUN-RUNTIMEMODELIOINTEGRITY — runtimemodeliointegrity</a>
+          </p>
+          <span style="display:flex; gap:6px; align-items:center; flex-shrink:0;">
+            <span class="ev-badge ev-static">static</span>
+            <span class="verdict-badge" style="background: #f9a825;">MEDIUM</span>
+          </span>
+        </div>
+        
+        <dl>
+          <dt>Evidence</dt>
+          <dd>lib/ai/tools/get-weather.ts:66-76</dd>
+          <dt>Reasoning</dt>
+          <dd>Tool outputs (third-party fetch JSON) and stored document content re-enter the model with no integrity/validation step, so manipulated external data can influence model behavior in subsequent steps.</dd>
+        </dl>
+        
+          <div class="controls">
+            <strong>Recommended controls:</strong>
+            <ul style="margin: 4px 0 0; padding-left: 20px;">
+              
+                <li><a href="https://owaspai.org/go/runtimemodeliointegrity/" target="_blank" rel="noopener">CTRL-RUN-RUNTIMEMODELIOINTEGRITY</a> — Validate and constrain tool I/O before feeding it back to the model.</li>
+              
+            </ul>
+          </div>
+      </div>
+    
+      <div class="finding">
+        <div class="finding-head">
+          <p class="finding-title">
+            <a href="https://owaspai.org/go/genericsecthreats/" target="_blank" rel="noopener">RUN-GENERICSECTHREATS — genericsecthreats</a>
+          </p>
+          <span style="display:flex; gap:6px; align-items:center; flex-shrink:0;">
+            <span class="ev-badge ev-static">static</span>
+            <span class="verdict-badge" style="background: #9e9d24;">LOW</span>
+          </span>
+        </div>
+        
+        <dl>
+          <dt>Evidence</dt>
+          <dd>app/(chat)/api/files/upload/route.ts:48-54</dd>
+          <dt>Reasoning</dt>
+          <dd>Uploaded files are validated (5MB, JPEG/PNG) and the filename is sanitized, but blobs are stored with access:&#39;public&#39;, making uploaded images publicly reachable by URL. Low because content is image-only and user-supplied, but worth noting.</dd>
+        </dl>
+        
+          <div class="controls">
+            <strong>Recommended controls:</strong>
+            <ul style="margin: 4px 0 0; padding-left: 20px;">
+              
+                <li><a href="https://owaspai.org/go/secprogram/" target="_blank" rel="noopener">GEN-SECPROGRAM</a> — Review public-blob exposure and apply access scoping where appropriate.</li>
+              
+            </ul>
+          </div>
+      </div>
+    
+  </section>
+  <section class="category-section">
+    <h2>
+      <span class="light" style="background: #2e7d32;"></span>
+      Testing
+    </h2>
+    
+      <div class="finding">
+        <div class="finding-head">
+          <p class="finding-title">
+            <a href="https://owaspai.org/go/testingpromptinjection/" target="_blank" rel="noopener">TEST-TESTINGPROMPTINJECTION — testingpromptinjection</a>
+          </p>
+          <span style="display:flex; gap:6px; align-items:center; flex-shrink:0;">
+            <span class="ev-badge ev-static">static</span>
+            <span class="verdict-badge" style="background: #f9a825;">MEDIUM</span>
+          </span>
+        </div>
+        
+        <dl>
+          <dt>Evidence</dt>
+          <dd>absence — no PI/jailbreak test suite found in repo test directories</dd>
+          <dt>Reasoning</dt>
+          <dd>The injection-relevant defenses (none beyond model alignment + ownership/approval) are not covered by any automated prompt-injection test, leaving regressions undetected.</dd>
+        </dl>
+        
+          <div class="controls">
+            <strong>Recommended controls:</strong>
+            <ul style="margin: 4px 0 0; padding-left: 20px;">
+              
+                <li><a href="https://owaspai.org/go/testingtoolsgenai/" target="_blank" rel="noopener">TEST-TESTINGTOOLSGENAI</a> — Integrate GenAI red-team/eval tooling into CI.</li>
+              
+            </ul>
+          </div>
+      </div>
+    
+  </section>
+  <section class="category-section">
+    <h2>
+      <span class="light" style="background: #2e7d32;"></span>
+      Privacy
+    </h2>
+    
+      <div class="finding">
+        <div class="finding-head">
+          <p class="finding-title">
+            <a href="https://owaspai.org/go/aiprivacy/" target="_blank" rel="noopener">PRIV-AIPRIVACY — aiprivacy</a>
+          </p>
+          <span style="display:flex; gap:6px; align-items:center; flex-shrink:0;">
+            <span class="ev-badge ev-static">static</span>
+            <span class="verdict-badge" style="background: #f9a825;">MEDIUM</span>
+          </span>
+        </div>
+        
+        <dl>
+          <dt>Evidence</dt>
+          <dd>app/(chat)/api/chat/route.ts:159-180; lib/ai/prompts.ts:58-64</dd>
+          <dt>Reasoning</dt>
+          <dd>Precise geolocation (lat/lon/city/country) is injected into every prompt, chats/messages persist indefinitely in Postgres, and prompts are forwarded to multiple third-party inference providers via the gateway, with no documented retention, minimization, or consent. Engages GDPR Art.5(1)(c)/(e) and CPRA disclosure.</dd>
+        </dl>
+        
+          <div class="controls">
+            <strong>Recommended controls:</strong>
+            <ul style="margin: 4px 0 0; padding-left: 20px;">
+              
+                <li><a href="https://owaspai.org/go/dataminimize/" target="_blank" rel="noopener">GEN-DATAMINIMIZE</a> — Reduce geolocation precision / include only when needed.</li>
+              
+                <li><a href="https://owaspai.org/go/shortretain/" target="_blank" rel="noopener">GEN-SHORTRETAIN</a> — Define and enforce a retention TTL for chats and documents.</li>
+              
+            </ul>
+          </div>
+      </div>
+    
+  </section>
+
+
+<section class="category-section" style="page-break-before: always;">
+  <h2>Appendix · Verdict ledger</h2>
+  <p style="margin: -4px 0 8px; color: var(--muted); font-size: 13px;">
+    Every applicable taxonomy entry with an explicit verdict — including every
+    justified N/A (shaded). This is the L2 completeness credential: silence on an
+    applicable entry is what v1.0.0 forbids.
+  </p>
+  <table class="ledger">
+    <thead><tr><th>Entry</th><th>Verdict</th><th>Applicability</th><th>Rationale</th></tr></thead>
+    <tbody>
+      <tr class="row-na">
+            <td><code>CTRL-DEV-CONFCOMPUTE</code></td>
+            <td class="v-na"><strong>N/A</strong></td>
+            <td>no-training-surface</td>
+            <td>Confidential compute for training; no training (training:0).</td>
+          </tr><tr class="row-na">
+            <td><code>CTRL-DEV-DATAQUALITYCONTROL</code></td>
+            <td class="v-na"><strong>N/A</strong></td>
+            <td>no-training-surface</td>
+            <td>No training data pipeline (training:0).</td>
+          </tr><tr class="row-na">
+            <td><code>CTRL-DEV-DEVSECURITY</code></td>
+            <td class="v-na"><strong>N/A</strong></td>
+            <td>no-training-surface</td>
+            <td>Development-environment security for model training; no training (training:0).</td>
+          </tr><tr class="row-na">
+            <td><code>CTRL-DEV-FEDERATEDLEARNING</code></td>
+            <td class="v-na"><strong>N/A</strong></td>
+            <td>no-training-surface</td>
+            <td>No training (training:0).</td>
+          </tr><tr class="row-na">
+            <td><code>CTRL-DEV-MORETRAINDATA</code></td>
+            <td class="v-na"><strong>N/A</strong></td>
+            <td>no-training-surface</td>
+            <td>No training (training:0).</td>
+          </tr><tr class="row-na">
+            <td><code>CTRL-DEV-POISONROBUSTMODEL</code></td>
+            <td class="v-na"><strong>N/A</strong></td>
+            <td>no-training-surface</td>
+            <td>No training (training:0).</td>
+          </tr><tr class="row-na">
+            <td><code>CTRL-DEV-SEGREGATEDATA</code></td>
+            <td class="v-na"><strong>N/A</strong></td>
+            <td>no-training-surface</td>
+            <td>No training data to segregate (training:0).</td>
+          </tr><tr class="">
+            <td><code>CTRL-DEV-SUPPLYCHAINMANAGE</code></td>
+            <td class=""><strong>MEDIUM</strong></td>
+            <td>applicable</td>
+            <td>Model supply chain is the Vercel AI Gateway pulled by id with gatewayOrder fallbacks; no integrity pinning/SBOM for models, and Pyodide is loaded from a public CDN URL (lib/ai/models.ts:126, artifacts/code/client.tsx:138).</td>
+          </tr><tr class="row-na">
+            <td><code>CTRL-DEV-TRAINADVERSARIAL</code></td>
+            <td class="v-na"><strong>N/A</strong></td>
+            <td>no-predictive-surface</td>
+            <td>Predictive-ML-only control.</td>
+          </tr><tr class="row-na">
+            <td><code>CTRL-DEV-TRAINDATADISTORTION</code></td>
+            <td class="v-na"><strong>N/A</strong></td>
+            <td>no-training-surface</td>
+            <td>No training (training:0).</td>
+          </tr><tr class="row-na">
+            <td><code>CTRL-INPUT-ADVERSARIALROBUSTDISTILLATION</code></td>
+            <td class="v-na"><strong>N/A</strong></td>
+            <td>no-predictive-surface</td>
+            <td>Predictive-ML-only control.</td>
+          </tr><tr class="row-na">
+            <td><code>CTRL-INPUT-ANOMALOUSINPUTHANDLING</code></td>
+            <td class="v-na"><strong>N/A</strong></td>
+            <td>no-predictive-surface</td>
+            <td>Predictive-ML-only control; no classifier.</td>
+          </tr><tr class="">
+            <td><code>CTRL-INPUT-DOSINPUTVALIDATION</code></td>
+            <td class=""><strong>MEDIUM</strong></td>
+            <td>applicable</td>
+            <td>Chat body validated for shape (postRequestBodySchema) but no max length on message/document content; uploads capped at 5MB image only (app/(chat)/api/chat/route.ts:65, files/upload/route.ts:10).</td>
+          </tr><tr class="row-na">
+            <td><code>CTRL-INPUT-EVASIONINPUTHANDLING</code></td>
+            <td class="v-na"><strong>N/A</strong></td>
+            <td>no-predictive-surface</td>
+            <td>Predictive-ML-only control.</td>
+          </tr><tr class="row-na">
+            <td><code>CTRL-INPUT-EVASIONROBUSTMODEL</code></td>
+            <td class="v-na"><strong>N/A</strong></td>
+            <td>no-predictive-surface</td>
+            <td>Predictive-ML-only control.</td>
+          </tr><tr class="row-na">
+            <td><code>CTRL-INPUT-INPUTDISTORTION</code></td>
+            <td class="v-na"><strong>N/A</strong></td>
+            <td>no-predictive-surface</td>
+            <td>Predictive-ML-only control.</td>
+          </tr><tr class="">
+            <td><code>CTRL-INPUT-INPUTSEGREGATION</code></td>
+            <td class=""><strong>MEDIUM</strong></td>
+            <td>applicable</td>
+            <td>User input and system instructions are joined as plain concatenated text with no structural segregation or marking (lib/ai/prompts.ts:76-79).</td>
+          </tr><tr class="">
+            <td><code>CTRL-INPUT-LIMITRESOURCES</code></td>
+            <td class=""><strong>LOW</strong></td>
+            <td>applicable</td>
+            <td>stepCountIs(5), maxDuration=60, and rate limits cap agent/server resource use; no per-request token cap (app/(chat)/api/chat/route.ts:48,198).</td>
+          </tr><tr class="">
+            <td><code>CTRL-INPUT-MODELACCESSCONTROL</code></td>
+            <td class=""><strong>LOW</strong></td>
+            <td>applicable</td>
+            <td>All chat/model routes require auth(); selectedChatModel is constrained to allowedModelIds allowlist (app/(chat)/api/chat/route.ts:83-85).</td>
+          </tr><tr class="row-na">
+            <td><code>CTRL-INPUT-MODELWATERMARKING</code></td>
+            <td class="v-na"><strong>N/A</strong></td>
+            <td>applicable</td>
+            <td>Watermarking is a model-owner control; models are third-party hosted.</td>
+          </tr><tr class="">
+            <td><code>CTRL-INPUT-MONITORUSE</code></td>
+            <td class=""><strong>MEDIUM</strong></td>
+            <td>applicable</td>
+            <td>Only console.error logging and message counts exist; no abuse/anomaly monitoring of prompt content (lib/errors.ts:62, app/(chat)/api/chat/route.ts:344).</td>
+          </tr><tr class="row-na">
+            <td><code>CTRL-INPUT-OBSCURECONFIDENCE</code></td>
+            <td class="v-na"><strong>N/A</strong></td>
+            <td>applicable</td>
+            <td>No confidence scores are exposed; chat returns free text only.</td>
+          </tr><tr class="">
+            <td><code>CTRL-INPUT-PROMPTINJECTIONIOHANDLING</code></td>
+            <td class=""><strong>MEDIUM</strong></td>
+            <td>applicable</td>
+            <td>No I/O-side handling of prompt injection (no delimiters, no detection, no output scrubbing) on the streamText path (app/(chat)/api/chat/route.ts:196-197).</td>
+          </tr><tr class="">
+            <td><code>CTRL-INPUT-PROMPTINJECTIONSEVENLAYERS</code></td>
+            <td class=""><strong>MEDIUM</strong></td>
+            <td>applicable</td>
+            <td>Few of the seven layers are present: no input/output prompt-injection filtering, no segregation, no dedicated PI detection; only model alignment + tool approval mitigate (app/(chat)/api/chat/route.ts:194).</td>
+          </tr><tr class="">
+            <td><code>CTRL-INPUT-RATELIMIT</code></td>
+            <td class=""><strong>LOW</strong></td>
+            <td>applicable</td>
+            <td>IP rate limit (10/hr via Redis) plus per-user entitlement (10 msg/hr) are implemented — surfaces.json rate-limit:0 is a false negative; verified in lib/ratelimit.ts:23 and lib/ai/entitlements.ts:8.</td>
+          </tr><tr class="">
+            <td><code>CTRL-INPUT-SENSITIVEOUTPUTHANDLING</code></td>
+            <td class=""><strong>MEDIUM</strong></td>
+            <td>applicable</td>
+            <td>No sensitive-output handling; model output streamed and persisted verbatim (app/(chat)/api/chat/route.ts:242,257).</td>
+          </tr><tr class="row-na">
+            <td><code>CTRL-INPUT-SMALLMODEL</code></td>
+            <td class="v-na"><strong>N/A</strong></td>
+            <td>applicable</td>
+            <td>Uses large hosted gateway models by design; small-model control not adopted and not required for this threat profile.</td>
+          </tr><tr class="row-na">
+            <td><code>CTRL-INPUT-TRAINADVERSARIAL</code></td>
+            <td class="v-na"><strong>N/A</strong></td>
+            <td>no-predictive-surface</td>
+            <td>Predictive-ML-only control.</td>
+          </tr><tr class="">
+            <td><code>CTRL-INPUT-UNWANTEDINPUTSERIESHANDLING</code></td>
+            <td class=""><strong>LOW</strong></td>
+            <td>applicable</td>
+            <td>Per-hour message caps blunt repeated-probe series (entitlements 10/hr), but no detection of adversarial prompt sequences.</td>
+          </tr><tr class="row-na">
+            <td><code>CTRL-RUN-AUGMENTATIONDATACONFIDENTIALITY</code></td>
+            <td class="v-na"><strong>N/A</strong></td>
+            <td>no-rag-surface</td>
+            <td>No RAG augmentation store (rag-embeddings:0).</td>
+          </tr><tr class="row-na">
+            <td><code>CTRL-RUN-AUGMENTATIONDATAINTEGRITY</code></td>
+            <td class="v-na"><strong>N/A</strong></td>
+            <td>no-rag-surface</td>
+            <td>No RAG augmentation store (rag-embeddings:0).</td>
+          </tr><tr class="">
+            <td><code>CTRL-RUN-ENCODEMODELOUTPUT</code></td>
+            <td class=""><strong>MEDIUM</strong></td>
+            <td>applicable</td>
+            <td>Model output is not encoded/escaped before being routed to client rendering and a Pyodide exec path; relies on React/markdown rendering safety only (artifacts/code/client.tsx:183).</td>
+          </tr><tr class="">
+            <td><code>CTRL-RUN-MODELINPUTCONFIDENTIALITY</code></td>
+            <td class=""><strong>LOW</strong></td>
+            <td>applicable</td>
+            <td>Prompts (incl. geolocation) are sent to third-party providers over the gateway; TLS in transit but no input minimization (app/(chat)/api/chat/route.ts:159).</td>
+          </tr><tr class="row-na">
+            <td><code>CTRL-RUN-MODELOBFUSCATION</code></td>
+            <td class="v-na"><strong>N/A</strong></td>
+            <td>applicable</td>
+            <td>No local model to obfuscate (gateway-hosted).</td>
+          </tr><tr class="row-na">
+            <td><code>CTRL-RUN-RUNTIMEMODELCONFIDENTIALITY</code></td>
+            <td class="v-na"><strong>N/A</strong></td>
+            <td>applicable</td>
+            <td>No local model weights at runtime; confidentiality is the gateway provider&#39;s responsibility.</td>
+          </tr><tr class="">
+            <td><code>CTRL-RUN-RUNTIMEMODELINTEGRITY</code></td>
+            <td class=""><strong>LOW</strong></td>
+            <td>applicable</td>
+            <td>Model integrity is delegated to the gateway over TLS; no app-side integrity check but no local weights to protect (lib/ai/models.ts:126).</td>
+          </tr><tr class="">
+            <td><code>CTRL-RUN-RUNTIMEMODELIOINTEGRITY</code></td>
+            <td class=""><strong>MEDIUM</strong></td>
+            <td>applicable</td>
+            <td>No integrity controls on model I/O: tool outputs and external fetch results re-enter the prompt without validation (lib/ai/tools/get-weather.ts:66).</td>
+          </tr><tr class="row-na">
+            <td><code>DEV-DATAPOISON</code></td>
+            <td class="v-na"><strong>N/A</strong></td>
+            <td>no-training-surface</td>
+            <td>No training data pipeline (training:0).</td>
+          </tr><tr class="">
+            <td><code>DEV-DEVCODELEAK</code></td>
+            <td class=""><strong>LOW</strong></td>
+            <td>applicable</td>
+            <td>Open-source repo; no secrets in code, secrets via env (process.env.AUTH_SECRET, REDIS_URL), but supply-chain of npm deps is unvetted in-repo.</td>
+          </tr><tr class="row-na">
+            <td><code>DEV-DEVDATALEAK</code></td>
+            <td class="v-na"><strong>N/A</strong></td>
+            <td>no-training-surface</td>
+            <td>No training data (training:0).</td>
+          </tr><tr class="row-na">
+            <td><code>DEV-DEVELOPMENTTIME</code></td>
+            <td class="v-na"><strong>N/A</strong></td>
+            <td>no-training-surface</td>
+            <td>No training/fine-tuning pipeline (training:0); dev-time model-build threats do not apply.</td>
+          </tr><tr class="row-na">
+            <td><code>DEV-DEVLEAK</code></td>
+            <td class="v-na"><strong>N/A</strong></td>
+            <td>no-training-surface</td>
+            <td>No development-time data/model artifacts to leak (training:0).</td>
+          </tr><tr class="row-na">
+            <td><code>DEV-DEVMODELLEAK</code></td>
+            <td class="v-na"><strong>N/A</strong></td>
+            <td>no-training-surface</td>
+            <td>No own model to leak at dev time (training:0).</td>
+          </tr><tr class="row-na">
+            <td><code>DEV-DEVMODELPOISON</code></td>
+            <td class="v-na"><strong>N/A</strong></td>
+            <td>no-training-surface</td>
+            <td>No own model development (training:0).</td>
+          </tr><tr class="row-na">
+            <td><code>DEV-MODELPOISON</code></td>
+            <td class="v-na"><strong>N/A</strong></td>
+            <td>no-training-surface</td>
+            <td>App does not train or fine-tune a model (training:0).</td>
+          </tr><tr class="">
+            <td><code>DEV-SUPPLYMODELPOISON</code></td>
+            <td class=""><strong>LOW</strong></td>
+            <td>applicable</td>
+            <td>Models are pulled from the Vercel AI Gateway by id at runtime (lib/ai/models.ts:126); a compromised upstream provider could serve a poisoned model, but selection is constrained to a curated allowlist.</td>
+          </tr><tr class="">
+            <td><code>GEN-AGENTICAITHREATS</code></td>
+            <td class=""><strong>MEDIUM</strong></td>
+            <td>applicable</td>
+            <td>Multi-step agent (stepCountIs(5)) with tools that mutate stored documents and call external APIs; injection-driven tool misuse is partly mitigated by ownership checks and tool approval but not by input segregation (app/(chat)/api/chat/route.ts:198-235).</td>
+          </tr><tr class="">
+            <td><code>GEN-AIPROGRAM</code></td>
+            <td class=""><strong>MEDIUM</strong></td>
+            <td>applicable</td>
+            <td>No evidence of an AI management program (policies, ownership, lifecycle) in the codebase.</td>
+          </tr><tr class="">
+            <td><code>GEN-AITRANSPARENCY</code></td>
+            <td class=""><strong>MEDIUM</strong></td>
+            <td>applicable</td>
+            <td>No AI-interaction disclosure or AI-content labeling surfaced in code; relevant to EU AI Act Art.50 (no disclosure string found in prompts/UI routes audited).</td>
+          </tr><tr class="row-na">
+            <td><code>GEN-ALLOWEDDATA</code></td>
+            <td class="v-na"><strong>N/A</strong></td>
+            <td>no-training-surface</td>
+            <td>Pertains to legal basis for training data; no training (training:0).</td>
+          </tr><tr class="">
+            <td><code>GEN-CHECKCOMPLIANCE</code></td>
+            <td class=""><strong>MEDIUM</strong></td>
+            <td>applicable</td>
+            <td>No compliance mapping (EU AI Act, GDPR/CCPA) evidenced in repo; geolocation + chat persistence raise privacy obligations.</td>
+          </tr><tr class="">
+            <td><code>GEN-CONTINUOUSVALIDATION</code></td>
+            <td class=""><strong>LOW</strong></td>
+            <td>applicable</td>
+            <td>No automated AI-safety regression/eval pipeline evidenced; standard test tooling only.</td>
+          </tr><tr class="">
+            <td><code>GEN-DATALIMIT</code></td>
+            <td class=""><strong>MEDIUM</strong></td>
+            <td>applicable</td>
+            <td>No retention limit on persisted chats/messages/documents; deleteAllChatsByUserId exists but no automatic expiry (lib/db/queries.ts).</td>
+          </tr><tr class="">
+            <td><code>GEN-DATAMINIMIZE</code></td>
+            <td class=""><strong>MEDIUM</strong></td>
+            <td>applicable</td>
+            <td>Precise geolocation (lat/lon/city/country) is injected into every prompt and stored, exceeding what the chat function requires (app/(chat)/api/chat/route.ts:159, lib/ai/prompts.ts:58).</td>
+          </tr><tr class="row-na">
+            <td><code>GEN-DEVPROGRAM</code></td>
+            <td class="v-na"><strong>N/A</strong></td>
+            <td>no-training-surface</td>
+            <td>No model-development program because no model is developed (training:0).</td>
+          </tr><tr class="row-na">
+            <td><code>GEN-DISCRETE</code></td>
+            <td class="v-na"><strong>N/A</strong></td>
+            <td>no-training-surface</td>
+            <td>Concerns minimizing data stored in a trained model; no own model (training:0).</td>
+          </tr><tr class="row-na">
+            <td><code>GEN-EXPLAINABILITY</code></td>
+            <td class="v-na"><strong>N/A</strong></td>
+            <td>governance-na</td>
+            <td>Explainability of decisions is not applicable to an open-ended chat assistant making no automated decisions about users.</td>
+          </tr><tr class="">
+            <td><code>GEN-GENERALCONTROLS</code></td>
+            <td class=""><strong>LOW</strong></td>
+            <td>applicable</td>
+            <td>Auth, ownership, rate-limit, and input validation controls exist but no documented AI governance program in-repo.</td>
+          </tr><tr class="">
+            <td><code>GEN-GOVERNANCECONTROLS</code></td>
+            <td class=""><strong>MEDIUM</strong></td>
+            <td>applicable</td>
+            <td>No AI governance, risk register, or model inventory documented in the repository.</td>
+          </tr><tr class="">
+            <td><code>GEN-LEASTMODELPRIVILEGE</code></td>
+            <td class=""><strong>LOW</strong></td>
+            <td>applicable</td>
+            <td>Tools are scoped and document tools re-check ownership (document.userId === session.user.id) before acting; weather/geocode reach only fixed public APIs (lib/ai/tools/update-document.ts:38, edit-document.ts:38).</td>
+          </tr><tr class="">
+            <td><code>GEN-LIMITUNWANTED</code></td>
+            <td class=""><strong>MEDIUM</strong></td>
+            <td>applicable</td>
+            <td>No content/output moderation or unwanted-behavior filter on model responses; reliance on upstream model alignment only (app/(chat)/api/chat/route.ts:294 onError only handles generic errors).</td>
+          </tr><tr class="row-na">
+            <td><code>GEN-MODELALIGNMENT</code></td>
+            <td class="v-na"><strong>N/A</strong></td>
+            <td>no-training-surface</td>
+            <td>Alignment is a property of the trained model; app does not train/fine-tune (training:0).</td>
+          </tr><tr class="row-na">
+            <td><code>GEN-OBFUSCATETRAININGDATA</code></td>
+            <td class="v-na"><strong>N/A</strong></td>
+            <td>no-training-surface</td>
+            <td>No training data to obfuscate (training:0).</td>
+          </tr><tr class="">
+            <td><code>GEN-OVERSIGHT</code></td>
+            <td class=""><strong>LOW</strong></td>
+            <td>applicable</td>
+            <td>A tool-approval flow exists (isToolApprovalFlow, approval-responded/output-denied states) giving human-in-the-loop gating for tool calls (app/(chat)/api/chat/route.ts:100,123-151).</td>
+          </tr><tr class="">
+            <td><code>GEN-SECDEVPROGRAM</code></td>
+            <td class=""><strong>LOW</strong></td>
+            <td>applicable</td>
+            <td>Repo uses typed schemas and linting; no documented secure-development standard for AI features.</td>
+          </tr><tr class="row-na">
+            <td><code>GEN-SECEDUCATE</code></td>
+            <td class="v-na"><strong>N/A</strong></td>
+            <td>governance-na</td>
+            <td>Workforce security education is an org-process control not observable from a codebase audit.</td>
+          </tr><tr class="">
+            <td><code>GEN-SECPROGRAM</code></td>
+            <td class=""><strong>LOW</strong></td>
+            <td>applicable</td>
+            <td>Security controls are coded ad hoc (errors.ts, ratelimit.ts) with no documented security program.</td>
+          </tr><tr class="">
+            <td><code>GEN-SHORTRETAIN</code></td>
+            <td class=""><strong>MEDIUM</strong></td>
+            <td>applicable</td>
+            <td>Chats, messages, documents and votes persist indefinitely in Postgres with no TTL (lib/db/queries.ts saveChat/saveMessages/saveDocument).</td>
+          </tr><tr class="">
+            <td><code>GEN-UNWANTEDBIASTESTING</code></td>
+            <td class=""><strong>LOW</strong></td>
+            <td>applicable</td>
+            <td>No bias testing of model outputs in repo; lower priority for a general chat assistant with no consequential decisions.</td>
+          </tr><tr class="">
+            <td><code>INPUT-AIRESOURCEEXHAUSTION</code></td>
+            <td class=""><strong>MEDIUM</strong></td>
+            <td>applicable</td>
+            <td>Rate limiting exists (checkIpRateLimit + per-user 10 msg/hr entitlement) but no input-size cap on message/document content and Pyodide runs unbounded user code client-side (lib/ratelimit.ts:23, lib/ai/entitlements.ts:8, app/(chat)/api/document/route.ts:12).</td>
+          </tr><tr class="">
+            <td><code>INPUT-DIRECTPROMPTINJECTION</code></td>
+            <td class=""><strong>MEDIUM</strong></td>
+            <td>applicable</td>
+            <td>User message is concatenated to system prompt with no segregation/delimiting; jailbreak of regularPrompt is unmitigated (lib/ai/prompts.ts:66-80).</td>
+          </tr><tr class="">
+            <td><code>INPUT-DISCLOSUREINOUTPUT</code></td>
+            <td class=""><strong>LOW</strong></td>
+            <td>applicable</td>
+            <td>No output filtering for sensitive data; model output is streamed verbatim to client and persisted (app/(chat)/api/chat/route.ts:242).</td>
+          </tr><tr class="">
+            <td><code>INPUT-DISCLOSUREUSE</code></td>
+            <td class=""><strong>LOW</strong></td>
+            <td>applicable</td>
+            <td>Geolocation hints (city/country/lat/lon) are injected into every prompt and sent to third-party gateway models (app/(chat)/api/chat/route.ts:159-166, lib/ai/prompts.ts:58).</td>
+          </tr><tr class="row-na">
+            <td><code>INPUT-EVASION</code></td>
+            <td class="v-na"><strong>N/A</strong></td>
+            <td>no-predictive-surface</td>
+            <td>Evasion targets a classifier decision boundary; this app has no predictive classifier (surfaces training:0, no rag/classifier).</td>
+          </tr><tr class="row-na">
+            <td><code>INPUT-EVASIONAFTERPOISON</code></td>
+            <td class="v-na"><strong>N/A</strong></td>
+            <td>no-training-surface</td>
+            <td>Requires poisoning of an own-trained model; app only consumes hosted gateway models (lib/ai/providers via Vercel AI Gateway), training:0.</td>
+          </tr><tr class="">
+            <td><code>INPUT-INDIRECTPROMPTINJECTION</code></td>
+            <td class=""><strong>MEDIUM</strong></td>
+            <td>applicable</td>
+            <td>getWeather fetches third-party JSON (open-meteo) and requestSuggestions feeds prior document content back to the model; untrusted external text re-enters the loop unsanitized (lib/ai/tools/get-weather.ts:66, lib/ai/tools/request-suggestions.ts:52).</td>
+          </tr><tr class="">
+            <td><code>INPUT-INPUTTHREATS</code></td>
+            <td class=""><strong>MEDIUM</strong></td>
+            <td>applicable</td>
+            <td>User messages flow into streamText with a static system prompt; no input-side injection defense beyond Zod shape validation (app/(chat)/api/chat/route.ts:194).</td>
+          </tr><tr class="row-na">
+            <td><code>INPUT-MODELEXFILTRATION</code></td>
+            <td class="v-na"><strong>N/A</strong></td>
+            <td>applicable</td>
+            <td>Weights are not hosted by this app (gateway-served); there is no local model file to exfiltrate.</td>
+          </tr><tr class="">
+            <td><code>INPUT-MODELINVERSIONANDMEMBERSHIP</code></td>
+            <td class=""><strong>LOW</strong></td>
+            <td>applicable</td>
+            <td>Models are third-party hosted; membership inference is the provider&#39;s risk, but app exposes raw model outputs with no confidence/obfuscation control.</td>
+          </tr><tr class="row-na">
+            <td><code>INPUT-PARTIALKNOWLEDGEEVASION</code></td>
+            <td class="v-na"><strong>N/A</strong></td>
+            <td>no-predictive-surface</td>
+            <td>Predictive-ML-only threat; no classifier surface.</td>
+          </tr><tr class="row-na">
+            <td><code>INPUT-PERFECTKNOWLEDGEEVASION</code></td>
+            <td class="v-na"><strong>N/A</strong></td>
+            <td>no-predictive-surface</td>
+            <td>Predictive-ML-only threat; no classifier surface.</td>
+          </tr><tr class="">
+            <td><code>INPUT-PROMPTINJECTION</code></td>
+            <td class=""><strong>MEDIUM</strong></td>
+            <td>applicable</td>
+            <td>Agent runs 5 tools with stepCountIs(5) and no injection guardrail; user content and tool outputs share the model context (app/(chat)/api/chat/route.ts:194-235).</td>
+          </tr><tr class="row-na">
+            <td><code>INPUT-TRANSFERATTACK</code></td>
+            <td class="v-na"><strong>N/A</strong></td>
+            <td>no-predictive-surface</td>
+            <td>Predictive-ML-only threat; no classifier surface.</td>
+          </tr><tr class="row-na">
+            <td><code>INPUT-ZEROKNOWLEDGEEVASION</code></td>
+            <td class="v-na"><strong>N/A</strong></td>
+            <td>no-predictive-surface</td>
+            <td>Predictive-ML-only threat; no classifier surface.</td>
+          </tr><tr class="">
+            <td><code>PRIV-AIPRIVACY</code></td>
+            <td class=""><strong>MEDIUM</strong></td>
+            <td>applicable</td>
+            <td>Precise geolocation injected into prompts, chats persisted indefinitely, sent to third-party providers, with no documented retention/consent (app/(chat)/api/chat/route.ts:159-180).</td>
+          </tr><tr class="row-na">
+            <td><code>RUN-AUGMENTATIONDATALEAK</code></td>
+            <td class="v-na"><strong>N/A</strong></td>
+            <td>no-rag-surface</td>
+            <td>No RAG/retrieval augmentation surface (rag-embeddings:0).</td>
+          </tr><tr class="row-na">
+            <td><code>RUN-AUGMENTATIONDATAMANIPULATION</code></td>
+            <td class="v-na"><strong>N/A</strong></td>
+            <td>no-rag-surface</td>
+            <td>No RAG/retrieval augmentation surface (rag-embeddings:0).</td>
+          </tr><tr class="">
+            <td><code>RUN-GENERICSECTHREATS</code></td>
+            <td class=""><strong>LOW</strong></td>
+            <td>applicable</td>
+            <td>Conventional app-sec posture is reasonable; ownership checks present, but uploaded files are stored with access:&#39;public&#39; (app/(chat)/api/files/upload/route.ts:52).</td>
+          </tr><tr class="">
+            <td><code>RUN-INPUTDATALEAK</code></td>
+            <td class=""><strong>LOW</strong></td>
+            <td>applicable</td>
+            <td>User prompts are persisted to Postgres and forwarded to third-party gateway providers; no redaction (app/(chat)/api/chat/route.ts:169-180).</td>
+          </tr><tr class="">
+            <td><code>RUN-OUTPUTCONTAINSCONVENTIONALINJECTION</code></td>
+            <td class=""><strong>MEDIUM</strong></td>
+            <td>applicable</td>
+            <td>Model-generated code/markdown is rendered client-side and Python output (incl. data:image base64) is shown; LLM output is also written to a Pyodide eval path (artifacts/code/client.tsx:183, components/ai-elements/code-block.tsx).</td>
+          </tr><tr class="">
+            <td><code>RUN-RUNTIMECONVENTIONALSEC</code></td>
+            <td class=""><strong>LOW</strong></td>
+            <td>applicable</td>
+            <td>Routes enforce auth() + ownership checks consistently; file upload validates size/type (app/(chat)/api/files/upload/route.ts:7-16); standard Next.js runtime hardening assumed.</td>
+          </tr><tr class="row-na">
+            <td><code>RUN-RUNTIMEMODELLEAK</code></td>
+            <td class="v-na"><strong>N/A</strong></td>
+            <td>applicable</td>
+            <td>No local model weights served by this app at runtime (gateway-hosted).</td>
+          </tr><tr class="row-na">
+            <td><code>RUN-RUNTIMEMODELPOISON</code></td>
+            <td class="v-na"><strong>N/A</strong></td>
+            <td>applicable</td>
+            <td>No locally hosted model weights at runtime to tamper with; models served via gateway.</td>
+          </tr><tr class="">
+            <td><code>TEST-TESTING</code></td>
+            <td class=""><strong>LOW</strong></td>
+            <td>applicable</td>
+            <td>Repo ships e2e/route tests but no AI-security-specific test suite was surfaced.</td>
+          </tr><tr class="">
+            <td><code>TEST-TESTINGPROMPTINJECTION</code></td>
+            <td class=""><strong>MEDIUM</strong></td>
+            <td>applicable</td>
+            <td>No prompt-injection test suite found; injection defenses are untested.</td>
+          </tr><tr class="">
+            <td><code>TEST-TESTINGTOOLSGENAI</code></td>
+            <td class=""><strong>LOW</strong></td>
+            <td>applicable</td>
+            <td>No GenAI red-team/eval tooling integrated; opportunity to add automated PI/jailbreak scans.</td>
+          </tr><tr class="row-na">
+            <td><code>TEST-TESTINGTOOLSPREDICTIVEAI</code></td>
+            <td class="v-na"><strong>N/A</strong></td>
+            <td>no-predictive-surface</td>
+            <td>Predictive-ML-only testing tools; no classifier.</td>
+          </tr>
+    </tbody>
+  </table>
+  <p style="margin-top: 8px; color: var(--muted); font-size: 12px;">
+    97 entries · 48 justified N/A.
+  </p>
+</section>
+
+<footer class="report-foot">
+  
+  <p><strong>Coverage:</strong> mean 100% · floor 100% at L1_surface_inventory · posture cap: none</p>
+  <p><strong>Evidence classes:</strong> static: 20</p>
+  <p><strong>Grounding:</strong> Findings grounded in live content fetched from owaspai.org at audit time.</p>
+  <p><strong>Snapshot date:</strong> n/a · <strong>Audit run:</strong> 2026-06-01T00:00:00Z</p>
+  <p><strong>Audit ID:</strong> <code>vercel-ai-chatbot-v1-0-0</code></p>
+  <p>Threat taxonomy: <a href="https://owaspai.org/">OWASP AI Exchange</a>. This report is not a compliance certification.</p>
+  <p class="no-print"><em>Tip: To export this report as PDF, use your browser's "Print → Save as PDF".</em></p>
+</footer>
+
+</div>
+</body>
+</html>

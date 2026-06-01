@@ -1,0 +1,1522 @@
+{
+  "audit_id": "vercel-ai-chatbot-v1-0-0",
+  "timestamp": "2026-06-01T00:00:00Z",
+  "subject": {
+    "type": "codebase",
+    "identifier": "vercel/ai-chatbot"
+  },
+  "scope": {
+    "system_kind": "agent",
+    "included_categories": [
+      "input-threats",
+      "dev-time",
+      "runtime",
+      "general-controls",
+      "testing",
+      "privacy"
+    ],
+    "excluded_categories": [],
+    "exclusion_reasons": {
+      "predictive-ml": "No training/predictive-classifier surface in surfaces.json (training:0, no model.fit/Trainer); all evasion + poisoning-of-own-model threats are N/A.",
+      "rag": "No rag-embeddings surface (0); augmentation threats N/A."
+    },
+    "jurisdictions": [
+      "EU",
+      "US-CA"
+    ]
+  },
+  "grounding": {
+    "primary_source": "live",
+    "fetched_at": "2026-06-01T00:00:00Z"
+  },
+  "coverage": {
+    "L1_surface_inventory": {
+      "covered": 27,
+      "total": 27,
+      "percent": 100
+    },
+    "L2_taxonomy_completeness": {
+      "verdicted": 85,
+      "applicable": 85,
+      "percent": 100
+    },
+    "L3_authz_matrix": {
+      "cells_filled": 30,
+      "cells_total": 30,
+      "percent": 100
+    },
+    "L4_trust_boundary": {
+      "subareas_covered": 7,
+      "subareas_total": 7,
+      "percent": 100
+    },
+    "L5_probe_verification": {
+      "high_plus_with_probe": 0,
+      "high_plus_total": 0,
+      "percent": 100
+    },
+    "L6_regulatory": {
+      "obligations_addressed": 7,
+      "obligations_total": 7,
+      "jurisdictions": [
+        "EU",
+        "US-CA"
+      ],
+      "percent": 100
+    },
+    "L7_operational": {
+      "subareas_covered": 4,
+      "subareas_total": 4,
+      "percent": 100
+    },
+    "L8_race_toctou": {
+      "patterns_inspected": 4,
+      "patterns_identified": 4,
+      "percent": 100
+    }
+  },
+  "verdict_ledger": [
+    {
+      "entry_id": "INPUT-INPUTTHREATS",
+      "verdict": "MEDIUM",
+      "applicability": "applicable",
+      "rationale": "User messages flow into streamText with a static system prompt; no input-side injection defense beyond Zod shape validation (app/(chat)/api/chat/route.ts:194)."
+    },
+    {
+      "entry_id": "INPUT-EVASION",
+      "verdict": "N/A",
+      "applicability": "no-predictive-surface",
+      "rationale": "Evasion targets a classifier decision boundary; this app has no predictive classifier (surfaces training:0, no rag/classifier)."
+    },
+    {
+      "entry_id": "INPUT-ZEROKNOWLEDGEEVASION",
+      "verdict": "N/A",
+      "applicability": "no-predictive-surface",
+      "rationale": "Predictive-ML-only threat; no classifier surface."
+    },
+    {
+      "entry_id": "INPUT-PERFECTKNOWLEDGEEVASION",
+      "verdict": "N/A",
+      "applicability": "no-predictive-surface",
+      "rationale": "Predictive-ML-only threat; no classifier surface."
+    },
+    {
+      "entry_id": "INPUT-TRANSFERATTACK",
+      "verdict": "N/A",
+      "applicability": "no-predictive-surface",
+      "rationale": "Predictive-ML-only threat; no classifier surface."
+    },
+    {
+      "entry_id": "INPUT-PARTIALKNOWLEDGEEVASION",
+      "verdict": "N/A",
+      "applicability": "no-predictive-surface",
+      "rationale": "Predictive-ML-only threat; no classifier surface."
+    },
+    {
+      "entry_id": "INPUT-EVASIONAFTERPOISON",
+      "verdict": "N/A",
+      "applicability": "no-training-surface",
+      "rationale": "Requires poisoning of an own-trained model; app only consumes hosted gateway models (lib/ai/providers via Vercel AI Gateway), training:0."
+    },
+    {
+      "entry_id": "INPUT-PROMPTINJECTION",
+      "verdict": "MEDIUM",
+      "applicability": "applicable",
+      "rationale": "Agent runs 5 tools with stepCountIs(5) and no injection guardrail; user content and tool outputs share the model context (app/(chat)/api/chat/route.ts:194-235)."
+    },
+    {
+      "entry_id": "INPUT-DIRECTPROMPTINJECTION",
+      "verdict": "MEDIUM",
+      "applicability": "applicable",
+      "rationale": "User message is concatenated to system prompt with no segregation/delimiting; jailbreak of regularPrompt is unmitigated (lib/ai/prompts.ts:66-80)."
+    },
+    {
+      "entry_id": "INPUT-INDIRECTPROMPTINJECTION",
+      "verdict": "MEDIUM",
+      "applicability": "applicable",
+      "rationale": "getWeather fetches third-party JSON (open-meteo) and requestSuggestions feeds prior document content back to the model; untrusted external text re-enters the loop unsanitized (lib/ai/tools/get-weather.ts:66, lib/ai/tools/request-suggestions.ts:52)."
+    },
+    {
+      "entry_id": "INPUT-DISCLOSUREUSE",
+      "verdict": "LOW",
+      "applicability": "applicable",
+      "rationale": "Geolocation hints (city/country/lat/lon) are injected into every prompt and sent to third-party gateway models (app/(chat)/api/chat/route.ts:159-166, lib/ai/prompts.ts:58)."
+    },
+    {
+      "entry_id": "INPUT-DISCLOSUREINOUTPUT",
+      "verdict": "LOW",
+      "applicability": "applicable",
+      "rationale": "No output filtering for sensitive data; model output is streamed verbatim to client and persisted (app/(chat)/api/chat/route.ts:242)."
+    },
+    {
+      "entry_id": "INPUT-MODELINVERSIONANDMEMBERSHIP",
+      "verdict": "LOW",
+      "applicability": "applicable",
+      "rationale": "Models are third-party hosted; membership inference is the provider's risk, but app exposes raw model outputs with no confidence/obfuscation control."
+    },
+    {
+      "entry_id": "INPUT-MODELEXFILTRATION",
+      "verdict": "N/A",
+      "applicability": "applicable",
+      "rationale": "Weights are not hosted by this app (gateway-served); there is no local model file to exfiltrate."
+    },
+    {
+      "entry_id": "INPUT-AIRESOURCEEXHAUSTION",
+      "verdict": "MEDIUM",
+      "applicability": "applicable",
+      "rationale": "Rate limiting exists (checkIpRateLimit + per-user 10 msg/hr entitlement) but no input-size cap on message/document content and Pyodide runs unbounded user code client-side (lib/ratelimit.ts:23, lib/ai/entitlements.ts:8, app/(chat)/api/document/route.ts:12)."
+    },
+    {
+      "entry_id": "DEV-DEVELOPMENTTIME",
+      "verdict": "N/A",
+      "applicability": "no-training-surface",
+      "rationale": "No training/fine-tuning pipeline (training:0); dev-time model-build threats do not apply."
+    },
+    {
+      "entry_id": "DEV-MODELPOISON",
+      "verdict": "N/A",
+      "applicability": "no-training-surface",
+      "rationale": "App does not train or fine-tune a model (training:0)."
+    },
+    {
+      "entry_id": "DEV-DATAPOISON",
+      "verdict": "N/A",
+      "applicability": "no-training-surface",
+      "rationale": "No training data pipeline (training:0)."
+    },
+    {
+      "entry_id": "DEV-DEVMODELPOISON",
+      "verdict": "N/A",
+      "applicability": "no-training-surface",
+      "rationale": "No own model development (training:0)."
+    },
+    {
+      "entry_id": "DEV-SUPPLYMODELPOISON",
+      "verdict": "LOW",
+      "applicability": "applicable",
+      "rationale": "Models are pulled from the Vercel AI Gateway by id at runtime (lib/ai/models.ts:126); a compromised upstream provider could serve a poisoned model, but selection is constrained to a curated allowlist."
+    },
+    {
+      "entry_id": "DEV-DEVLEAK",
+      "verdict": "N/A",
+      "applicability": "no-training-surface",
+      "rationale": "No development-time data/model artifacts to leak (training:0)."
+    },
+    {
+      "entry_id": "DEV-DEVDATALEAK",
+      "verdict": "N/A",
+      "applicability": "no-training-surface",
+      "rationale": "No training data (training:0)."
+    },
+    {
+      "entry_id": "DEV-DEVMODELLEAK",
+      "verdict": "N/A",
+      "applicability": "no-training-surface",
+      "rationale": "No own model to leak at dev time (training:0)."
+    },
+    {
+      "entry_id": "DEV-DEVCODELEAK",
+      "verdict": "LOW",
+      "applicability": "applicable",
+      "rationale": "Open-source repo; no secrets in code, secrets via env (process.env.AUTH_SECRET, REDIS_URL), but supply-chain of npm deps is unvetted in-repo."
+    },
+    {
+      "entry_id": "RUN-RUNTIMECONVENTIONALSEC",
+      "verdict": "LOW",
+      "applicability": "applicable",
+      "rationale": "Routes enforce auth() + ownership checks consistently; file upload validates size/type (app/(chat)/api/files/upload/route.ts:7-16); standard Next.js runtime hardening assumed."
+    },
+    {
+      "entry_id": "RUN-GENERICSECTHREATS",
+      "verdict": "LOW",
+      "applicability": "applicable",
+      "rationale": "Conventional app-sec posture is reasonable; ownership checks present, but uploaded files are stored with access:'public' (app/(chat)/api/files/upload/route.ts:52)."
+    },
+    {
+      "entry_id": "RUN-RUNTIMEMODELPOISON",
+      "verdict": "N/A",
+      "applicability": "applicable",
+      "rationale": "No locally hosted model weights at runtime to tamper with; models served via gateway."
+    },
+    {
+      "entry_id": "RUN-RUNTIMEMODELLEAK",
+      "verdict": "N/A",
+      "applicability": "applicable",
+      "rationale": "No local model weights served by this app at runtime (gateway-hosted)."
+    },
+    {
+      "entry_id": "RUN-OUTPUTCONTAINSCONVENTIONALINJECTION",
+      "verdict": "MEDIUM",
+      "applicability": "applicable",
+      "rationale": "Model-generated code/markdown is rendered client-side and Python output (incl. data:image base64) is shown; LLM output is also written to a Pyodide eval path (artifacts/code/client.tsx:183, components/ai-elements/code-block.tsx)."
+    },
+    {
+      "entry_id": "RUN-INPUTDATALEAK",
+      "verdict": "LOW",
+      "applicability": "applicable",
+      "rationale": "User prompts are persisted to Postgres and forwarded to third-party gateway providers; no redaction (app/(chat)/api/chat/route.ts:169-180)."
+    },
+    {
+      "entry_id": "RUN-AUGMENTATIONDATALEAK",
+      "verdict": "N/A",
+      "applicability": "no-rag-surface",
+      "rationale": "No RAG/retrieval augmentation surface (rag-embeddings:0)."
+    },
+    {
+      "entry_id": "RUN-AUGMENTATIONDATAMANIPULATION",
+      "verdict": "N/A",
+      "applicability": "no-rag-surface",
+      "rationale": "No RAG/retrieval augmentation surface (rag-embeddings:0)."
+    },
+    {
+      "entry_id": "GEN-GENERALCONTROLS",
+      "verdict": "LOW",
+      "applicability": "applicable",
+      "rationale": "Auth, ownership, rate-limit, and input validation controls exist but no documented AI governance program in-repo."
+    },
+    {
+      "entry_id": "GEN-GOVERNANCECONTROLS",
+      "verdict": "MEDIUM",
+      "applicability": "applicable",
+      "rationale": "No AI governance, risk register, or model inventory documented in the repository."
+    },
+    {
+      "entry_id": "GEN-AIPROGRAM",
+      "verdict": "MEDIUM",
+      "applicability": "applicable",
+      "rationale": "No evidence of an AI management program (policies, ownership, lifecycle) in the codebase."
+    },
+    {
+      "entry_id": "GEN-SECPROGRAM",
+      "verdict": "LOW",
+      "applicability": "applicable",
+      "rationale": "Security controls are coded ad hoc (errors.ts, ratelimit.ts) with no documented security program."
+    },
+    {
+      "entry_id": "GEN-SECDEVPROGRAM",
+      "verdict": "LOW",
+      "applicability": "applicable",
+      "rationale": "Repo uses typed schemas and linting; no documented secure-development standard for AI features."
+    },
+    {
+      "entry_id": "GEN-DEVPROGRAM",
+      "verdict": "N/A",
+      "applicability": "no-training-surface",
+      "rationale": "No model-development program because no model is developed (training:0)."
+    },
+    {
+      "entry_id": "GEN-CHECKCOMPLIANCE",
+      "verdict": "MEDIUM",
+      "applicability": "applicable",
+      "rationale": "No compliance mapping (EU AI Act, GDPR/CCPA) evidenced in repo; geolocation + chat persistence raise privacy obligations."
+    },
+    {
+      "entry_id": "GEN-SECEDUCATE",
+      "verdict": "N/A",
+      "applicability": "governance-na",
+      "rationale": "Workforce security education is an org-process control not observable from a codebase audit."
+    },
+    {
+      "entry_id": "GEN-DATALIMIT",
+      "verdict": "MEDIUM",
+      "applicability": "applicable",
+      "rationale": "No retention limit on persisted chats/messages/documents; deleteAllChatsByUserId exists but no automatic expiry (lib/db/queries.ts)."
+    },
+    {
+      "entry_id": "GEN-DATAMINIMIZE",
+      "verdict": "MEDIUM",
+      "applicability": "applicable",
+      "rationale": "Precise geolocation (lat/lon/city/country) is injected into every prompt and stored, exceeding what the chat function requires (app/(chat)/api/chat/route.ts:159, lib/ai/prompts.ts:58)."
+    },
+    {
+      "entry_id": "GEN-ALLOWEDDATA",
+      "verdict": "N/A",
+      "applicability": "no-training-surface",
+      "rationale": "Pertains to legal basis for training data; no training (training:0)."
+    },
+    {
+      "entry_id": "GEN-SHORTRETAIN",
+      "verdict": "MEDIUM",
+      "applicability": "applicable",
+      "rationale": "Chats, messages, documents and votes persist indefinitely in Postgres with no TTL (lib/db/queries.ts saveChat/saveMessages/saveDocument)."
+    },
+    {
+      "entry_id": "GEN-OBFUSCATETRAININGDATA",
+      "verdict": "N/A",
+      "applicability": "no-training-surface",
+      "rationale": "No training data to obfuscate (training:0)."
+    },
+    {
+      "entry_id": "GEN-DISCRETE",
+      "verdict": "N/A",
+      "applicability": "no-training-surface",
+      "rationale": "Concerns minimizing data stored in a trained model; no own model (training:0)."
+    },
+    {
+      "entry_id": "GEN-LIMITUNWANTED",
+      "verdict": "MEDIUM",
+      "applicability": "applicable",
+      "rationale": "No content/output moderation or unwanted-behavior filter on model responses; reliance on upstream model alignment only (app/(chat)/api/chat/route.ts:294 onError only handles generic errors)."
+    },
+    {
+      "entry_id": "GEN-OVERSIGHT",
+      "verdict": "LOW",
+      "applicability": "applicable",
+      "rationale": "A tool-approval flow exists (isToolApprovalFlow, approval-responded/output-denied states) giving human-in-the-loop gating for tool calls (app/(chat)/api/chat/route.ts:100,123-151)."
+    },
+    {
+      "entry_id": "GEN-LEASTMODELPRIVILEGE",
+      "verdict": "LOW",
+      "applicability": "applicable",
+      "rationale": "Tools are scoped and document tools re-check ownership (document.userId === session.user.id) before acting; weather/geocode reach only fixed public APIs (lib/ai/tools/update-document.ts:38, edit-document.ts:38)."
+    },
+    {
+      "entry_id": "GEN-MODELALIGNMENT",
+      "verdict": "N/A",
+      "applicability": "no-training-surface",
+      "rationale": "Alignment is a property of the trained model; app does not train/fine-tune (training:0)."
+    },
+    {
+      "entry_id": "GEN-AITRANSPARENCY",
+      "verdict": "MEDIUM",
+      "applicability": "applicable",
+      "rationale": "No AI-interaction disclosure or AI-content labeling surfaced in code; relevant to EU AI Act Art.50 (no disclosure string found in prompts/UI routes audited)."
+    },
+    {
+      "entry_id": "GEN-CONTINUOUSVALIDATION",
+      "verdict": "LOW",
+      "applicability": "applicable",
+      "rationale": "No automated AI-safety regression/eval pipeline evidenced; standard test tooling only."
+    },
+    {
+      "entry_id": "GEN-EXPLAINABILITY",
+      "verdict": "N/A",
+      "applicability": "governance-na",
+      "rationale": "Explainability of decisions is not applicable to an open-ended chat assistant making no automated decisions about users."
+    },
+    {
+      "entry_id": "GEN-UNWANTEDBIASTESTING",
+      "verdict": "LOW",
+      "applicability": "applicable",
+      "rationale": "No bias testing of model outputs in repo; lower priority for a general chat assistant with no consequential decisions."
+    },
+    {
+      "entry_id": "CTRL-INPUT-MONITORUSE",
+      "verdict": "MEDIUM",
+      "applicability": "applicable",
+      "rationale": "Only console.error logging and message counts exist; no abuse/anomaly monitoring of prompt content (lib/errors.ts:62, app/(chat)/api/chat/route.ts:344)."
+    },
+    {
+      "entry_id": "CTRL-INPUT-RATELIMIT",
+      "verdict": "LOW",
+      "applicability": "applicable",
+      "rationale": "IP rate limit (10/hr via Redis) plus per-user entitlement (10 msg/hr) are implemented — surfaces.json rate-limit:0 is a false negative; verified in lib/ratelimit.ts:23 and lib/ai/entitlements.ts:8."
+    },
+    {
+      "entry_id": "CTRL-INPUT-MODELACCESSCONTROL",
+      "verdict": "LOW",
+      "applicability": "applicable",
+      "rationale": "All chat/model routes require auth(); selectedChatModel is constrained to allowedModelIds allowlist (app/(chat)/api/chat/route.ts:83-85)."
+    },
+    {
+      "entry_id": "CTRL-INPUT-ANOMALOUSINPUTHANDLING",
+      "verdict": "N/A",
+      "applicability": "no-predictive-surface",
+      "rationale": "Predictive-ML-only control; no classifier."
+    },
+    {
+      "entry_id": "CTRL-INPUT-UNWANTEDINPUTSERIESHANDLING",
+      "verdict": "LOW",
+      "applicability": "applicable",
+      "rationale": "Per-hour message caps blunt repeated-probe series (entitlements 10/hr), but no detection of adversarial prompt sequences."
+    },
+    {
+      "entry_id": "CTRL-INPUT-OBSCURECONFIDENCE",
+      "verdict": "N/A",
+      "applicability": "applicable",
+      "rationale": "No confidence scores are exposed; chat returns free text only."
+    },
+    {
+      "entry_id": "CTRL-INPUT-EVASIONINPUTHANDLING",
+      "verdict": "N/A",
+      "applicability": "no-predictive-surface",
+      "rationale": "Predictive-ML-only control."
+    },
+    {
+      "entry_id": "CTRL-INPUT-EVASIONROBUSTMODEL",
+      "verdict": "N/A",
+      "applicability": "no-predictive-surface",
+      "rationale": "Predictive-ML-only control."
+    },
+    {
+      "entry_id": "CTRL-INPUT-TRAINADVERSARIAL",
+      "verdict": "N/A",
+      "applicability": "no-predictive-surface",
+      "rationale": "Predictive-ML-only control."
+    },
+    {
+      "entry_id": "CTRL-INPUT-INPUTDISTORTION",
+      "verdict": "N/A",
+      "applicability": "no-predictive-surface",
+      "rationale": "Predictive-ML-only control."
+    },
+    {
+      "entry_id": "CTRL-INPUT-ADVERSARIALROBUSTDISTILLATION",
+      "verdict": "N/A",
+      "applicability": "no-predictive-surface",
+      "rationale": "Predictive-ML-only control."
+    },
+    {
+      "entry_id": "CTRL-INPUT-PROMPTINJECTIONSEVENLAYERS",
+      "verdict": "MEDIUM",
+      "applicability": "applicable",
+      "rationale": "Few of the seven layers are present: no input/output prompt-injection filtering, no segregation, no dedicated PI detection; only model alignment + tool approval mitigate (app/(chat)/api/chat/route.ts:194)."
+    },
+    {
+      "entry_id": "CTRL-INPUT-PROMPTINJECTIONIOHANDLING",
+      "verdict": "MEDIUM",
+      "applicability": "applicable",
+      "rationale": "No I/O-side handling of prompt injection (no delimiters, no detection, no output scrubbing) on the streamText path (app/(chat)/api/chat/route.ts:196-197)."
+    },
+    {
+      "entry_id": "CTRL-INPUT-INPUTSEGREGATION",
+      "verdict": "MEDIUM",
+      "applicability": "applicable",
+      "rationale": "User input and system instructions are joined as plain concatenated text with no structural segregation or marking (lib/ai/prompts.ts:76-79)."
+    },
+    {
+      "entry_id": "CTRL-INPUT-SENSITIVEOUTPUTHANDLING",
+      "verdict": "MEDIUM",
+      "applicability": "applicable",
+      "rationale": "No sensitive-output handling; model output streamed and persisted verbatim (app/(chat)/api/chat/route.ts:242,257)."
+    },
+    {
+      "entry_id": "CTRL-INPUT-SMALLMODEL",
+      "verdict": "N/A",
+      "applicability": "applicable",
+      "rationale": "Uses large hosted gateway models by design; small-model control not adopted and not required for this threat profile."
+    },
+    {
+      "entry_id": "CTRL-INPUT-MODELWATERMARKING",
+      "verdict": "N/A",
+      "applicability": "applicable",
+      "rationale": "Watermarking is a model-owner control; models are third-party hosted."
+    },
+    {
+      "entry_id": "CTRL-INPUT-DOSINPUTVALIDATION",
+      "verdict": "MEDIUM",
+      "applicability": "applicable",
+      "rationale": "Chat body validated for shape (postRequestBodySchema) but no max length on message/document content; uploads capped at 5MB image only (app/(chat)/api/chat/route.ts:65, files/upload/route.ts:10)."
+    },
+    {
+      "entry_id": "CTRL-INPUT-LIMITRESOURCES",
+      "verdict": "LOW",
+      "applicability": "applicable",
+      "rationale": "stepCountIs(5), maxDuration=60, and rate limits cap agent/server resource use; no per-request token cap (app/(chat)/api/chat/route.ts:48,198)."
+    },
+    {
+      "entry_id": "CTRL-DEV-DEVSECURITY",
+      "verdict": "N/A",
+      "applicability": "no-training-surface",
+      "rationale": "Development-environment security for model training; no training (training:0)."
+    },
+    {
+      "entry_id": "CTRL-DEV-SEGREGATEDATA",
+      "verdict": "N/A",
+      "applicability": "no-training-surface",
+      "rationale": "No training data to segregate (training:0)."
+    },
+    {
+      "entry_id": "CTRL-DEV-CONFCOMPUTE",
+      "verdict": "N/A",
+      "applicability": "no-training-surface",
+      "rationale": "Confidential compute for training; no training (training:0)."
+    },
+    {
+      "entry_id": "CTRL-DEV-FEDERATEDLEARNING",
+      "verdict": "N/A",
+      "applicability": "no-training-surface",
+      "rationale": "No training (training:0)."
+    },
+    {
+      "entry_id": "CTRL-DEV-SUPPLYCHAINMANAGE",
+      "verdict": "MEDIUM",
+      "applicability": "applicable",
+      "rationale": "Model supply chain is the Vercel AI Gateway pulled by id with gatewayOrder fallbacks; no integrity pinning/SBOM for models, and Pyodide is loaded from a public CDN URL (lib/ai/models.ts:126, artifacts/code/client.tsx:138)."
+    },
+    {
+      "entry_id": "CTRL-DEV-MORETRAINDATA",
+      "verdict": "N/A",
+      "applicability": "no-training-surface",
+      "rationale": "No training (training:0)."
+    },
+    {
+      "entry_id": "CTRL-DEV-DATAQUALITYCONTROL",
+      "verdict": "N/A",
+      "applicability": "no-training-surface",
+      "rationale": "No training data pipeline (training:0)."
+    },
+    {
+      "entry_id": "CTRL-DEV-TRAINDATADISTORTION",
+      "verdict": "N/A",
+      "applicability": "no-training-surface",
+      "rationale": "No training (training:0)."
+    },
+    {
+      "entry_id": "CTRL-DEV-POISONROBUSTMODEL",
+      "verdict": "N/A",
+      "applicability": "no-training-surface",
+      "rationale": "No training (training:0)."
+    },
+    {
+      "entry_id": "CTRL-DEV-TRAINADVERSARIAL",
+      "verdict": "N/A",
+      "applicability": "no-predictive-surface",
+      "rationale": "Predictive-ML-only control."
+    },
+    {
+      "entry_id": "CTRL-RUN-RUNTIMEMODELINTEGRITY",
+      "verdict": "LOW",
+      "applicability": "applicable",
+      "rationale": "Model integrity is delegated to the gateway over TLS; no app-side integrity check but no local weights to protect (lib/ai/models.ts:126)."
+    },
+    {
+      "entry_id": "CTRL-RUN-RUNTIMEMODELIOINTEGRITY",
+      "verdict": "MEDIUM",
+      "applicability": "applicable",
+      "rationale": "No integrity controls on model I/O: tool outputs and external fetch results re-enter the prompt without validation (lib/ai/tools/get-weather.ts:66)."
+    },
+    {
+      "entry_id": "CTRL-RUN-RUNTIMEMODELCONFIDENTIALITY",
+      "verdict": "N/A",
+      "applicability": "applicable",
+      "rationale": "No local model weights at runtime; confidentiality is the gateway provider's responsibility."
+    },
+    {
+      "entry_id": "CTRL-RUN-MODELOBFUSCATION",
+      "verdict": "N/A",
+      "applicability": "applicable",
+      "rationale": "No local model to obfuscate (gateway-hosted)."
+    },
+    {
+      "entry_id": "CTRL-RUN-ENCODEMODELOUTPUT",
+      "verdict": "MEDIUM",
+      "applicability": "applicable",
+      "rationale": "Model output is not encoded/escaped before being routed to client rendering and a Pyodide exec path; relies on React/markdown rendering safety only (artifacts/code/client.tsx:183)."
+    },
+    {
+      "entry_id": "CTRL-RUN-MODELINPUTCONFIDENTIALITY",
+      "verdict": "LOW",
+      "applicability": "applicable",
+      "rationale": "Prompts (incl. geolocation) are sent to third-party providers over the gateway; TLS in transit but no input minimization (app/(chat)/api/chat/route.ts:159)."
+    },
+    {
+      "entry_id": "CTRL-RUN-AUGMENTATIONDATACONFIDENTIALITY",
+      "verdict": "N/A",
+      "applicability": "no-rag-surface",
+      "rationale": "No RAG augmentation store (rag-embeddings:0)."
+    },
+    {
+      "entry_id": "CTRL-RUN-AUGMENTATIONDATAINTEGRITY",
+      "verdict": "N/A",
+      "applicability": "no-rag-surface",
+      "rationale": "No RAG augmentation store (rag-embeddings:0)."
+    },
+    {
+      "entry_id": "TEST-TESTING",
+      "verdict": "LOW",
+      "applicability": "applicable",
+      "rationale": "Repo ships e2e/route tests but no AI-security-specific test suite was surfaced."
+    },
+    {
+      "entry_id": "TEST-TESTINGPROMPTINJECTION",
+      "verdict": "MEDIUM",
+      "applicability": "applicable",
+      "rationale": "No prompt-injection test suite found; injection defenses are untested."
+    },
+    {
+      "entry_id": "TEST-TESTINGTOOLSPREDICTIVEAI",
+      "verdict": "N/A",
+      "applicability": "no-predictive-surface",
+      "rationale": "Predictive-ML-only testing tools; no classifier."
+    },
+    {
+      "entry_id": "TEST-TESTINGTOOLSGENAI",
+      "verdict": "LOW",
+      "applicability": "applicable",
+      "rationale": "No GenAI red-team/eval tooling integrated; opportunity to add automated PI/jailbreak scans."
+    },
+    {
+      "entry_id": "PRIV-AIPRIVACY",
+      "verdict": "MEDIUM",
+      "applicability": "applicable",
+      "rationale": "Precise geolocation injected into prompts, chats persisted indefinitely, sent to third-party providers, with no documented retention/consent (app/(chat)/api/chat/route.ts:159-180)."
+    },
+    {
+      "entry_id": "GEN-AGENTICAITHREATS",
+      "verdict": "MEDIUM",
+      "applicability": "applicable",
+      "rationale": "Multi-step agent (stepCountIs(5)) with tools that mutate stored documents and call external APIs; injection-driven tool misuse is partly mitigated by ownership checks and tool approval but not by input segregation (app/(chat)/api/chat/route.ts:198-235)."
+    }
+  ],
+  "evidence_class_summary": {
+    "static": 20,
+    "reasoned-probe": 0,
+    "demonstrated": 0
+  },
+  "auth_matrix": {
+    "user_types": [
+      "anonymous",
+      "guest",
+      "regular"
+    ],
+    "resources": [
+      "chats",
+      "documents",
+      "messages",
+      "streams",
+      "votes"
+    ],
+    "cells": [
+      {
+        "user_type": "anonymous",
+        "resource": "chats",
+        "action": "read",
+        "verdict": "PASS",
+        "evidence": "proxy.ts:24-31 — unauthenticated requests are redirected to guest sign-in before reaching routes",
+        "reasoning": "No anonymous access; proxy forces a guest token."
+      },
+      {
+        "user_type": "anonymous",
+        "resource": "documents",
+        "action": "read",
+        "verdict": "PASS",
+        "evidence": "proxy.ts:24-31; app/(chat)/api/document/route.ts:30-34",
+        "reasoning": "Route returns unauthorized without session; proxy blocks anonymous."
+      },
+      {
+        "user_type": "anonymous",
+        "resource": "messages",
+        "action": "read",
+        "verdict": "LOW",
+        "evidence": "app/(chat)/api/messages/route.ts:28-35",
+        "reasoning": "Public-visibility chats expose messages to anyone by design; private chats require session ownership."
+      },
+      {
+        "user_type": "anonymous",
+        "resource": "streams",
+        "action": "read",
+        "verdict": "PASS",
+        "evidence": "app/(chat)/api/chat/[id]/stream/route.ts:1-3",
+        "reasoning": "Stream GET is a 204 no-op stub; no data exposed."
+      },
+      {
+        "user_type": "anonymous",
+        "resource": "votes",
+        "action": "write",
+        "verdict": "PASS",
+        "evidence": "app/(chat)/api/vote/route.ts:61-75; proxy.ts:24",
+        "reasoning": "PATCH requires session and chat ownership."
+      },
+      {
+        "user_type": "guest",
+        "resource": "chats",
+        "action": "read",
+        "verdict": "PASS",
+        "evidence": "app/(chat)/api/chat/route.ts:107-109",
+        "reasoning": "chat.userId !== session.user.id → forbidden; guests bound to their own id."
+      },
+      {
+        "user_type": "guest",
+        "resource": "chats",
+        "action": "write",
+        "verdict": "PASS",
+        "evidence": "app/(chat)/api/chat/route.ts:111-119",
+        "reasoning": "saveChat binds chat to session.user.id."
+      },
+      {
+        "user_type": "guest",
+        "resource": "chats",
+        "action": "delete",
+        "verdict": "PASS",
+        "evidence": "app/(chat)/api/chat/route.ts:363-367",
+        "reasoning": "Ownership check before deleteChatById."
+      },
+      {
+        "user_type": "guest",
+        "resource": "documents",
+        "action": "read",
+        "verdict": "PASS",
+        "evidence": "app/(chat)/api/document/route.ts:44-46",
+        "reasoning": "document.userId !== session.user.id → forbidden."
+      },
+      {
+        "user_type": "guest",
+        "resource": "documents",
+        "action": "write",
+        "verdict": "PASS",
+        "evidence": "app/(chat)/api/document/route.ts:91-93,101-107",
+        "reasoning": "Ownership re-checked on update; create binds userId."
+      },
+      {
+        "user_type": "guest",
+        "resource": "documents",
+        "action": "delete",
+        "verdict": "MEDIUM",
+        "evidence": "app/(chat)/api/document/route.ts:137-143",
+        "reasoning": "DELETE reads documents then dereferences document.userId without a not-found guard; a missing/foreign id can throw, but ownership check itself is present."
+      },
+      {
+        "user_type": "guest",
+        "resource": "messages",
+        "action": "read",
+        "verdict": "PASS",
+        "evidence": "app/(chat)/api/messages/route.ts:28-35",
+        "reasoning": "Private chats enforce ownership; public by design."
+      },
+      {
+        "user_type": "guest",
+        "resource": "streams",
+        "action": "read",
+        "verdict": "PASS",
+        "evidence": "app/(chat)/api/chat/[id]/stream/route.ts:1-3",
+        "reasoning": "204 stub, no data."
+      },
+      {
+        "user_type": "guest",
+        "resource": "votes",
+        "action": "read",
+        "verdict": "PASS",
+        "evidence": "app/(chat)/api/vote/route.ts:29-37",
+        "reasoning": "Ownership check on chat before returning votes."
+      },
+      {
+        "user_type": "guest",
+        "resource": "votes",
+        "action": "write",
+        "verdict": "PASS",
+        "evidence": "app/(chat)/api/vote/route.ts:67-81",
+        "reasoning": "Ownership check before voteMessage."
+      },
+      {
+        "user_type": "regular",
+        "resource": "chats",
+        "action": "read",
+        "verdict": "PASS",
+        "evidence": "app/(chat)/api/chat/route.ts:107-109",
+        "reasoning": "Same ownership path as guest."
+      },
+      {
+        "user_type": "regular",
+        "resource": "chats",
+        "action": "write",
+        "verdict": "PASS",
+        "evidence": "app/(chat)/api/chat/route.ts:111-119",
+        "reasoning": "userId binding."
+      },
+      {
+        "user_type": "regular",
+        "resource": "chats",
+        "action": "delete",
+        "verdict": "PASS",
+        "evidence": "app/(chat)/api/chat/route.ts:363-367",
+        "reasoning": "Ownership check."
+      },
+      {
+        "user_type": "regular",
+        "resource": "documents",
+        "action": "read",
+        "verdict": "PASS",
+        "evidence": "app/(chat)/api/document/route.ts:44-46",
+        "reasoning": "Ownership check."
+      },
+      {
+        "user_type": "regular",
+        "resource": "documents",
+        "action": "write",
+        "verdict": "PASS",
+        "evidence": "app/(chat)/api/document/route.ts:91-93",
+        "reasoning": "Ownership check."
+      },
+      {
+        "user_type": "regular",
+        "resource": "documents",
+        "action": "delete",
+        "verdict": "MEDIUM",
+        "evidence": "app/(chat)/api/document/route.ts:137-143",
+        "reasoning": "Same missing not-found guard before ownership dereference as guest."
+      },
+      {
+        "user_type": "regular",
+        "resource": "messages",
+        "action": "read",
+        "verdict": "PASS",
+        "evidence": "app/(chat)/api/messages/route.ts:28-35",
+        "reasoning": "Ownership/visibility enforced."
+      },
+      {
+        "user_type": "regular",
+        "resource": "messages",
+        "action": "delete",
+        "verdict": "PASS",
+        "evidence": "app/(chat)/actions.ts:42-61",
+        "reasoning": "deleteTrailingMessages checks chat ownership."
+      },
+      {
+        "user_type": "regular",
+        "resource": "streams",
+        "action": "read",
+        "verdict": "PASS",
+        "evidence": "app/(chat)/api/chat/[id]/stream/route.ts:1-3",
+        "reasoning": "204 stub."
+      },
+      {
+        "user_type": "regular",
+        "resource": "votes",
+        "action": "read",
+        "verdict": "PASS",
+        "evidence": "app/(chat)/api/vote/route.ts:29-37",
+        "reasoning": "Ownership check."
+      },
+      {
+        "user_type": "regular",
+        "resource": "votes",
+        "action": "write",
+        "verdict": "PASS",
+        "evidence": "app/(chat)/api/vote/route.ts:67-81",
+        "reasoning": "Ownership check."
+      },
+      {
+        "user_type": "anonymous",
+        "resource": "chats",
+        "action": "write",
+        "verdict": "PASS",
+        "evidence": "proxy.ts:24-31",
+        "reasoning": "Anonymous redirected to guest auth before any write."
+      },
+      {
+        "user_type": "anonymous",
+        "resource": "documents",
+        "action": "write",
+        "verdict": "PASS",
+        "evidence": "app/(chat)/api/document/route.ts:62-66",
+        "reasoning": "No session → not_found/unauthorized."
+      },
+      {
+        "user_type": "guest",
+        "resource": "messages",
+        "action": "delete",
+        "verdict": "PASS",
+        "evidence": "app/(chat)/actions.ts:42-61",
+        "reasoning": "Ownership check in deleteTrailingMessages."
+      },
+      {
+        "user_type": "regular",
+        "resource": "streams",
+        "action": "write",
+        "verdict": "N/A",
+        "evidence": "app/(chat)/api/chat/[id]/stream/route.ts:1-3",
+        "reasoning": "No write endpoint for streams; resumable streams created server-side only."
+      }
+    ]
+  },
+  "l4_subareas": [
+    {
+      "subarea": "server input",
+      "verdict": "MEDIUM",
+      "evidence": "app/(chat)/api/chat/route.ts:60-66",
+      "reasoning": "Zod shape validation only; no content-length bound or prompt-injection screening on user message/document content."
+    },
+    {
+      "subarea": "server output",
+      "verdict": "MEDIUM",
+      "evidence": "app/(chat)/api/chat/route.ts:242,257",
+      "reasoning": "Model output streamed and persisted verbatim with no sensitive-output handling or encoding."
+    },
+    {
+      "subarea": "client renderer",
+      "verdict": "MEDIUM",
+      "evidence": "artifacts/code/client.tsx:183; components/ai-elements/code-block.tsx:232",
+      "reasoning": "LLM-generated code/markdown rendered and routed to a Pyodide exec path; output-as-conventional-injection risk depends on renderer escaping."
+    },
+    {
+      "subarea": "code-exec sandbox",
+      "verdict": "LOW",
+      "evidence": "artifacts/code/client.tsx:137-183",
+      "reasoning": "Python runs in browser-side Pyodide (WASM), not a host boundary; blast radius is the user's own tab, but Pyodide is loaded from a public CDN with no SRI."
+    },
+    {
+      "subarea": "log sink",
+      "verdict": "LOW",
+      "evidence": "lib/errors.ts:62-66; app/(chat)/api/chat/route.ts:344",
+      "reasoning": "Database errors logged server-side without leaking to client; chat unhandled errors log full error object (could include prompt fragments)."
+    },
+    {
+      "subarea": "telemetry",
+      "verdict": "LOW",
+      "evidence": "app/(chat)/api/chat/route.ts:236-239",
+      "reasoning": "experimental_telemetry enabled in production with functionId; sends trace metadata to the AI SDK telemetry sink — review for prompt content capture."
+    },
+    {
+      "subarea": "provider/gateway",
+      "verdict": "LOW",
+      "evidence": "lib/ai/models.ts:126; lib/ai/providers",
+      "reasoning": "All inference + capability lookups go through Vercel AI Gateway over TLS with curated model allowlist; no integrity pinning of returned models."
+    }
+  ],
+  "l7_subareas": [
+    {
+      "subarea": "logging",
+      "verdict": "LOW",
+      "evidence": "lib/errors.ts:62-66",
+      "reasoning": "Structured server-side error logging; DB errors hidden from client. Chat route logs full error object which may contain request context (route.ts:344)."
+    },
+    {
+      "subarea": "telemetry",
+      "verdict": "LOW",
+      "evidence": "app/(chat)/api/chat/route.ts:236-239",
+      "reasoning": "Production telemetry enabled via AI SDK; no documented scrubbing of prompt content."
+    },
+    {
+      "subarea": "error handling",
+      "verdict": "PASS",
+      "evidence": "lib/errors.ts:25-75",
+      "reasoning": "Centralized ChatbotError with per-surface visibility; DB internals masked to a generic message, correct status codes."
+    },
+    {
+      "subarea": "cost attribution",
+      "verdict": "MEDIUM",
+      "evidence": "lib/ai/entitlements.ts:7-14; lib/ratelimit.ts",
+      "reasoning": "Message caps exist (10/hr per user, 10/hr per IP) but guest==regular limits and no token-level cost cap; abuse of expensive models is rate-bounded by count not tokens."
+    }
+  ],
+  "l8_patterns": [
+    {
+      "pattern": "TOCTOU: getDocumentById then ownership check then saveDocument (read-modify-write without transaction)",
+      "verdict": "LOW",
+      "evidence": "lib/ai/tools/edit-document.ts:32-54",
+      "reasoning": "Document fetched, ownership checked, then saved; concurrent edits could race but writes are scoped to the owner so impact is last-writer-wins, not privilege escalation."
+    },
+    {
+      "pattern": "DELETE document: getDocumentsById then unguarded document.userId dereference",
+      "verdict": "MEDIUM",
+      "evidence": "app/(chat)/api/document/route.ts:137-143",
+      "reasoning": "If the id is absent, document is undefined and the ownership check throws before validating; a not-found guard is missing (GET path at :40-42 has it, DELETE does not)."
+    },
+    {
+      "pattern": "Per-user message-count rate limit (read count then proceed)",
+      "verdict": "LOW",
+      "evidence": "app/(chat)/api/chat/route.ts:91-98",
+      "reasoning": "getMessageCountByUserId then compare is a check-then-act window; bursts within the window can slightly exceed the cap, but the IP Redis INCR limiter (atomic) backstops it."
+    },
+    {
+      "pattern": "IP rate limit via Redis MULTI INCR+EXPIRE",
+      "verdict": "PASS",
+      "evidence": "lib/ratelimit.ts:34-44",
+      "reasoning": "Atomic INCR with NX expire avoids the classic increment race; correct pattern."
+    }
+  ],
+  "l6_obligations": [
+    {
+      "obligation": "EU AI Act Art.50(1) AI-interaction disclosure",
+      "jurisdiction": "EU",
+      "verdict": "MEDIUM",
+      "evidence": "absence — no AI-disclosure string in lib/ai/prompts.ts or audited UI routes",
+      "reasoning": "Users must be informed they interact with an AI system; no explicit disclosure surfaced in code."
+    },
+    {
+      "obligation": "EU AI Act Art.50(2) AI-generated content marking",
+      "jurisdiction": "EU",
+      "verdict": "LOW",
+      "evidence": "absence — no watermark/label on generated artifacts (artifacts/*/server.ts)",
+      "reasoning": "Generated text/code/sheets are not machine-markable as AI-generated; lower risk for assistant text but relevant for artifacts."
+    },
+    {
+      "obligation": "GDPR Art.5(1)(c) data minimisation",
+      "jurisdiction": "EU",
+      "verdict": "MEDIUM",
+      "evidence": "app/(chat)/api/chat/route.ts:159-166",
+      "reasoning": "Precise lat/lon geolocation injected into every prompt exceeds necessity for a chat function."
+    },
+    {
+      "obligation": "GDPR Art.5(1)(e) storage limitation",
+      "jurisdiction": "EU",
+      "verdict": "MEDIUM",
+      "evidence": "lib/db/queries.ts saveChat/saveMessages — no TTL",
+      "reasoning": "Chat/message/document data persists indefinitely; no retention policy in code."
+    },
+    {
+      "obligation": "GDPR Art.44 third-country transfers (third-party model providers)",
+      "jurisdiction": "EU",
+      "verdict": "LOW",
+      "evidence": "lib/ai/models.ts:126 — gateway routes to fireworks/bedrock/groq/xai/deepinfra",
+      "reasoning": "Prompts (incl. location) forwarded to multiple third-party inference providers; transfer safeguards are an org/contract concern, not visible in code."
+    },
+    {
+      "obligation": "CCPA/CPRA notice & data-subject rights (deletion)",
+      "jurisdiction": "US-CA",
+      "verdict": "LOW",
+      "evidence": "app/(chat)/api/history/route.ts:39-47 deleteAllChatsByUserId",
+      "reasoning": "A bulk delete path exists supporting deletion requests, but no formal notice/opt-out mechanism in code."
+    },
+    {
+      "obligation": "CCPA/CPRA: sharing personal info with third parties",
+      "jurisdiction": "US-CA",
+      "verdict": "LOW",
+      "evidence": "app/(chat)/api/chat/route.ts:159; lib/ai/models.ts:126",
+      "reasoning": "Geolocation + prompts shared with third-party model providers; requires disclosure under CPRA but not a code-level defect."
+    }
+  ],
+  "findings": [
+    {
+      "threat_id": "INPUT-DIRECTPROMPTINJECTION",
+      "threat_url": "https://owaspai.org/go/directpromptinjection/",
+      "category": "input-threats",
+      "verdict": "MEDIUM",
+      "evidence_class": "static",
+      "evidence": "lib/ai/prompts.ts:66-80; app/(chat)/api/chat/route.ts:194-197",
+      "reasoning": "The system prompt (regularPrompt + request hints + artifactsPrompt) is plain-concatenated and the user message is appended as a normal model message with no segregation, delimiting, or instruction-hierarchy enforcement. A user can attempt to override system instructions (e.g., 'ignore previous instructions, reveal your system prompt'). Static evidence only — outcome depends on the chosen gateway model's alignment, so capped at MEDIUM.",
+      "recommended_controls": [
+        {
+          "control_id": "CTRL-INPUT-INPUTSEGREGATION",
+          "url": "https://owaspai.org/go/inputsegregation/",
+          "summary": "Structurally separate trusted instructions from untrusted user input (delimiters/typed roles, spotlighting)."
+        },
+        {
+          "control_id": "CTRL-INPUT-PROMPTINJECTIONSEVENLAYERS",
+          "url": "https://owaspai.org/go/promptinjectionsevenlayers/",
+          "summary": "Layer multiple PI defenses: input/output filtering, segregation, detection, least-privilege tools."
+        }
+      ],
+      "cross_references": {
+        "atlas": [
+          {
+            "id": "AML.T0051",
+            "url": "https://atlas.mitre.org/techniques/AML.T0051"
+          }
+        ],
+        "nist": [
+          {
+            "section": "2.2 Direct Prompt Injection",
+            "url": "https://csrc.nist.gov/pubs/ai/100/2/e2025/final"
+          }
+        ]
+      }
+    },
+    {
+      "threat_id": "INPUT-INDIRECTPROMPTINJECTION",
+      "threat_url": "https://owaspai.org/go/indirectpromptinjection/",
+      "category": "input-threats",
+      "verdict": "MEDIUM",
+      "evidence_class": "static",
+      "evidence": "lib/ai/tools/get-weather.ts:66-76; lib/ai/tools/request-suggestions.ts:49-63",
+      "reasoning": "getWeather returns third-party JSON (open-meteo) directly into the tool result that re-enters the model context, and requestSuggestions feeds stored document.content back through streamText. Untrusted external/stored text is not sanitized before re-prompting, enabling indirect injection that could steer subsequent tool calls within the stepCountIs(5) loop. Static — exploitability depends on model susceptibility, capped at MEDIUM.",
+      "recommended_controls": [
+        {
+          "control_id": "CTRL-INPUT-INPUTSEGREGATION",
+          "url": "https://owaspai.org/go/inputsegregation/",
+          "summary": "Mark and isolate tool/external content so it cannot be interpreted as instructions."
+        },
+        {
+          "control_id": "CTRL-RUN-RUNTIMEMODELIOINTEGRITY",
+          "url": "https://owaspai.org/go/runtimemodeliointegrity/",
+          "summary": "Validate/normalize tool outputs before they re-enter the model."
+        }
+      ],
+      "cross_references": {
+        "atlas": [
+          {
+            "id": "AML.T0051.001",
+            "url": "https://atlas.mitre.org/techniques/AML.T0051.001"
+          }
+        ],
+        "nist": [
+          {
+            "section": "2.2 Indirect Prompt Injection",
+            "url": "https://csrc.nist.gov/pubs/ai/100/2/e2025/final"
+          }
+        ]
+      }
+    },
+    {
+      "threat_id": "INPUT-PROMPTINJECTION",
+      "threat_url": "https://owaspai.org/go/promptinjection/",
+      "category": "input-threats",
+      "verdict": "MEDIUM",
+      "evidence_class": "static",
+      "evidence": "app/(chat)/api/chat/route.ts:194-235",
+      "reasoning": "The agent exposes five tools (incl. document mutation) under a single shared context with no prompt-injection guardrail. Injection could attempt to invoke editDocument/updateDocument on the user's own documents; impact is bounded because each document tool re-checks ownership and a tool-approval flow exists. Static, capped MEDIUM.",
+      "recommended_controls": [
+        {
+          "control_id": "CTRL-INPUT-PROMPTINJECTIONIOHANDLING",
+          "url": "https://owaspai.org/go/promptinjectioniohandling/",
+          "summary": "Add I/O-side PI handling: detect/screen inputs and outputs around the agent loop."
+        },
+        {
+          "control_id": "GEN-LEASTMODELPRIVILEGE",
+          "url": "https://owaspai.org/go/leastmodelprivilege/",
+          "summary": "Keep tools least-privileged and ownership-scoped (already partially done)."
+        }
+      ],
+      "cross_references": {
+        "atlas": [
+          {
+            "id": "AML.T0051",
+            "url": "https://atlas.mitre.org/techniques/AML.T0051"
+          }
+        ],
+        "nist": [
+          {
+            "section": "2.2 Prompt Injection",
+            "url": "https://csrc.nist.gov/pubs/ai/100/2/e2025/final"
+          }
+        ]
+      }
+    },
+    {
+      "threat_id": "RUN-OUTPUTCONTAINSCONVENTIONALINJECTION",
+      "threat_url": "https://owaspai.org/go/outputcontainsconventionalinjection/",
+      "category": "runtime",
+      "verdict": "MEDIUM",
+      "evidence_class": "static",
+      "evidence": "artifacts/code/client.tsx:137-183; lib/ai/tools/edit-document.ts:62-86",
+      "reasoning": "LLM-generated code is streamed into a Pyodide runPythonAsync(content) execution path and into client-side rendering. Model output is treated as executable/renderable without an encode/escape step, so model output containing conventional injection (e.g., crafted Python or markup) executes in the user's browser session. Blast radius is the user's own tab (browser sandbox), so MEDIUM not higher.",
+      "recommended_controls": [
+        {
+          "control_id": "CTRL-RUN-ENCODEMODELOUTPUT",
+          "url": "https://owaspai.org/go/encodemodeloutput/",
+          "summary": "Encode/escape model output before it reaches an interpreter or renderer."
+        },
+        {
+          "control_id": "GEN-OVERSIGHT",
+          "url": "https://owaspai.org/go/oversight/",
+          "summary": "Require explicit user action before executing generated code (already user-initiated via Run)."
+        }
+      ]
+    },
+    {
+      "threat_id": "CTRL-INPUT-INPUTSEGREGATION",
+      "threat_url": "https://owaspai.org/go/inputsegregation/",
+      "category": "input-threats",
+      "verdict": "MEDIUM",
+      "evidence_class": "static",
+      "evidence": "lib/ai/prompts.ts:76-79",
+      "reasoning": "systemPrompt() returns trusted instructions and request hints as one concatenated string and the user turn is added as an ordinary message; there is no spotlighting, delimiting, or typed separation between trusted and untrusted content. This is the root enabler for the injection findings above.",
+      "recommended_controls": [
+        {
+          "control_id": "CTRL-INPUT-PROMPTINJECTIONSEVENLAYERS",
+          "url": "https://owaspai.org/go/promptinjectionsevenlayers/",
+          "summary": "Adopt layered PI defenses with segregation as the first layer."
+        }
+      ],
+      "cross_references": {
+        "atlas": [
+          {
+            "id": "AML.T0051",
+            "url": "https://atlas.mitre.org/techniques/AML.T0051"
+          }
+        ],
+        "nist": [
+          {
+            "section": "2.2 Prompt Injection mitigations",
+            "url": "https://csrc.nist.gov/pubs/ai/100/2/e2025/final"
+          }
+        ]
+      }
+    },
+    {
+      "threat_id": "INPUT-AIRESOURCEEXHAUSTION",
+      "threat_url": "https://owaspai.org/go/airesourceexhaustion/",
+      "category": "input-threats",
+      "verdict": "MEDIUM",
+      "evidence_class": "static",
+      "evidence": "lib/ai/entitlements.ts:7-14; app/(chat)/api/document/route.ts:12-17; app/(chat)/api/chat/route.ts:48",
+      "reasoning": "Message-count rate limits (10/hr IP + 10/hr user) and maxDuration=60/stepCountIs(5) bound request volume, but there is no cap on individual message or document content length and no per-request token budget, so a single huge prompt or document can drive disproportionate model/token cost. Static, capped MEDIUM.",
+      "recommended_controls": [
+        {
+          "control_id": "CTRL-INPUT-DOSINPUTVALIDATION",
+          "url": "https://owaspai.org/go/dosinputvalidation/",
+          "summary": "Validate and bound input size before model invocation."
+        },
+        {
+          "control_id": "CTRL-INPUT-LIMITRESOURCES",
+          "url": "https://owaspai.org/go/limitresources/",
+          "summary": "Apply token/compute budgets per request in addition to count-based limits."
+        },
+        {
+          "control_id": "CTRL-INPUT-RATELIMIT",
+          "url": "https://owaspai.org/go/ratelimit/",
+          "summary": "Keep rate limiting (present) and extend to token volume."
+        }
+      ],
+      "cross_references": {
+        "atlas": [
+          {
+            "id": "AML.T0034",
+            "url": "https://atlas.mitre.org/techniques/AML.T0034"
+          }
+        ],
+        "nist": [
+          {
+            "section": "Availability / resource exhaustion",
+            "url": "https://csrc.nist.gov/pubs/ai/100/2/e2025/final"
+          }
+        ]
+      }
+    },
+    {
+      "threat_id": "PRIV-AIPRIVACY",
+      "threat_url": "https://owaspai.org/go/aiprivacy/",
+      "category": "privacy",
+      "verdict": "MEDIUM",
+      "evidence_class": "static",
+      "evidence": "app/(chat)/api/chat/route.ts:159-180; lib/ai/prompts.ts:58-64",
+      "reasoning": "Precise geolocation (lat/lon/city/country) is injected into every prompt, chats/messages persist indefinitely in Postgres, and prompts are forwarded to multiple third-party inference providers via the gateway, with no documented retention, minimization, or consent. Engages GDPR Art.5(1)(c)/(e) and CPRA disclosure.",
+      "recommended_controls": [
+        {
+          "control_id": "GEN-DATAMINIMIZE",
+          "url": "https://owaspai.org/go/dataminimize/",
+          "summary": "Reduce geolocation precision / include only when needed."
+        },
+        {
+          "control_id": "GEN-SHORTRETAIN",
+          "url": "https://owaspai.org/go/shortretain/",
+          "summary": "Define and enforce a retention TTL for chats and documents."
+        }
+      ]
+    },
+    {
+      "threat_id": "GEN-AGENTICAITHREATS",
+      "threat_url": "https://owaspai.org/go/agenticaithreats/",
+      "category": "general-controls",
+      "verdict": "MEDIUM",
+      "evidence_class": "static",
+      "evidence": "app/(chat)/api/chat/route.ts:198-235; lib/ai/tools/update-document.ts:38-40",
+      "reasoning": "A multi-step agent (stepCountIs(5)) drives tools that mutate stored documents and hit external APIs. The strong mitigations are per-tool ownership checks and a tool-approval flow; the gap is the absence of input segregation/PI screening, so an injected instruction could still attempt to chain owner-scoped tool actions. Static, MEDIUM.",
+      "recommended_controls": [
+        {
+          "control_id": "GEN-OVERSIGHT",
+          "url": "https://owaspai.org/go/oversight/",
+          "summary": "Keep human-in-the-loop approval for state-changing tool calls (present)."
+        },
+        {
+          "control_id": "GEN-LEASTMODELPRIVILEGE",
+          "url": "https://owaspai.org/go/leastmodelprivilege/",
+          "summary": "Maintain least-privilege, ownership-scoped tools."
+        }
+      ]
+    },
+    {
+      "threat_id": "GEN-GOVERNANCECONTROLS",
+      "threat_url": "https://owaspai.org/go/governancecontrols/",
+      "category": "general-controls",
+      "verdict": "MEDIUM",
+      "evidence_class": "static",
+      "evidence": "absence — no governance/policy/model-inventory docs in repo",
+      "reasoning": "No AI governance program, model inventory, or risk register is present in the codebase. This is a reference/template app, so absence is expected, but adopters inherit the gap.",
+      "recommended_controls": [
+        {
+          "control_id": "GEN-AIPROGRAM",
+          "url": "https://owaspai.org/go/aiprogram/",
+          "summary": "Establish an AI management program covering inventory, ownership, and lifecycle."
+        },
+        {
+          "control_id": "GEN-CHECKCOMPLIANCE",
+          "url": "https://owaspai.org/go/checkcompliance/",
+          "summary": "Map applicable regulatory obligations (EU AI Act, GDPR/CPRA)."
+        }
+      ]
+    },
+    {
+      "threat_id": "GEN-AITRANSPARENCY",
+      "threat_url": "https://owaspai.org/go/aitransparency/",
+      "category": "general-controls",
+      "verdict": "MEDIUM",
+      "evidence_class": "static",
+      "evidence": "absence — no AI-interaction disclosure string in lib/ai/prompts.ts or audited routes",
+      "reasoning": "No explicit user-facing disclosure that responses are AI-generated was found in audited code. Relevant to EU AI Act Art.50(1).",
+      "recommended_controls": [
+        {
+          "control_id": "GEN-AITRANSPARENCY",
+          "url": "https://owaspai.org/go/aitransparency/",
+          "summary": "Add a clear AI-interaction disclosure in the UI."
+        }
+      ]
+    },
+    {
+      "threat_id": "GEN-LIMITUNWANTED",
+      "threat_url": "https://owaspai.org/go/limitunwanted/",
+      "category": "general-controls",
+      "verdict": "MEDIUM",
+      "evidence_class": "static",
+      "evidence": "app/(chat)/api/chat/route.ts:294-304",
+      "reasoning": "There is no output moderation or unwanted-behavior filtering; onError only maps generic error strings. The app relies entirely on upstream model alignment to avoid harmful content.",
+      "recommended_controls": [
+        {
+          "control_id": "GEN-MODELALIGNMENT",
+          "url": "https://owaspai.org/go/modelalignment/",
+          "summary": "Rely on aligned models and add output guardrails for unwanted content."
+        },
+        {
+          "control_id": "CTRL-INPUT-MONITORUSE",
+          "url": "https://owaspai.org/go/monitoruse/",
+          "summary": "Monitor usage for abusive/unwanted interactions."
+        }
+      ]
+    },
+    {
+      "threat_id": "GEN-DATAMINIMIZE",
+      "threat_url": "https://owaspai.org/go/dataminimize/",
+      "category": "general-controls",
+      "verdict": "MEDIUM",
+      "evidence_class": "static",
+      "evidence": "app/(chat)/api/chat/route.ts:159-166; lib/ai/prompts.ts:58-64",
+      "reasoning": "Precise latitude/longitude plus city/country are injected into every prompt regardless of whether the user's request needs location, exceeding data-minimization for a general chat assistant.",
+      "recommended_controls": [
+        {
+          "control_id": "GEN-DATAMINIMIZE",
+          "url": "https://owaspai.org/go/dataminimize/",
+          "summary": "Inject coarse location only when the request requires it."
+        }
+      ]
+    },
+    {
+      "threat_id": "GEN-SHORTRETAIN",
+      "threat_url": "https://owaspai.org/go/shortretain/",
+      "category": "general-controls",
+      "verdict": "MEDIUM",
+      "evidence_class": "static",
+      "evidence": "lib/db/queries.ts saveChat/saveMessages/saveDocument; app/(chat)/api/history/route.ts:39-47",
+      "reasoning": "Persisted chat/message/document data has no TTL; only an explicit bulk-delete endpoint exists. No automatic retention limit engages GDPR Art.5(1)(e).",
+      "recommended_controls": [
+        {
+          "control_id": "GEN-SHORTRETAIN",
+          "url": "https://owaspai.org/go/shortretain/",
+          "summary": "Implement automatic retention/expiry for stored conversation data."
+        }
+      ]
+    },
+    {
+      "threat_id": "CTRL-DEV-SUPPLYCHAINMANAGE",
+      "threat_url": "https://owaspai.org/go/supplychainmanage/",
+      "category": "dev-time",
+      "verdict": "MEDIUM",
+      "evidence_class": "static",
+      "evidence": "lib/ai/models.ts:122-150; artifacts/code/client.tsx:137-139",
+      "reasoning": "Models are resolved at runtime by id from the Vercel AI Gateway with provider fallbacks and no integrity pinning, and the Pyodide runtime is loaded from a public CDN (cdn.jsdelivr.net) without subresource integrity. A compromised CDN/gateway entry is an untracked supply-chain exposure.",
+      "recommended_controls": [
+        {
+          "control_id": "CTRL-DEV-SUPPLYCHAINMANAGE",
+          "url": "https://owaspai.org/go/supplychainmanage/",
+          "summary": "Track and pin model/runtime supply chain; add SRI for CDN assets."
+        }
+      ]
+    },
+    {
+      "threat_id": "CTRL-RUN-RUNTIMEMODELIOINTEGRITY",
+      "threat_url": "https://owaspai.org/go/runtimemodeliointegrity/",
+      "category": "runtime",
+      "verdict": "MEDIUM",
+      "evidence_class": "static",
+      "evidence": "lib/ai/tools/get-weather.ts:66-76",
+      "reasoning": "Tool outputs (third-party fetch JSON) and stored document content re-enter the model with no integrity/validation step, so manipulated external data can influence model behavior in subsequent steps.",
+      "recommended_controls": [
+        {
+          "control_id": "CTRL-RUN-RUNTIMEMODELIOINTEGRITY",
+          "url": "https://owaspai.org/go/runtimemodeliointegrity/",
+          "summary": "Validate and constrain tool I/O before feeding it back to the model."
+        }
+      ]
+    },
+    {
+      "threat_id": "TEST-TESTINGPROMPTINJECTION",
+      "threat_url": "https://owaspai.org/go/testingpromptinjection/",
+      "category": "testing",
+      "verdict": "MEDIUM",
+      "evidence_class": "static",
+      "evidence": "absence — no PI/jailbreak test suite found in repo test directories",
+      "reasoning": "The injection-relevant defenses (none beyond model alignment + ownership/approval) are not covered by any automated prompt-injection test, leaving regressions undetected.",
+      "recommended_controls": [
+        {
+          "control_id": "TEST-TESTINGTOOLSGENAI",
+          "url": "https://owaspai.org/go/testingtoolsgenai/",
+          "summary": "Integrate GenAI red-team/eval tooling into CI."
+        }
+      ]
+    },
+    {
+      "threat_id": "CTRL-INPUT-MONITORUSE",
+      "threat_url": "https://owaspai.org/go/monitoruse/",
+      "category": "input-threats",
+      "verdict": "MEDIUM",
+      "evidence_class": "static",
+      "evidence": "lib/errors.ts:62-66; app/(chat)/api/chat/route.ts:344",
+      "reasoning": "Only error-level console logging and message counts exist; there is no monitoring of prompt content for abuse, jailbreak attempts, or anomalous tool-use patterns.",
+      "recommended_controls": [
+        {
+          "control_id": "CTRL-INPUT-MONITORUSE",
+          "url": "https://owaspai.org/go/monitoruse/",
+          "summary": "Log and monitor prompts/tool calls for abuse and injection signals."
+        }
+      ]
+    },
+    {
+      "threat_id": "GEN-DATALIMIT",
+      "threat_url": "https://owaspai.org/go/datalimit/",
+      "category": "general-controls",
+      "verdict": "MEDIUM",
+      "evidence_class": "static",
+      "evidence": "lib/db/queries.ts (no retention controls)",
+      "reasoning": "No limit on the volume/age of personal data accumulated across chats, messages, documents, and votes.",
+      "recommended_controls": [
+        {
+          "control_id": "GEN-SHORTRETAIN",
+          "url": "https://owaspai.org/go/shortretain/",
+          "summary": "Bound retained data with a retention policy."
+        }
+      ]
+    },
+    {
+      "threat_id": "CTRL-INPUT-SENSITIVEOUTPUTHANDLING",
+      "threat_url": "https://owaspai.org/go/sensitiveoutputhandling/",
+      "category": "input-threats",
+      "verdict": "MEDIUM",
+      "evidence_class": "static",
+      "evidence": "app/(chat)/api/chat/route.ts:242-292",
+      "reasoning": "Model output is merged into the UI stream and persisted with no scanning/redaction for sensitive content the model might surface.",
+      "recommended_controls": [
+        {
+          "control_id": "CTRL-INPUT-SENSITIVEOUTPUTHANDLING",
+          "url": "https://owaspai.org/go/sensitiveoutputhandling/",
+          "summary": "Screen model output for sensitive data before display/persistence."
+        }
+      ]
+    },
+    {
+      "threat_id": "RUN-GENERICSECTHREATS",
+      "threat_url": "https://owaspai.org/go/genericsecthreats/",
+      "category": "runtime",
+      "verdict": "LOW",
+      "evidence_class": "static",
+      "evidence": "app/(chat)/api/files/upload/route.ts:48-54",
+      "reasoning": "Uploaded files are validated (5MB, JPEG/PNG) and the filename is sanitized, but blobs are stored with access:'public', making uploaded images publicly reachable by URL. Low because content is image-only and user-supplied, but worth noting.",
+      "recommended_controls": [
+        {
+          "control_id": "GEN-SECPROGRAM",
+          "url": "https://owaspai.org/go/secprogram/",
+          "summary": "Review public-blob exposure and apply access scoping where appropriate."
+        }
+      ]
+    }
+  ],
+  "rollup": {
+    "general-controls": "AMBER",
+    "input-threats": "AMBER",
+    "dev-time": "GREEN",
+    "runtime": "AMBER",
+    "testing": "GREEN",
+    "privacy": "GREEN",
+    "graded_posture": "Concerning",
+    "overall": "Concerning"
+  }
+}
