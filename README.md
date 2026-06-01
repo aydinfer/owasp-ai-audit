@@ -49,7 +49,7 @@ The reported posture is then **capped**: ≥90% on every layer → posture as gr
 
 ## What a real audit produces
 
-A worked example, run on [`vercel/ai-chatbot`](https://github.com/vercel/ai-chatbot) — the artifacts are in the repo ([dashboard](benchmarks/vercel-ai-chatbot/dashboard.html), [findings.json](benchmarks/vercel-ai-chatbot/findings.json), [write-up](benchmarks/v0.2.2-vs-v1.0.0.md)):
+A worked example, run on [`vercel/ai-chatbot`](https://github.com/vercel/ai-chatbot) — the artifacts are in the repo ([dashboard](benchmarks/vercel-ai-chatbot/dashboard.html), [findings.json](benchmarks/vercel-ai-chatbot/findings.json)):
 
 | | Result |
 |---|---|

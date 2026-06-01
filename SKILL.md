@@ -41,7 +41,7 @@ node scripts/enumerate-ai-surfaces.js <target> --out surfaces.json
 
 **No finding may be written without an anchor entry in `surfaces.json` (file:line).** A surface the static enumerator provably cannot see (e.g. a sink built by reflection) must be **added to `surfaces.json` manually with a justification**, plus a `TODO` opening a detector-gap issue. Do not invent locations.
 
-> **L1 coverage = (AI-relevant files read end-to-end) / (AI-relevant files in surfaces.json)**, where an AI-relevant file contains ≥ 1 surface. This is the honesty meter the v0.2.2 audit failed: it read 8 of 153 files and called it done.
+> **L1 coverage = (AI-relevant files read end-to-end) / (AI-relevant files in surfaces.json)**, where an AI-relevant file contains ≥ 1 surface. This is the honesty meter: read a fraction of the AI-relevant files and call it done, and L1 says so on page one.
 
 ### L2 — Taxonomy completeness (REQUIRED)
 
