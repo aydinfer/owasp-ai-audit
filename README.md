@@ -6,15 +6,11 @@
 
 **Most LLM-driven security audits lie — not on purpose, by construction.** You point a model at your codebase, ask "is this AI system safe?", and it writes a confident report that checked a handful of things, missed most of the taxonomy, found one scary-looking issue, and stamped the whole thing "Acceptable." It *looks* thorough. Nothing in the process forces it to admit how little it actually examined.
 
-That's not hypothetical — it's exactly how this project's own **old version (v0.x)** behaved. Its baseline run on vercel/ai-chatbot graded **26 of 97** threat entries (~27% of the taxonomy), left the other 71 silent — no verdict, no justified N/A, no record they were skipped — and still labelled the result "Acceptable." A highlights reel wearing the costume of a complete audit.
+This skill is built so that can't happen. It rests on three ideas:
 
-**v1.0.0 (this version) fixed that: it now adjudicates all 97 of 97 entries**, and the same re-audit honestly comes out "Concerning." That's the before → after this release delivers — 26/97 "Acceptable" (dishonest) → 97/97 "Concerning" (earned). The numbers are reproducible: see [`benchmarks/v0.2.2-vs-v1.0.0.md`](benchmarks/v0.2.2-vs-v1.0.0.md).
-
-**v1.0.0 is a contract change that makes that dishonesty impossible.** The design rests on three ideas:
-
-1. **Completeness is structural, not optional.** An audit isn't "some findings" — it's an explicit verdict on *every applicable* taxonomy entry, driven through eight mandatory layers, each with a coverage score. Silence on an applicable threat is a measured failure, not a clean result.
+1. **Completeness is structural, not optional.** An audit isn't "some findings" — it's an explicit verdict on *every applicable* taxonomy entry (all 97 OWASP AI Exchange threats and controls), driven through eight mandatory layers, each with a coverage score. Silence on an applicable threat is a measured failure, not a clean result.
 2. **The posture is capped by what you actually looked at.** If your weakest layer is under 70%, the report says **"Screen only — not an audit"** on page one, in the biggest type — no matter how clean the findings list looks. You cannot dress up a partial look as a clean bill of health.
-3. **The model writes the verdicts; the tool does the math.** Left to grade itself, an LLM fudges (in testing it called three AMBER categories "Acceptable"). So the rollup, the posture, and the severity caps are computed *deterministically in code*, and severity is bounded by how it was evidenced — reasoning alone caps at MEDIUM, a written probe at HIGH, an *executed* probe at CRITICAL. A hand-edited number can't survive it.
+3. **The model writes the verdicts; the tool does the math.** Left to grade itself, an LLM fudges. So the rollup, the posture, and the severity caps are computed *deterministically in code*, and severity is bounded by how it was evidenced — reasoning alone caps at MEDIUM, a written probe at HIGH, an *executed* probe at CRITICAL. A hand-edited number can't survive it.
 
 The result is an audit that is honest about its own limits — which is the only kind worth trusting. The rest of this README is the **what** and the **how**.
 
@@ -51,19 +47,20 @@ The reported posture is then **capped**: ≥90% on every layer → posture as gr
 
 *An owasp-ai-audit dashboard: traffic-light rollup, per-finding cards each citing an `owaspai.org/go/{slug}/` permalink. Under v1.0.0 the report now leads with a page-one **coverage panel** and closes with the full **verdict ledger** — see a live one in [the vercel/ai-chatbot v1.0.0 report](benchmarks/vercel-ai-chatbot/dashboard.html).*
 
-## Proven on real code: the vercel/ai-chatbot regression
+## What a real audit produces
 
-v1.0.0 isn't a spec — it's enforced, and the proof is a side-by-side re-audit of [`vercel/ai-chatbot`](https://github.com/vercel/ai-chatbot) ([full write-up](benchmarks/v0.2.2-vs-v1.0.0.md)):
+A worked example, run on [`vercel/ai-chatbot`](https://github.com/vercel/ai-chatbot) — the artifacts are in the repo ([dashboard](benchmarks/vercel-ai-chatbot/dashboard.html), [findings.json](benchmarks/vercel-ai-chatbot/findings.json), [write-up](benchmarks/v0.2.2-vs-v1.0.0.md)):
 
-| | **v0.2.2** | **v1.0.0** |
-|---|---|---|
-| Taxonomy entries adjudicated | **26 / 97** (~27%, the rest silent) | **97 / 97** — 85 applicable + 12 justified `N/A` |
-| Coverage measured? | no | **yes — 8 layers, mean 100%** |
-| Auth/authz matrix | none | **30 cells** (anon/guest/regular × 5 resources) |
-| Highest severity | `HIGH` ×1 (asserted, no probe) | `HIGH` ×2 (each backed by a verbatim probe; L5 = 2/2) |
-| **Reported posture** | **Acceptable** | **Concerning** |
+| | Result |
+|---|---|
+| Taxonomy entries adjudicated | **97 / 97** — 85 applicable verdicts + 12 justified `N/A` |
+| Coverage | **8 layers, all measured** (mean 100% on this run) |
+| Auth/authz matrix | **30 cells** — anon/guest/regular × chats/documents/messages/streams/votes |
+| Findings | 21 cards, every one carrying an evidence class (14 `static`, 7 `reasoned-probe`) |
+| Highest severity | **`HIGH` ×2**, each backed by a verbatim probe traced through the real code (L5 = 2/2) |
+| **Reported posture** | **Concerning** — graded deterministically from the full ledger, not asserted |
 
-The v0.2.2 run graded a quarter of the taxonomy, shipped one un-evidenced `HIGH`, and mislabelled its own AMBER rollup "Acceptable." v1.0.0 makes all three impossible: every applicable entry gets a verdict, severity is **capped by evidence class** (`static`→MEDIUM, `reasoned-probe`→HIGH, `demonstrated`→CRITICAL), and the posture is recomputed deterministically and **bounded by the lowest-covered layer**. A deep reasoned-probe pass then earned two HIGHs the honest way — cost-amplification via uncounted nested `streamText`, and always-on geolocation injection — while most attack paths' defenses *held* and were graded down accordingly. More verdicts, lower posture, fully measured, every HIGH probed.
+The two HIGHs were earned the honest way — cost amplification via uncounted nested `streamText`, and always-on geolocation injection — while most attack paths' defenses *held* under probing and were graded down accordingly (cross-tenant IDOR re-checked per route, tools re-derive authority from the session, model selection allowlisted). Nothing reached CRITICAL because the app wasn't run; on your own repo, where it is, that ceiling lifts.
 
 ## Why grounding matters
 
