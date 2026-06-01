@@ -278,9 +278,13 @@ Every finding carries an **evidence class** that caps how severe it may be grade
 |---|---|---|---|
 | `static` | file:line + reasoning | **MEDIUM** | no |
 | `reasoned-probe` | the exact attack payload is written **and** reasoned through the real code, naming the behaviour it relies on | **HIGH** | no |
-| `demonstrated` | that payload was **executed against a running instance** and the recorded result confirms it works | **CRITICAL** | **yes** |
+| `demonstrated` | that payload was **executed against a locally-running instance** (`npm run dev` on `localhost`) and the recorded result confirms it works | **CRITICAL** | **yes — but just `npm run dev`** |
 
-**The skill reads your code and reasons about it. It does not deploy your app, log in, and fire real attacks at it.** So on its own it tops out at **HIGH** — *"here is the exact malicious input and why it should defeat your defence."* It cannot reach **CRITICAL** (`demonstrated`) by itself, because CRITICAL means *"I ran the exploit against the live system and watched it work"* — and that requires an actual running instance of your app, with its database, secrets, auth and environment. That's your machine, not the skill's. To get a `demonstrated`/CRITICAL finding, you (or Claude in a session where your app is genuinely running) must execute the probe against the live target. The finalizer enforces this: a finding can't be marked CRITICAL without `demonstrated` evidence, and it can't be HIGH without at least a `reasoned-probe`.
+**"Running instance" means a local dev server — `npm run dev` on `localhost`, a dev database, test credentials. It does NOT mean production.** If you're auditing your own repo you already have this running; reaching CRITICAL is the *normal* case, not an exotic one. The flow: Claude reads the code and authors a probe (→ HIGH, `reasoned-probe`), then — when a local instance is up — actually sends that probe to `localhost`, records the response, and grades it `demonstrated` → CRITICAL where it really fires.
+
+Read-and-reason alone tops out at **HIGH** — *"here is the exact malicious input and why it should defeat your defence."* The only thing standing between HIGH and CRITICAL is *running the app locally and firing the probe*. The finalizer enforces the ladder both ways: a finding can't be CRITICAL without `demonstrated` evidence, and can't be HIGH without at least a `reasoned-probe`.
+
+> The one time this *was* a hard limit was our own benchmark: we audited **vercel's** repo, which we never stood up, so every finding capped at HIGH. That's a property of auditing *someone else's* code you haven't run — not a limit of the skill on *your own* repo.
 
 ### Other honest limits
 

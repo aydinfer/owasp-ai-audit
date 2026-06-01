@@ -86,7 +86,9 @@ Every finding declares an `evidence_class`, and **no finding may exceed its cap*
 |---|---|---|
 | `static` | file:line + reasoning only | **MEDIUM** |
 | `reasoned-probe` | a probe is authored **and** reasoned through against the *named* model behaviour the exploit depends on | **HIGH** |
-| `demonstrated` | the probe was executed against a running instance and the recorded result confirms exploitability | **CRITICAL** |
+| `demonstrated` | the probe was executed against a **locally-running instance** (`npm run dev` / `localhost`, dev DB, test creds — **not production**) and the recorded result confirms exploitability | **CRITICAL** |
+
+**Escalate to `demonstrated` when you can.** "Running instance" means a local dev server, not production — and when you are auditing the user's *own* repo, it is usually already runnable. So for any `reasoned-probe` finding, **offer to start the app locally and fire the probe**: e.g. `npm run dev` (note the dev DB / API-key / env it needs), then send the authored payload to `localhost` (curl the route, or the chat message) and record the response. If it fires, grade it `demonstrated` and let it reach CRITICAL; if the defence holds, that's a PASS/LOW you just proved. Do **not** run probes against production or any system you are not authorised to test. If the app can't be stood up (missing secrets, the path needs edge-only infra like a provider's geolocation), say so and leave the finding at `reasoned-probe`/HIGH — capped honestly, not silently.
 
 The renderer shows `evidence_class` on every finding card, and flags any cap violation on page one. A HIGH+ finding with no valid `evidence_class` is itself a violation.
 
@@ -274,7 +276,7 @@ Produced by `scripts/enumerate-ai-surfaces.js`. Deterministic and dependency-fre
 
 ## What this skill does not do
 
-- Penetration testing — a *taxonomy audit*, not a live attack (though L5 `demonstrated` evidence may include executed probes)
+- A full penetration test — it is a *taxonomy audit*. It will run authored probes against a **locally-running** instance to earn `demonstrated`/CRITICAL (L5), but it does not fuzz, chain exploits, or attack production/unauthorised targets
 - Compliance certification — output is evidence, not a stamp
 - Code fixes — recommends controls, does not write patches
 - Replace human security review — augments it
