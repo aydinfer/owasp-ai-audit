@@ -55,6 +55,15 @@ Run `node scripts/reground-applies-to.js --dry-run --verbose` to preview changes
 
 [`reference/verdict-rules.md`](reference/verdict-rules.md) is load-bearing for the skill's outputs. Changes that loosen rules (e.g., allowing PASS without a cited control) will not be accepted. Changes that close gaps (e.g., the current rules don't define a colour for "exactly 1–2 MEDIUM in a category" — that's a real gap) are welcome.
 
+## Completeness, evidence classes, and the posture cap (v1.0.0)
+
+The v1.0.0 contract is that an audit's posture is **capped by its lowest-covered completeness layer**, computed deterministically in [`scripts/lib/coverage.js`](scripts/lib/coverage.js). Two invariants are non-negotiable, and `tests/coverage.test.js` enforces them:
+
+1. **The cap is recomputed from numerators/denominators, never trusted from a stored `percent`.** A change that lets a hand-written `percent` move the posture will not be accepted — that reopens the exact dishonesty v1.0.0 closes.
+2. **Evidence classes cap severity.** `static` → MEDIUM, `reasoned-probe` → HIGH, `demonstrated` → CRITICAL. A finding above its cap (or HIGH+ with no class) is a flagged violation. Don't add a path that lets a `static` finding ship as HIGH.
+
+Zero-denominator layers (no HIGH+ findings, no read-then-act patterns, no declared jurisdiction) are vacuously 100% — but the report must say so. Don't "fix" a low layer by deleting its coverage block: an absent required layer counts as 0%.
+
 ## Snapshot refresh PRs
 
 The GitHub Action at `.github/workflows/snapshot-refresh.yml` opens a weekly PR with the refreshed snapshot. These should auto-merge on green. If one shows a *taxonomy* drift (a slug that no longer resolves), the PR will fail — that's the signal to update the index, not to skip the validation.
@@ -76,7 +85,7 @@ The enumerator is a deterministic, AST-based catalogue of AI surfaces (Step 1.5 
 
 1. **Queries, not line regex, for discovery.** Detectors live in `scripts/lib/ai-surface-detectors/<language>.js` as `{ kind, query, test }` tuples — a tree-sitter S-expression that captures the surface node and a discriminating node, plus a `test(caps)` over the captured *node text*. Matching on AST nodes is what stops strings, comments, and look-alikes (Vitest `test()`, readline `prompt`) from false-positiving. Don't reintroduce raw-line scanning here; that's what the CI runner's regex *fallback* is for.
 2. **Add a fixture and a decoy.** A new detector needs a fixture under `tests/fixtures/` proving it fires *and* a decoy proving a similarly-named non-AI construct does **not**. `tests/enumerate.test.js` asserts both.
-3. **`kind` vocabulary is shared.** Surfaces use the kinds in `SURFACE_KINDS` (`llm-call`, `prompt-construction`, `tool-definition`, `rag-embeddings`, `auth`, `rate-limit`); the CI runner maps a subset of these to taxonomy threats. Adding a new kind means updating both.
+3. **`kind` vocabulary is shared.** Surfaces use the kinds in `SURFACE_KINDS` — the LLM core (`llm-call`, `prompt-construction`, `tool-definition`, `rag-embeddings`, `auth`, `rate-limit`) plus the v1.0.0 trust-boundary/operational kinds (`code-exec`, `sandbox`, `api-route`, `log-sink`, `external-fetch`, `training`) that anchor the completeness layers (L3/L4/L7/L8). The CI runner maps a subset of these to taxonomy threats. Adding a new kind means updating `SURFACE_KINDS`, the per-language detector(s), a fixture + decoy, and — if it should also drive the static screen — `static-detectors.js`.
 
 ### Vendored tree-sitter parsers
 

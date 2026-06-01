@@ -91,7 +91,19 @@ Evidence must quote or cite the specific part of the architecture description th
 | 🟡 AMBER | Any `HIGH`, OR 3+ `MEDIUM` in the category |
 | 🟢 GREEN | Only `LOW` / `PASS` / `N/A` |
 
-## Overall posture
+## Evidence-class caps (v1.0.0, L5)
+
+Every finding declares an `evidence_class`. A finding **may not exceed the cap** its evidence class affords. This is enforced by `scripts/lib/coverage.js` and surfaced on page one of the dashboard.
+
+| `evidence_class` | what backs it | severity cap |
+|---|---|---|
+| `static` | file:line + reasoning only | **MEDIUM** |
+| `reasoned-probe` | a probe is authored **and** reasoned through against the *named* model behaviour the exploit depends on | **HIGH** |
+| `demonstrated` | the probe was executed against a running instance and the recorded result confirms exploitability | **CRITICAL** |
+
+A `HIGH`/`CRITICAL` finding with no valid `evidence_class`, or one above its cap, is an enforced violation — fix the class or lower the verdict. "I'm confident it's exploitable" is `static` until a probe is reasoned through or run.
+
+## Graded posture
 
 | Posture | Trigger |
 |---------|---------|
@@ -100,4 +112,16 @@ Evidence must quote or cite the specific part of the architecture description th
 | **Acceptable** | One category AMBER, rest GREEN |
 | **Strong** | All categories GREEN |
 
-The posture is the worst-case rollup. Do not soften it for politeness.
+The graded posture is the worst-case category rollup. Do not soften it for politeness. Record it as `rollup.graded_posture`.
+
+## Reported posture — capped by coverage (v1.0.0, the lever)
+
+The graded posture is what the findings *alone* say. The **reported** posture is the graded posture **bounded by the lowest of the eight completeness layers** (SKILL.md L1–L8). `scripts/lib/coverage.js` recomputes every layer's percentage from its numerator/denominator — a hand-edited `percent` cannot move the cap.
+
+| Lowest-layer coverage | Reported posture |
+|---|---|
+| **≥ 90% on every layer** | the graded posture |
+| **any layer 70–90%** | **"Partial — acceptable for what was read (NN%)"** |
+| **any layer < 70%** | **"Screen only — not an audit"** |
+
+A required layer with no coverage block counts as 0% (you cannot earn a clean posture by omitting a layer). A layer whose denominator is genuinely zero — no HIGH+ findings to probe, no read-then-act patterns, no declared jurisdiction — is vacuously 100%, but the report must say so. This is the rule that makes "graded 8 of 97 entries, labelled Acceptable" impossible.

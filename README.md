@@ -6,11 +6,28 @@
 
 A drop-in skill folder for [Claude Code](https://claude.ai/code). Point Claude at a codebase or paste an architecture description, ask for an OWASP AI audit, and get back:
 
-- A traffic-light dashboard across the six OWASP AI Exchange categories
-- Per-finding verdicts (`CRITICAL` / `HIGH` / `MEDIUM` / `LOW` / `PASS` / `N/A`) with concrete evidence and reasoning
-- Every threat reference linked to its `owaspai.org/go/{slug}/` permalink
-- Recommended controls, also citing OWASP permalinks
-- A printable, self-contained HTML report — no servers, no external assets
+- A **page-one coverage panel** scoring eight mandatory completeness layers, with the overall posture **capped by the lowest layer** — so a partial look can never be dressed up as "Acceptable"
+- A **verdict ledger** with an explicit verdict on *every applicable* taxonomy entry (not a highlights reel), including every justified `N/A`
+- Per-finding verdicts (`CRITICAL` / `HIGH` / `MEDIUM` / `LOW` / `PASS` / `N/A`) with concrete evidence, reasoning, and an **evidence class** (`static` / `reasoned-probe` / `demonstrated`) that caps how severe a finding may be graded
+- Every threat reference linked to its `owaspai.org/go/{slug}/` permalink; recommended controls likewise
+- A traffic-light dashboard across the six OWASP AI Exchange categories — a printable, self-contained HTML report, no servers, no external assets
+
+## Completeness by construction (v1.0.0)
+
+v0.x was a highlights reel: on its first real run it graded a handful of entries, read a fraction of the files, and still labelled the result "Acceptable." v1.0.0 makes that dishonesty pattern impossible. An audit is driven through **eight ordered, mandatory layers**, each with a coverage formula:
+
+| | Layer | Coverage |
+|---|---|---|
+| L1 | Surface inventory | files read end-to-end / AI-relevant files |
+| L2 | Taxonomy completeness | entries verdicted / applicable entries |
+| L3 | Auth/authz matrix | cells filled / grid cells |
+| L4 | Trust-boundary depth | subareas covered / 7 |
+| L5 | Probe verification | HIGH+ findings with a probe / HIGH+ findings |
+| L6 | Regulatory pass | obligations addressed / obligations (declared jurisdictions) |
+| L7 | Operational pass | subareas covered / 4 |
+| L8 | Race / TOCTOU pass | patterns inspected / patterns identified |
+
+The reported posture is then **capped**: ≥90% on every layer → posture as graded; any layer 70–90% → "Partial — acceptable for what was read (NN%)"; any layer <70% → **"Screen only — not an audit."** The cap is computed deterministically in [`scripts/lib/coverage.js`](scripts/lib/coverage.js) from the numerator/denominator you record — a hand-edited percentage cannot move it. See [SKILL.md](SKILL.md) for the full layer definitions and [reference/verdict-rules.md](reference/verdict-rules.md) for the caps.
 
 ![Dashboard screenshot — the skill audited its own repo](docs/dashboard-screenshot.png)
 
@@ -68,7 +85,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
-      - uses: aydinfer/owasp-ai-audit@v0.3.0
+      - uses: aydinfer/owasp-ai-audit@v1
         with:
           target: .
           fail-on: HIGH        # NONE | LOW | MEDIUM | HIGH | CRITICAL
@@ -104,7 +121,7 @@ Before the audit reasons about anything, it statically catalogues every AI surfa
 node scripts/enumerate-ai-surfaces.js path/to/repo --out surfaces.json
 ```
 
-This parses each TypeScript / TSX / JavaScript / Python / Go file with a vendored tree-sitter grammar and matches **structural queries** — LLM call sites, prompt construction, tool/function definitions, embedding/RAG calls, auth surfaces, rate-limit sites — emitting a `surfaces.json` where each entry carries the file, line range, kind, name, enclosing `callers`, and an evidence excerpt. Because detection runs on the AST and not on raw text, it doesn't trip on strings, comments, or look-alikes (Vitest's `test()`, readline's `prompt`).
+This parses each TypeScript / TSX / JavaScript / Python / Go file with a vendored tree-sitter grammar and matches **structural queries**, emitting a `surfaces.json` where each entry carries the file, line range, kind, name, enclosing `callers`, and an evidence excerpt. v1.0.0 detects twelve kinds — the LLM core (`llm-call`, `prompt-construction`, `tool-definition`, `rag-embeddings`, `auth`, `rate-limit`) plus the trust-boundary/operational kinds the completeness layers need: `code-exec`, `sandbox`, `api-route`, `log-sink`, `external-fetch`, `training`. Because detection runs on the AST and not on raw text, it doesn't trip on strings, comments, or look-alikes (Vitest's `test()`, readline's `prompt`, `Math.exp`, a local `get`). `external-fetch` fires only on literal absolute non-loopback URLs.
 
 Why it matters: the [benchmark run](benchmarks/skill-issues.md) found the real attack surface routinely lived in files too large to read end-to-end (a 5204-line `middleware.py`, an 11806-line `router.py`). Enumerating surfaces first anchors every finding to a detected node instead of to whatever fit in context. Both the GitHub Action and the interactive [SKILL.md](SKILL.md) workflow (Step 1.5) use it; the CI runner falls back to regex detectors only if the vendored runtime can't load.
 
@@ -182,7 +199,8 @@ owasp-ai-audit/
 ├── reference/
 │   ├── taxonomy-index.json               # Map of OWASP AI threats + controls + permalinks
 │   ├── cross-references.json             # OWASP slug → MITRE ATLAS + NIST AI 100-2 anchors
-│   ├── verdict-rules.md                  # Explicit severity assignment rules
+│   ├── llm-top10-2025.json               # OWASP LLM Top 10 (2025) → AI Exchange slug mapping
+│   ├── verdict-rules.md                  # Severity rules + evidence-class & coverage caps
 │   └── snapshot/                         # Offline fallback (auto-refreshed weekly)
 ├── scripts/
 │   ├── lib/
@@ -190,6 +208,7 @@ owasp-ai-audit/
 │   │   ├── extract.js                    # htmlToText(), extractSections() — used by the regrounder
 │   │   ├── static-detectors.js           # regex AI-surface detectors (CI runner fallback)
 │   │   ├── audit-summary.js              # findings.json → Markdown summary (PR comment)
+│   │   ├── coverage.js                   # eight-layer coverage formulas + posture cap (the lever)
 │   │   ├── ai-surface-detectors.js       # language registry for the AST enumerator
 │   │   ├── ai-surface-detectors/         # per-language tree-sitter detector sets
 │   │   └── parsers/                      # vendored tree-sitter runtime + grammar .wasm
