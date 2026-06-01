@@ -1,6 +1,19 @@
+import logging
+import subprocess
+
+import requests
 from openai import OpenAI
 
 client = OpenAI()
+logger = logging.getLogger(__name__)
+
+
+@app.post("/run")
+def run_endpoint(code):
+    logger.info("running endpoint")              # log-sink
+    subprocess.run(["echo", code])               # code-exec
+    r = requests.get("https://api.example.com/data")  # external-fetch
+    return r.json()
 
 
 def answer(query, role):

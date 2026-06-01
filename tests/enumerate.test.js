@@ -48,9 +48,36 @@ test('every surface has the documented schema and a known kind', async () => {
   assert.match(d.parsers.runtime, /web-tree-sitter@/);
 });
 
+test('TS/JS v1.0.0 kinds: api-route, auth, external-fetch, log-sink, code-exec, sandbox', async () => {
+  const d = await doc('llm-app-sample');
+  const k = byKind(d);
+  assert.ok(k['api-route']?.some((s) => s.name === 'POST'), 'Next.js POST route');
+  assert.ok(k['auth']?.some((s) => s.name === 'getServerSession'), 'getServerSession');
+  assert.ok(k['external-fetch']?.some((s) => /api\.example\.com/.test(s.evidence_excerpt)), 'external fetch');
+  assert.ok(k['log-sink']?.some((s) => /console\.error/.test(s.name)), 'console.error');
+  assert.ok(k['code-exec']?.some((s) => s.name === 'Function'), 'new Function');
+  assert.ok(k['code-exec']?.some((s) => /child_process\.exec/.test(s.name)), 'child_process.exec');
+  assert.ok(k['code-exec']?.some((s) => /vm\.runInNewContext/.test(s.name)), 'vm.runInNewContext');
+  assert.ok(k['sandbox']?.some((s) => s.name === 'loadPyodide'), 'loadPyodide');
+  assert.ok(k['sandbox']?.some((s) => s.name === 'Worker'), 'new Worker');
+});
+
 test('TS decoy: Vitest test() and readline prompt are NOT AI surfaces', async () => {
   const d = await doc('llm-app-sample');
   assert.equal(d.surfaces.filter((s) => s.file.includes('cli.test.ts')).length, 0);
+});
+
+test('TS decoy2: Math.exp/new Map/fetchData/lowercase get are NOT AI surfaces', async () => {
+  const d = await doc('llm-app-sample');
+  assert.equal(d.surfaces.filter((s) => s.file.includes('decoy2.test.ts')).length, 0);
+});
+
+test('external-fetch ignores internal/relative URLs', async () => {
+  // The fixture only fetches an absolute https URL; relative fetches never fire.
+  const d = await doc('llm-app-sample');
+  for (const s of d.surfaces.filter((s) => s.kind === 'external-fetch')) {
+    assert.match(s.evidence_excerpt, /https?:\/\//, 'external-fetch must carry an absolute URL');
+  }
 });
 
 test('Python: f-string prompt, @tool, member calls, and auth — with callers', async () => {
@@ -62,6 +89,15 @@ test('Python: f-string prompt, @tool, member calls, and auth — with callers', 
   assert.ok(k['prompt-construction']?.some((s) => s.name === 'system_prompt' && s.callers.includes('answer')));
   assert.ok((k['tool-definition'] || []).length >= 1, '@tool decorator');
   assert.ok(k['auth']?.some((s) => s.name === 'get_current_user'));
+});
+
+test('Python v1.0.0 kinds: api-route, code-exec, log-sink, external-fetch', async () => {
+  const d = await doc('py-llm-app');
+  const k = byKind(d);
+  assert.ok(k['api-route']?.some((s) => s.name === 'post'), '@app.post route decorator');
+  assert.ok(k['code-exec']?.some((s) => /subprocess\.run/.test(s.name)), 'subprocess.run');
+  assert.ok(k['log-sink']?.some((s) => /logger\.info/.test(s.name)), 'logger.info');
+  assert.ok(k['external-fetch']?.some((s) => /requests\.get/.test(s.name)), 'requests.get');
 });
 
 test('Python decoy: pytest.fixture, input() prompt, plain f-string ignored', async () => {

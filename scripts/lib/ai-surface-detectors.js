@@ -27,9 +27,13 @@ function forExtension(ext) {
 }
 
 // All surface kinds the detectors can emit (for documentation / validation).
+// The first row is the LLM core; the second row was added in v1.0.0 to give the
+// completeness layers (L3 authz, L4 trust-boundary, L7 operational, L8 race)
+// structural anchors.
 const SURFACE_KINDS = [
   'llm-call', 'prompt-construction', 'tool-definition',
   'rag-embeddings', 'auth', 'rate-limit',
+  'code-exec', 'sandbox', 'api-route', 'log-sink', 'external-fetch', 'training',
 ];
 
 module.exports = { LANGUAGES, forExtension, SURFACE_KINDS };
