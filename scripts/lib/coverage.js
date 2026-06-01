@@ -148,6 +148,103 @@ function evidenceCapViolations(findings) {
   return out;
 }
 
+// ---------------------------------------------------------------------------
+// Deterministic finalization (v1.0.0).
+//
+// The model writes verdicts (the verdict_ledger and the finding cards). The
+// MATH — which categories are AMBER/RED, the graded posture, the L5 ratio, the
+// evidence tally — is the tool's job, never the model's. We saw why: an LLM
+// audit labelled a 3-AMBER rollup "Acceptable". finalize() recomputes all of it
+// from the ledger + findings so any user's run lands the same place.
+// ---------------------------------------------------------------------------
+
+const CATEGORY_ORDER = ['general-controls', 'input-threats', 'dev-time', 'runtime', 'testing', 'privacy'];
+
+// verdict-rules.md: RED = any CRITICAL or 2+ HIGH; AMBER = any HIGH or 3+ MEDIUM.
+function categoryColor(counts) {
+  if ((counts.CRITICAL || 0) > 0 || (counts.HIGH || 0) >= 2) return 'RED';
+  if ((counts.HIGH || 0) >= 1 || (counts.MEDIUM || 0) >= 3) return 'AMBER';
+  return 'GREEN';
+}
+
+// Roll up category colours. Over the COMPLETE verdict_ledger when present (every
+// applicable entry's verdict, mapped to its category via `catOf`); otherwise
+// over findings[] by their own `.category` (back-compat for ledger-less docs).
+function categoryRollup(doc, catOf) {
+  const counts = {};
+  const ensure = (c) => (counts[c] ??= { CRITICAL: 0, HIGH: 0, MEDIUM: 0, LOW: 0, PASS: 0, 'N/A': 0 });
+  const ledger = doc.verdict_ledger || [];
+  if (ledger.length && catOf) {
+    for (const r of ledger) { const c = catOf[r.entry_id]; if (!c) continue; ensure(c)[r.verdict] = (ensure(c)[r.verdict] || 0) + 1; }
+  } else {
+    for (const f of doc.findings || []) { const c = f.category; if (!c) continue; ensure(c)[f.verdict] = (ensure(c)[f.verdict] || 0) + 1; }
+  }
+  const colors = {};
+  for (const c of Object.keys(counts)) colors[c] = categoryColor(counts[c]);
+  return colors;
+}
+
+// verdict-rules.md: Critical (any RED) > Concerning (2+ AMBER) > Acceptable
+// (1 AMBER) > Strong (all GREEN).
+function gradedPosture(colors) {
+  const vals = Object.values(colors);
+  const reds = vals.filter((v) => v === 'RED').length;
+  const ambers = vals.filter((v) => v === 'AMBER').length;
+  if (reds > 0) return 'Critical';
+  if (ambers >= 2) return 'Concerning';
+  if (ambers === 1) return 'Acceptable';
+  return 'Strong';
+}
+
+// L5 numerator/denominator straight from findings (no eyeballing).
+function recomputeL5(findings) {
+  const highs = (findings || []).filter((f) => f.verdict === 'HIGH' || f.verdict === 'CRITICAL');
+  const withProbe = highs.filter((f) => f.evidence_class === 'reasoned-probe' || f.evidence_class === 'demonstrated');
+  return { high_plus_with_probe: withProbe.length, high_plus_total: highs.length };
+}
+
+// Recompute everything derivable, returning a NEW doc plus what the auditor must
+// fix. `catOf` is { entry_id: category } from taxonomy-index. Pure.
+//   - reconciles each finding's verdict into its verdict_ledger row (a card with
+//     evidence is authoritative); flags a finding whose entry has no ledger row;
+//   - recomputes category rollup + graded_posture (skipped for screen_only docs,
+//     whose rollup the CI runner owns);
+//   - recomputes coverage.L5_probe_verification and every coverage .percent;
+//   - recomputes evidence_class_summary;
+//   - collects evidence-class cap violations (the hard gate).
+function finalize(doc, catOf) {
+  const out = JSON.parse(JSON.stringify(doc));
+  const errors = [];
+
+  if (out.verdict_ledger && out.findings) {
+    const byId = Object.fromEntries(out.verdict_ledger.map((r) => [r.entry_id, r]));
+    for (const f of out.findings) {
+      if (!f.threat_id) continue;
+      if (byId[f.threat_id]) byId[f.threat_id].verdict = f.verdict;
+      else errors.push(`finding ${f.threat_id} has no verdict_ledger row (ledger must be complete)`);
+    }
+  }
+
+  if (!out.screen_only) {
+    const colors = categoryRollup(out, catOf);
+    if (Object.keys(colors).length) {
+      out.rollup = { ...colors, graded_posture: gradedPosture(colors), overall: gradedPosture(colors) };
+    }
+  }
+
+  if (out.coverage) {
+    if (out.coverage.L5_probe_verification) out.coverage.L5_probe_verification = recomputeL5(out.findings);
+    for (const layer of LAYERS) {
+      const cell = out.coverage[layer.key];
+      if (cell) cell.percent = layerPercent(layer, out.coverage);
+    }
+  }
+
+  out.evidence_class_summary = evidenceClassSummary(out.findings);
+  const violations = evidenceCapViolations(out.findings);
+  return { doc: out, violations, errors };
+}
+
 // One-call rollup used by the renderer and the inline summary.
 function summarize(doc) {
   const block = doc.coverage || {};
@@ -166,7 +263,8 @@ function summarize(doc) {
 }
 
 module.exports = {
-  LAYERS, EVIDENCE_CLASS_CAP, SEVERITY_RANK,
+  LAYERS, EVIDENCE_CLASS_CAP, SEVERITY_RANK, CATEGORY_ORDER,
   layerPercent, band, layerRows, minCoverage, meanCoverage,
   cappedPosture, evidenceClassSummary, evidenceCapViolations, summarize,
+  categoryColor, categoryRollup, gradedPosture, recomputeL5, finalize,
 };

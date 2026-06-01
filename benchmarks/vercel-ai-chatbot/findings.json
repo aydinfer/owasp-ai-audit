@@ -52,7 +52,8 @@
     },
     "L5_probe_verification": {
       "high_plus_with_probe": 2,
-      "high_plus_total": 2
+      "high_plus_total": 2,
+      "percent": 100
     },
     "L6_regulatory": {
       "obligations_addressed": 7,
@@ -661,7 +662,8 @@
   "evidence_class_summary": {
     "static": 14,
     "reasoned-probe": 7,
-    "demonstrated": 0
+    "demonstrated": 0,
+    "unspecified": 0
   },
   "auth_matrix": {
     "user_types": [
@@ -1539,13 +1541,14 @@
     }
   ],
   "rollup": {
-    "general-controls": "AMBER",
     "input-threats": "AMBER",
     "dev-time": "GREEN",
     "runtime": "AMBER",
+    "general-controls": "AMBER",
     "testing": "GREEN",
     "privacy": "AMBER",
     "graded_posture": "Concerning",
     "overall": "Concerning"
-  }
+  },
+  "finalized": true
 }

@@ -19,7 +19,19 @@ if (!inPath || !outPath) {
   process.exit(1);
 }
 
-const findings = JSON.parse(fs.readFileSync(inPath, 'utf8'));
+let findings = JSON.parse(fs.readFileSync(inPath, 'utf8'));
+
+// Self-compute the rollup / graded posture / L5 / evidence tally from the
+// verdict ledger + taxonomy, so the dashboard can never display a number the
+// model mislabelled (the deterministic counterpart to finalize-findings.js).
+// Falls back to the doc as-written if the taxonomy index can't be loaded — e.g.
+// rendering a legacy findings.json outside the skill tree.
+try {
+  const idx = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'reference', 'taxonomy-index.json'), 'utf8'));
+  const catOf = {};
+  for (const e of [...idx.threats, ...(idx.controls || [])]) catOf[e.id] = e.category;
+  findings = coverage.finalize(findings, catOf).doc;
+} catch { /* keep findings as-written */ }
 
 const verdictRank = { CRITICAL: 5, HIGH: 4, MEDIUM: 3, LOW: 2, UNKNOWN: 1.5, PASS: 1, 'N/A': 0 };
 const verdictColor = {

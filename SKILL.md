@@ -167,16 +167,21 @@ For each applicable entry decide `CRITICAL | HIGH | MEDIUM | LOW | PASS | N/A` p
 
 Follow Deep Trace: read implicated files end-to-end. No grep-only conclusions.
 
-### Step 7 — Compute coverage and roll up
+### Step 7 — Write verdicts, then finalize (the tool does the math)
 
-Fill `findings.json → coverage` for all eight layers (numerator/denominator per the formulas). Per-category traffic lights and graded posture come from `reference/verdict-rules.md`; the **reported posture is then capped** by `scripts/lib/coverage.js`. Set `rollup.graded_posture` to the uncapped grade so the renderer can show "graded X, capped to Y."
+Fill `findings.json → coverage` numerators/denominators for all eight layers, the `verdict_ledger`, and the `findings`. **You write the verdicts; you do not compute the rollup, the graded posture, the L5 ratio, or the evidence tally by hand** — an LLM gets that wrong (a 3-AMBER rollup once shipped as "Acceptable"). Run the finalizer:
+
+```bash
+node scripts/finalize-findings.js findings.json
+```
+
+It deterministically recomputes the per-category rollup and graded posture from the complete `verdict_ledger` (via `reference/verdict-rules.md` thresholds), recomputes `coverage.L5_probe_verification` and every `.percent`, recomputes `evidence_class_summary`, and reconciles each finding's verdict into its ledger row. It is the **enforcement gate: it exits non-zero** if any finding exceeds its evidence-class cap (`static`→MEDIUM, `reasoned-probe`→HIGH, `demonstrated`→CRITICAL) or if a finding has no ledger row — fix the verdict (lower it, or add a probe) and re-run until clean.
 
 ### Step 8 — Render the dashboard
 
-1. Write `findings.json` in the working directory.
-2. `node scripts/render-dashboard.js findings.json dashboard.html`
-3. The page-one **Coverage panel** (per-layer % + colour band) renders **before any findings**; the **verdict ledger** renders as an appendix; every finding card shows its `evidence_class`.
-4. Tell the user the file location and that "Save as PDF" from any browser produces the deliverable. Use `present_files` if available.
+1. `node scripts/render-dashboard.js findings.json dashboard.html`. The renderer **self-computes** the same rollup/posture/L5 from the taxonomy, so it can never display a number you mislabelled — but run Step 7's finalizer first so the saved `findings.json` matches.
+2. The page-one **Coverage panel** (per-layer % + colour band) renders **before any findings**; the **verdict ledger** renders as an appendix; every finding card shows its `evidence_class`; the reported posture shows "graded X, capped to Y" when capped.
+3. Tell the user the file location and that "Save as PDF" from any browser produces the deliverable. Use `present_files` if available.
 
 ### Step 9 — Inline summary
 

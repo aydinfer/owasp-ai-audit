@@ -125,3 +125,5 @@ The graded posture is what the findings *alone* say. The **reported** posture is
 | **any layer < 70%** | **"Screen only — not an audit"** |
 
 A required layer with no coverage block counts as 0% (you cannot earn a clean posture by omitting a layer). A layer whose denominator is genuinely zero — no HIGH+ findings to probe, no read-then-act patterns, no declared jurisdiction — is vacuously 100%, but the report must say so. This is the rule that makes "graded 8 of 97 entries, labelled Acceptable" impossible.
+
+**You do not apply these rules by hand.** `scripts/finalize-findings.js` recomputes the category rollup, the graded posture, the L5 ratio and the evidence tally from the `verdict_ledger` you wrote, and exits non-zero on any evidence-class cap violation. The auditor writes verdicts; the tool does the arithmetic — because an LLM, left to eyeball it, mislabels (a 3-AMBER rollup once shipped as "Acceptable").

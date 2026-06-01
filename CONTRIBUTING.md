@@ -21,6 +21,9 @@ node scripts/snapshot-update.js
 
 # 3. The example dashboard should still render
 node scripts/render-dashboard.js examples/findings.json examples/dashboard.html
+
+# 4. A findings.json finalizes cleanly (recomputes the math, enforces caps)
+node scripts/finalize-findings.js path/to/findings.json --check
 ```
 
 All three should exit 0 with no errors. The snapshot script prints a summary at the end (`Done. N ok, 0 failed.`) — `0 failed` is required. The tests need Node 18+ (built-in test runner).
@@ -61,6 +64,7 @@ The v1.0.0 contract is that an audit's posture is **capped by its lowest-covered
 
 1. **The cap is recomputed from numerators/denominators, never trusted from a stored `percent`.** A change that lets a hand-written `percent` move the posture will not be accepted — that reopens the exact dishonesty v1.0.0 closes.
 2. **Evidence classes cap severity.** `static` → MEDIUM, `reasoned-probe` → HIGH, `demonstrated` → CRITICAL. A finding above its cap (or HIGH+ with no class) is a flagged violation. Don't add a path that lets a `static` finding ship as HIGH.
+3. **The model writes verdicts; the tool computes the rollup.** The per-category rollup, graded posture, L5 ratio and evidence tally are computed by `scripts/finalize-findings.js` (and re-derived by the renderer), never by the auditing LLM — because it gets them wrong. `node scripts/finalize-findings.js findings.json --check` is the gate; it exits non-zero on a cap violation or a finding with no ledger row. Keep that gate intact: a PR that lets the model's hand-written `rollup`/`graded_posture` survive into the dashboard defeats the whole release.
 
 Zero-denominator layers (no HIGH+ findings, no read-then-act patterns, no declared jurisdiction) are vacuously 100% — but the report must say so. Don't "fix" a low layer by deleting its coverage block: an absent required layer counts as 0%.
 

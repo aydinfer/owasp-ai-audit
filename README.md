@@ -27,7 +27,9 @@ v0.x was a highlights reel: on its first real run it graded a handful of entries
 | L7 | Operational pass | subareas covered / 4 |
 | L8 | Race / TOCTOU pass | patterns inspected / patterns identified |
 
-The reported posture is then **capped**: ≥90% on every layer → posture as graded; any layer 70–90% → "Partial — acceptable for what was read (NN%)"; any layer <70% → **"Screen only — not an audit."** The cap is computed deterministically in [`scripts/lib/coverage.js`](scripts/lib/coverage.js) from the numerator/denominator you record — a hand-edited percentage cannot move it. See [SKILL.md](SKILL.md) for the full layer definitions and [reference/verdict-rules.md](reference/verdict-rules.md) for the caps.
+The reported posture is then **capped**: ≥90% on every layer → posture as graded; any layer 70–90% → "Partial — acceptable for what was read (NN%)"; any layer <70% → **"Screen only — not an audit."**
+
+**The model writes the verdicts; the tool does the math.** The rollup, the graded posture, the L5 probe ratio and the evidence tally are *not* left to the LLM (it gets them wrong — a 3-AMBER rollup once shipped as "Acceptable"). [`scripts/finalize-findings.js`](scripts/finalize-findings.js) recomputes them deterministically from your `verdict_ledger` and **fails the run** if any finding exceeds its evidence-class cap; the renderer self-computes the same numbers so it can never *display* a fudged one. A hand-edited percentage or posture cannot survive. So anyone can clone this, point Claude at their own repo, and get the same trustworthy arithmetic — that's the point. See [SKILL.md](SKILL.md) for the layer definitions and [reference/verdict-rules.md](reference/verdict-rules.md) for the caps.
 
 ![Dashboard screenshot — an owasp-ai-audit report](docs/dashboard-screenshot.png)
 
@@ -200,9 +202,12 @@ L6  regulatory pass      L7  operational (4 subareas)        L8  race / TOCTOU
   ↓
 [write findings.json: coverage{} + verdict_ledger[] + findings[] + evidence_class]
   ↓
-coverage.js  →  recompute each layer %, CAP the posture by the lowest layer
+finalize-findings.js  →  the model wrote the verdicts; the TOOL computes the
+      rollup, graded posture, L5 ratio + evidence tally, and FAILS on any finding
+      above its evidence-class cap. coverage.js then caps posture by lowest layer.
   ↓
-render-dashboard.js → dashboard.html   (coverage panel first, ledger appendix last)
+render-dashboard.js → dashboard.html   (self-computes the same math; coverage
+      panel first, ledger appendix last)
   ↓
 [open in browser → Print → Save as PDF]
 ```
@@ -235,6 +240,7 @@ owasp-ai-audit/
 │   ├── snapshot-update.js                # Refreshes bundled snapshot from owaspai.org
 │   ├── reground-applies-to.js            # Re-derives applies_to from live chapter content
 │   ├── enumerate-ai-surfaces.js          # Deterministic AST catalogue of AI surfaces → surfaces.json
+│   ├── finalize-findings.js              # Recompute rollup/posture/L5 from verdicts; enforce evidence caps
 │   ├── run-audit.js                      # Non-interactive CI runner (static first-pass screen)
 │   ├── pr-comment.js                     # Posts the screen summary as a PR comment
 │   └── render-dashboard.js               # findings.json → dashboard.html
