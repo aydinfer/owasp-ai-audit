@@ -6,7 +6,9 @@
 
 **Most LLM-driven security audits lie — not on purpose, by construction.** You point a model at your codebase, ask "is this AI system safe?", and it writes a confident report that checked a handful of things, missed most of the taxonomy, found one scary-looking issue, and stamped the whole thing "Acceptable." It *looks* thorough. Nothing in the process forces it to admit how little it actually examined.
 
-That's not hypothetical — it's exactly how this project's own v0.x behaved. Its baseline run on vercel/ai-chatbot graded **26 of 97** threat entries (~27% of the taxonomy), left the other 71 silent — no verdict, no justified N/A, no record they were skipped — and still labelled the result "Acceptable." A highlights reel wearing the costume of a complete audit. (The numbers are reproducible: see [`benchmarks/v0.2.2-vs-v1.0.0.md`](benchmarks/v0.2.2-vs-v1.0.0.md).)
+That's not hypothetical — it's exactly how this project's own **old version (v0.x)** behaved. Its baseline run on vercel/ai-chatbot graded **26 of 97** threat entries (~27% of the taxonomy), left the other 71 silent — no verdict, no justified N/A, no record they were skipped — and still labelled the result "Acceptable." A highlights reel wearing the costume of a complete audit.
+
+**v1.0.0 (this version) fixed that: it now adjudicates all 97 of 97 entries**, and the same re-audit honestly comes out "Concerning." That's the before → after this release delivers — 26/97 "Acceptable" (dishonest) → 97/97 "Concerning" (earned). The numbers are reproducible: see [`benchmarks/v0.2.2-vs-v1.0.0.md`](benchmarks/v0.2.2-vs-v1.0.0.md).
 
 **v1.0.0 is a contract change that makes that dishonesty impossible.** The design rests on three ideas:
 
