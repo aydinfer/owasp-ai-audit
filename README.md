@@ -270,12 +270,25 @@ The snapshot in `reference/snapshot/` is auto-refreshed weekly by GitHub Actions
 node scripts/snapshot-update.js --verbose
 ```
 
-## What this skill does NOT do
+## What it proves — and what it can't (read this)
 
-- Penetration testing — this is a *taxonomy audit*, not a live attack
-- Compliance certification — output is evidence, not a stamp
-- Code fixes — recommends controls, does not write patches
-- Replace human security review — augments it
+Every finding carries an **evidence class** that caps how severe it may be graded. This is the honest ceiling on what the skill can claim:
+
+| Evidence class | What backs it | Severity cap | Needs the app running? |
+|---|---|---|---|
+| `static` | file:line + reasoning | **MEDIUM** | no |
+| `reasoned-probe` | the exact attack payload is written **and** reasoned through the real code, naming the behaviour it relies on | **HIGH** | no |
+| `demonstrated` | that payload was **executed against a running instance** and the recorded result confirms it works | **CRITICAL** | **yes** |
+
+**The skill reads your code and reasons about it. It does not deploy your app, log in, and fire real attacks at it.** So on its own it tops out at **HIGH** — *"here is the exact malicious input and why it should defeat your defence."* It cannot reach **CRITICAL** (`demonstrated`) by itself, because CRITICAL means *"I ran the exploit against the live system and watched it work"* — and that requires an actual running instance of your app, with its database, secrets, auth and environment. That's your machine, not the skill's. To get a `demonstrated`/CRITICAL finding, you (or Claude in a session where your app is genuinely running) must execute the probe against the live target. The finalizer enforces this: a finding can't be marked CRITICAL without `demonstrated` evidence, and it can't be HIGH without at least a `reasoned-probe`.
+
+### Other honest limits
+
+- **It audits; it does not patch.** Findings include grounded `recommended_controls` (each an OWASP permalink). A human implements the fix.
+- **Coverage measures breadth, not perfection.** "100% on L4" means all seven trust-boundary subareas were *examined and verdicted* — not that all seven are secure. The verdicts say whether they're secure; the coverage says you looked.
+- **The model writes the verdicts; the tool only does the arithmetic.** `finalize-findings.js` guarantees the rollup, posture, L5 and caps are computed correctly and honestly — it does **not** guarantee the auditing model's *reasoning* on any single entry is right. Deep-trace quality still depends on the model; the enforcement just stops it from overstating the result.
+- **Not a compliance certification.** The L6 regulatory pass is evidence toward an obligation set you declare, not a legal stamp.
+- **Not a substitute for `/security-review` or human review.** It covers AI-specific threats; run conventional app-sec review alongside it.
 
 ## License
 
