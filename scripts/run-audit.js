@@ -219,10 +219,28 @@ async function main() {
   for (const c of allCategories) rollup[c] = catsWithFindings.has(c) ? 'AMBER' : 'GREEN';
   rollup.overall = findings.length ? 'Needs Review' : 'No AI surface detected';
 
+  // A screen reads no file end-to-end and renders no judgment, so its coverage
+  // is zero on every layer that requires reasoning — which makes the shared
+  // renderer label it "Screen only — not an audit" honestly, by the same cap
+  // that governs a full audit. L1 total is the count of AI-relevant files the
+  // enumerator found but the screen did not read.
+  const aiFiles = new Set(surfaces.map((s) => s.file));
+  const screenCoverage = {
+    L1_surface_inventory:     { covered: 0, total: aiFiles.size },
+    L2_taxonomy_completeness: { verdicted: 0, applicable: findings.length },
+    L3_authz_matrix:          { cells_filled: 0, cells_total: kinds.has('auth') || kinds.has('api-route') ? 1 : 0 },
+    L4_trust_boundary:        { subareas_covered: 0, subareas_total: 7 },
+    L5_probe_verification:    { high_plus_with_probe: 0, high_plus_total: 0 },
+    L6_regulatory:            { obligations_addressed: 0, obligations_total: 0, jurisdictions: [] },
+    L7_operational:           { subareas_covered: 0, subareas_total: 4 },
+    L8_race_toctou:           { patterns_inspected: 0, patterns_identified: 0 },
+  };
+
   const now = new Date().toISOString();
   const doc = {
     audit_id: `static-${now.replace(/[^0-9]/g, '').slice(0, 14)}`,
     timestamp: now,
+    screen_only: true,
     subject: { type: 'codebase', identifier: path.resolve(opts.target) },
     scope: {
       system_kind: kinds.has('rag-embeddings') ? 'rag'
@@ -237,8 +255,9 @@ async function main() {
       surface_discovery: surfaceSource,
       fetched_at: now
     },
+    coverage: screenCoverage,
     findings,
-    rollup,
+    rollup: { ...rollup, graded_posture: rollup.overall },
     footer_note: FOOTER_NOTE
   };
 

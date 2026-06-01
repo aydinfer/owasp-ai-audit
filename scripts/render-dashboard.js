@@ -11,6 +11,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const { esc, safeUrl } = require('./lib/sanitize');
+const coverage = require('./lib/coverage');
 
 const [,, inPath, outPath] = process.argv;
 if (!inPath || !outPath) {
@@ -57,7 +58,24 @@ for (const c of categories) {
 }
 
 const rollup = findings.rollup || {};
-const overall = rollup.overall || 'Unknown';
+
+// v1.0.0 coverage enforcement. When the findings.json carries a `coverage`
+// block, the displayed posture is the CAPPED posture (lowest-layer-bound), not
+// the raw graded rollup — this is what makes "8/97 entries → Acceptable"
+// impossible. Older findings.json without a coverage block fall back to the
+// raw rollup.overall and render no coverage panel.
+const hasCoverage = !!findings.coverage && Object.keys(findings.coverage).length > 0;
+const cov = hasCoverage ? coverage.summarize(findings) : null;
+const overall = hasCoverage ? cov.posture : (rollup.overall || 'Unknown');
+
+const bandColor = { green: '#2e7d32', amber: '#f9a825', red: '#b00020' };
+function postureColor(p) {
+  if (postureLabel[p]) return postureLabel[p];
+  if (/^Screen only/i.test(p)) return '#b00020';
+  if (/^Partial/i.test(p)) return '#f9a825';
+  return '#455a64';
+}
+
 const groundingMode = findings.grounding?.primary_source || 'unknown';
 const groundingNote = {
   live: 'Findings grounded in live content fetched from owaspai.org at audit time.',
@@ -129,6 +147,30 @@ const html = `<!doctype html>
   footer.report-foot p { margin: 4px 0; }
   code { background: #f0f0f0; padding: 1px 5px; border-radius: 3px; font-size: 90%; }
 
+  .coverage-panel .cov-key { display: inline-flex; align-items: center; gap: 4px; margin-right: 10px; white-space: nowrap; }
+  .cov-chip { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
+  .cov-row { display: grid; grid-template-columns: 12px minmax(150px, 1.4fr) minmax(70px, auto) 2fr 48px; align-items: center; gap: 10px; padding: 6px 0; border-bottom: 1px solid var(--border); }
+  .cov-row:last-child { border-bottom: none; }
+  .cov-band { width: 12px; height: 12px; border-radius: 50%; }
+  .cov-name { font-weight: 600; font-size: 14px; }
+  .cov-frac { color: var(--muted); font-size: 12px; text-align: right; font-variant-numeric: tabular-nums; }
+  .cov-bar { height: 8px; background: #eee; border-radius: 999px; overflow: hidden; }
+  .cov-fill { display: block; height: 100%; }
+  .cov-pct { font-weight: 700; font-size: 13px; text-align: right; font-variant-numeric: tabular-nums; }
+  @media (max-width: 800px) {
+    .cov-row { grid-template-columns: 12px 1fr 44px; }
+    .cov-frac, .cov-bar { display: none; }
+  }
+  .ledger { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 8px; }
+  .ledger th, .ledger td { text-align: left; padding: 5px 8px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  .ledger th { color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; font-size: 11px; }
+  .ledger .v-na { color: #607d8b; }
+  .ledger tr.row-na { background: #f7f9fa; }
+  .ev-badge { padding: 2px 7px; border-radius: 4px; font-size: 11px; font-weight: 700; letter-spacing: 0.03em; background: #eceff1; color: #37474f; }
+  .ev-demonstrated { background: #e8f5e9; color: #2e7d32; }
+  .ev-reasoned-probe { background: #fff8e1; color: #9a7d00; }
+  .ev-static { background: #eceff1; color: #546e7a; }
+
   @media print {
     body { background: white; }
     .wrap { max-width: none; padding: 16px; }
@@ -156,9 +198,15 @@ const html = `<!doctype html>
   <div class="card">
     <h3>Overall posture</h3>
     <div class="posture">
-      <div class="posture-dot" style="background: ${postureLabel[overall] || '#999'};"></div>
+      <div class="posture-dot" style="background: ${postureColor(overall)};"></div>
       <div class="posture-label">${esc(overall)}</div>
     </div>
+    ${hasCoverage && cov.cap !== 'none' ? `
+      <p style="margin: 10px 0 0; font-size: 13px; color: var(--muted);">
+        Findings alone graded <strong>${esc(cov.graded_posture)}</strong>, but coverage is capped by
+        <strong>${esc(cov.min.layer || '—')}</strong> at <strong>${cov.min.percent}%</strong> —
+        the posture above reflects how much was actually examined, not how clean the findings list looks.
+      </p>` : ''}
     <p style="margin: 12px 0 0; color: var(--muted); font-size: 14px;">
       ${esc(groundingNote)}
     </p>
@@ -173,6 +221,31 @@ const html = `<!doctype html>
     </div>
   </div>
 </div>
+
+${hasCoverage ? `
+<div class="card coverage-panel" style="margin-top: 16px;">
+  <h2>Completeness coverage</h2>
+  <p style="margin: -4px 0 14px; color: var(--muted); font-size: 13px;">
+    Eight mandatory layers. Posture is bounded by the lowest band:
+    <span class="cov-key"><span class="cov-chip" style="background:${bandColor.green}"></span>≥90%</span>
+    <span class="cov-key"><span class="cov-chip" style="background:${bandColor.amber}"></span>70–90% → Partial</span>
+    <span class="cov-key"><span class="cov-chip" style="background:${bandColor.red}"></span>&lt;70% → Screen only</span>
+    · mean ${cov.mean}%
+  </p>
+  ${cov.layers.map((l) => `
+    <div class="cov-row">
+      <span class="cov-band" style="background:${bandColor[l.band]}"></span>
+      <span class="cov-name">${esc(l.label)}</span>
+      <span class="cov-frac">${l.present ? `${esc(String(l.numerator ?? '?'))}/${esc(String(l.denominator ?? '?'))}${l.jurisdictions ? ` · ${esc(l.jurisdictions.join(', '))}` : ''}` : 'not reported'}</span>
+      <span class="cov-bar"><span class="cov-fill" style="width:${l.percent == null ? 0 : l.percent}%;background:${bandColor[l.band]}"></span></span>
+      <span class="cov-pct" style="color:${bandColor[l.band]}">${l.percent == null ? '—' : l.percent + '%'}</span>
+    </div>`).join('')}
+  ${cov.evidence_cap_violations.length ? `
+    <p style="margin: 12px 0 0; padding: 8px 12px; background:#fdecea; border-left:3px solid ${bandColor.red}; border-radius:4px; font-size:13px;">
+      <strong>${cov.evidence_cap_violations.length} evidence-class cap violation(s):</strong>
+      ${esc(cov.evidence_cap_violations.map((v) => `${v.threat_id} (${v.verdict}, ${v.reason})`).join('; '))}
+    </p>` : ''}
+</div>` : ''}
 
 <div class="card" style="margin-top: 16px;">
   <h2>Category posture</h2>
@@ -224,7 +297,10 @@ ${categories.map((c) => {
           <p class="finding-title">
             <a href="${esc(safeUrl(f.threat_url))}" target="_blank" rel="noopener">${esc(f.threat_id || '')} — ${esc(extractTitleFromUrl(f.threat_url))}</a>
           </p>
-          <span class="verdict-badge" style="background: ${verdictColor[f.verdict] || '#999'};">${esc(f.verdict)}</span>
+          <span style="display:flex; gap:6px; align-items:center; flex-shrink:0;">
+            ${f.evidence_class ? `<span class="ev-badge ev-${esc(f.evidence_class)}">${esc(f.evidence_class)}</span>` : ''}
+            <span class="verdict-badge" style="background: ${verdictColor[f.verdict] || '#999'};">${esc(f.verdict)}</span>
+          </span>
         </div>
         ${(f.cross_references && ((f.cross_references.atlas || []).length || (f.cross_references.nist || []).length)) ? `
           <div class="xrefs">Also: ${[
@@ -251,8 +327,39 @@ ${categories.map((c) => {
   </section>`;
 }).join('')}
 
+${(findings.verdict_ledger || []).length ? `
+<section class="category-section" style="page-break-before: always;">
+  <h2>Appendix · Verdict ledger</h2>
+  <p style="margin: -4px 0 8px; color: var(--muted); font-size: 13px;">
+    Every applicable taxonomy entry with an explicit verdict — including every
+    justified N/A (shaded). This is the L2 completeness credential: silence on an
+    applicable entry is what v1.0.0 forbids.
+  </p>
+  <table class="ledger">
+    <thead><tr><th>Entry</th><th>Verdict</th><th>Applicability</th><th>Rationale</th></tr></thead>
+    <tbody>
+      ${[...findings.verdict_ledger]
+        .sort((a, b) => String(a.entry_id || '').localeCompare(String(b.entry_id || '')))
+        .map((e) => {
+          const na = e.verdict === 'N/A';
+          return `<tr class="${na ? 'row-na' : ''}">
+            <td><code>${esc(e.entry_id || '—')}</code></td>
+            <td class="${na ? 'v-na' : ''}"><strong>${esc(e.verdict || '—')}</strong></td>
+            <td>${esc(e.applicability || '—')}</td>
+            <td>${esc(e.rationale || '—')}</td>
+          </tr>`;
+        }).join('')}
+    </tbody>
+  </table>
+  <p style="margin-top: 8px; color: var(--muted); font-size: 12px;">
+    ${findings.verdict_ledger.length} entries · ${findings.verdict_ledger.filter((e) => e.verdict === 'N/A').length} justified N/A.
+  </p>
+</section>` : ''}
+
 <footer class="report-foot">
   ${findings.footer_note ? `<p style="padding: 10px 12px; background: #eceff1; border-left: 3px solid #455a64; border-radius: 4px; color: var(--ink);"><strong>Note:</strong> ${esc(findings.footer_note)}</p>` : ''}
+  ${hasCoverage ? `<p><strong>Coverage:</strong> mean ${cov.mean}% · floor ${cov.min.percent}% at ${esc(cov.min.layer || '—')} · posture cap: ${esc(cov.cap)}</p>
+  <p><strong>Evidence classes:</strong> ${Object.entries(cov.evidence_class_summary).filter(([, n]) => n > 0).map(([k, n]) => `${esc(k)}: ${n}`).join(' · ') || 'none'}</p>` : ''}
   <p><strong>Grounding:</strong> ${esc(groundingNote)}</p>
   <p><strong>Snapshot date:</strong> ${esc(findings.grounding?.snapshot_date || 'n/a')} · <strong>Audit run:</strong> ${esc(findings.grounding?.fetched_at || '—')}</p>
   <p><strong>Audit ID:</strong> <code>${esc(findings.audit_id || '—')}</code></p>
