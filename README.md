@@ -29,9 +29,23 @@ v0.x was a highlights reel: on its first real run it graded a handful of entries
 
 The reported posture is then **capped**: ≥90% on every layer → posture as graded; any layer 70–90% → "Partial — acceptable for what was read (NN%)"; any layer <70% → **"Screen only — not an audit."** The cap is computed deterministically in [`scripts/lib/coverage.js`](scripts/lib/coverage.js) from the numerator/denominator you record — a hand-edited percentage cannot move it. See [SKILL.md](SKILL.md) for the full layer definitions and [reference/verdict-rules.md](reference/verdict-rules.md) for the caps.
 
-![Dashboard screenshot — the skill audited its own repo](docs/dashboard-screenshot.png)
+![Dashboard screenshot — an owasp-ai-audit report](docs/dashboard-screenshot.png)
 
-*The screenshot above is the actual dashboard the skill produced when run on its own repository — every category green, one bug found and fixed (see [v0.2.0 → v0.2.1](https://github.com/aydinfer/owasp-ai-audit/releases)).*
+*An owasp-ai-audit dashboard: traffic-light rollup, per-finding cards each citing an `owaspai.org/go/{slug}/` permalink. Under v1.0.0 the report now leads with a page-one **coverage panel** and closes with the full **verdict ledger** — see a live one in [the vercel/ai-chatbot v1.0.0 report](benchmarks/vercel-ai-chatbot/dashboard.html).*
+
+## Proven on real code: the vercel/ai-chatbot regression
+
+v1.0.0 isn't a spec — it's enforced, and the proof is a side-by-side re-audit of [`vercel/ai-chatbot`](https://github.com/vercel/ai-chatbot) ([full write-up](benchmarks/v0.2.2-vs-v1.0.0.md)):
+
+| | **v0.2.2** | **v1.0.0** |
+|---|---|---|
+| Taxonomy entries adjudicated | **26 / 97** (~27%, the rest silent) | **97 / 97** — 85 applicable + 12 justified `N/A` |
+| Coverage measured? | no | **yes — 8 layers, mean 100%** |
+| Auth/authz matrix | none | **30 cells** (anon/guest/regular × 5 resources) |
+| Highest severity | `HIGH` ×1 (unprobed — and the app *does* rate-limit, so wrong) | `MEDIUM` (every finding `static`, capped) |
+| **Reported posture** | **Acceptable** | **Concerning** |
+
+The v0.2.2 run graded a quarter of the taxonomy, shipped one un-evidenced `HIGH`, and mislabelled its own 3-AMBER rollup "Acceptable." v1.0.0 makes all three impossible: every applicable entry gets a verdict, severity is capped by evidence class, and the posture is recomputed deterministically and **bounded by the lowest-covered layer**. More verdicts, lower posture, fully measured.
 
 ## Why grounding matters
 
@@ -94,15 +108,15 @@ jobs:
 
 What it does, and — importantly — what it does *not* do:
 
-- It statically catalogues the AI surfaces in `target` (LLM call sites, prompt construction, tool/function defs, embedding/RAG calls, rate-limit sites), maps each to the OWASP AI Exchange threats it implicates, and fetches a live `/go/{slug}/` citation for every one.
-- It writes a `findings.json` + `dashboard.html` and (on PR events) posts a summary comment.
-- **It does not grade severity.** A non-LLM pass can't judge whether input is isolated, output is validated, or a surface is actually exposed — so every finding it writes is `UNKNOWN`. The Action's job is to surface *presence* and *citations*, then point you at the real audit.
+- It statically catalogues the AI surfaces in `target` (the twelve kinds below — LLM calls, prompt construction, tools, embeddings, plus api-routes, auth, code-exec, sandbox, log-sink and external-fetch), maps each to the OWASP AI Exchange threats it implicates, and fetches a live `/go/{slug}/` citation for every one.
+- It writes a `findings.json` (with a zero-on-reasoning-layers `coverage` block) + `dashboard.html` and (on PR events) posts a summary comment.
+- **It does not grade severity, and it says so structurally.** A non-LLM pass can't judge whether input is isolated, output is validated, or a surface is actually exposed — so every finding it writes is `UNKNOWN`, and the dashboard self-labels **"Screen only — not an audit"** through the exact coverage cap a full audit obeys. Its job is to surface *presence* and *citations*, then point you at the real audit.
 
 Because findings are ungraded, the `fail-on` gate is conservative: an `UNKNOWN` is treated as *"could be anything up to CRITICAL"* and so trips **any** threshold other than `NONE`. Set `fail-on: NONE` (the default) for a report-only screen, or any level to block PRs until a human runs the full [SKILL.md](SKILL.md) workflow in Claude Code. The PR comment it posts looks like:
 
 > ### OWASP AI Audit — static first-pass screen
 >
-> **Overall posture:** Needs Review  
+> **Overall posture:** Screen only — not an audit  
 > **Findings (8):** UNKNOWN: 8
 >
 > **Top findings**
@@ -170,25 +184,30 @@ The skill detects the input type, scopes the audit, fetches threat content (cach
 
 ## How it works
 
+The full audit (inside Claude Code) is driven through the eight mandatory layers — completeness is the control flow, not an afterthought:
+
 ```
-input
+input  →  [detect: codebase | architecture; declare jurisdiction for L6]
   ↓
-[detect: codebase | architecture]
+L1  enumerate-ai-surfaces.js → surfaces.json   (every finding must anchor here)
   ↓
-[load taxonomy-index.json — the map of OWASP AI threats]
+L2  taxonomy-index.json → applicable entries; verdict on EVERY one (ledger)
+      fetch-threat.sh per entry: memory → disk cache → live → snapshot
   ↓
-[scope filter — drop threats irrelevant to system class]
+L3  auth/authz matrix    L4  trust-boundary (7 subareas)    L5  evidence class caps severity
+L6  regulatory pass      L7  operational (4 subareas)        L8  race / TOCTOU
+      ↓ Deep Trace: read implicated files end-to-end; grade per verdict-rules.md
   ↓
-[fetch-threat.sh per threat: memory → disk cache → live → snapshot]
+[write findings.json: coverage{} + verdict_ledger[] + findings[] + evidence_class]
   ↓
-[Claude analyses, grades per verdict-rules.md, follows Deep Trace on code]
+coverage.js  →  recompute each layer %, CAP the posture by the lowest layer
   ↓
-[write findings.json]
+render-dashboard.js → dashboard.html   (coverage panel first, ledger appendix last)
   ↓
-[render-dashboard.js → dashboard.html]
-  ↓
-[user prints to PDF]
+[open in browser → Print → Save as PDF]
 ```
+
+The composite GitHub Action is the non-interactive counterpart: it runs L1 + a citation pass only, emits `UNKNOWN` verdicts, and — through the same coverage cap — self-labels **"Screen only — not an audit."**
 
 ## Repo layout
 

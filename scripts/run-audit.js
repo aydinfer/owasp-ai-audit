@@ -43,6 +43,7 @@ const path = require('node:path');
 const { execFileSync } = require('node:child_process');
 const { scanDir, scopeFromKinds } = require('./lib/static-detectors');
 const crossRefs = require('./lib/cross-references');
+const coverage = require('./lib/coverage');
 
 const REPO_ROOT = path.resolve(__dirname, '..');
 const INDEX_PATH = path.join(REPO_ROOT, 'reference', 'taxonomy-index.json');
@@ -257,9 +258,15 @@ async function main() {
     },
     coverage: screenCoverage,
     findings,
-    rollup: { ...rollup, graded_posture: rollup.overall },
+    rollup,
     footer_note: FOOTER_NOTE
   };
+  // Self-label through the same coverage cap a full audit obeys, so the PR
+  // comment (buildSummary reads rollup.overall) and the dashboard agree: a
+  // screen with surfaces is "Screen only — not an audit"; with none it stays
+  // "No AI surface detected".
+  doc.rollup.graded_posture = rollup.overall;
+  doc.rollup.overall = coverage.cappedPosture(screenCoverage, rollup.overall).posture;
 
   fs.writeFileSync(opts.out, JSON.stringify(doc, null, 2) + '\n');
   console.log(`Wrote ${findings.length} static finding(s) to ${opts.out} (surfaces via ${surfaceSource}).`);

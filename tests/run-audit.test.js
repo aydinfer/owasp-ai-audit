@@ -90,6 +90,20 @@ test('run-audit produces a valid findings.json against the fixture', () => {
   assert.ok([...ids].some((id) => /PROMPTINJECTION/.test(id)), 'expected a prompt-injection finding');
 });
 
+test('run-audit self-labels "Screen only" via the coverage cap', () => {
+  const out = path.join(os.tmpdir(), `oaa-screen-${process.pid}.json`);
+  execFileSync('node', [RUN_AUDIT, FIXTURE, '--no-fetch', '--no-dashboard', '--out', out],
+    { encoding: 'utf8' });
+  const doc = JSON.parse(fs.readFileSync(out, 'utf8'));
+  fs.rmSync(out, { force: true });
+  assert.equal(doc.screen_only, true);
+  assert.ok(doc.coverage, 'screen emits a coverage block');
+  assert.equal(doc.coverage.L1_surface_inventory.covered, 0, 'screen reads no file end-to-end');
+  // the reasoning layers are 0%, so the cap forces "Screen only" regardless of findings
+  assert.equal(doc.rollup.overall, 'Screen only — not an audit');
+  assert.equal(doc.rollup.graded_posture, 'Needs Review');
+});
+
 // ---- gate logic ----------------------------------------------------------
 
 test('gateTripped: NONE never trips', () => {
