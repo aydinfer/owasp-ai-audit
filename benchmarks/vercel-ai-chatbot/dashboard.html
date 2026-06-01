@@ -128,13 +128,13 @@
           CRITICAL: 0
         </div>
         <div class="count-pill" style="background: #d84315;">
-          HIGH: 0
+          HIGH: 2
         </div>
         <div class="count-pill" style="background: #f9a825;">
-          MEDIUM: 19
+          MEDIUM: 17
         </div>
         <div class="count-pill" style="background: #9e9d24;">
-          LOW: 1
+          LOW: 2
         </div>
         <div class="count-pill" style="background: #455a64;">
           UNKNOWN: 0
@@ -191,7 +191,7 @@
     <div class="cov-row">
       <span class="cov-band" style="background:#2e7d32"></span>
       <span class="cov-name">L5 · Probe verification</span>
-      <span class="cov-frac">0/0</span>
+      <span class="cov-frac">2/2</span>
       <span class="cov-bar"><span class="cov-fill" style="width:100%;background:#2e7d32"></span></span>
       <span class="cov-pct" style="color:#2e7d32">100%</span>
     </div>
@@ -240,7 +240,7 @@
     <div class="category-row">
       <span class="category-light" style="background: #f9a825;"></span>
       <span class="category-name">Runtime</span>
-      <span class="category-count">3 findings</span>
+      <span class="category-count">4 findings</span>
     </div>
     <div class="category-row">
       <span class="category-light" style="background: #2e7d32;"></span>
@@ -248,7 +248,7 @@
       <span class="category-count">1 finding</span>
     </div>
     <div class="category-row">
-      <span class="category-light" style="background: #2e7d32;"></span>
+      <span class="category-light" style="background: #f9a825;"></span>
       <span class="category-name">Privacy</span>
       <span class="category-count">1 finding</span>
     </div>
@@ -286,7 +286,7 @@
             <a href="https://owaspai.org/go/agenticaithreats/" target="_blank" rel="noopener">GEN-AGENTICAITHREATS — agenticaithreats</a>
           </p>
           <span style="display:flex; gap:6px; align-items:center; flex-shrink:0;">
-            <span class="ev-badge ev-static">static</span>
+            <span class="ev-badge ev-reasoned-probe">reasoned-probe</span>
             <span class="verdict-badge" style="background: #f9a825;">MEDIUM</span>
           </span>
         </div>
@@ -295,7 +295,7 @@
           <dt>Evidence</dt>
           <dd>app/(chat)/api/chat/route.ts:198-235; lib/ai/tools/update-document.ts:38-40</dd>
           <dt>Reasoning</dt>
-          <dd>A multi-step agent (stepCountIs(5)) drives tools that mutate stored documents and hit external APIs. The strong mitigations are per-tool ownership checks and a tool-approval flow; the gap is the absence of input segregation/PI screening, so an injected instruction could still attempt to chain owner-scoped tool actions. Static, MEDIUM.</dd>
+          <dd>PROBED. The agent loop (stepCountIs(5), route.ts:198) with five mutating/external tools is the live agentic surface. State-changing tool abuse across tenants is BLOCKED by per-tool ownership re-checks (update/edit/request-suggestions :38/:38/:40) and a tool-approval flow exists (route.ts:100,123-151), so the model cannot escalate beyond the caller&#39;s own resources. The unmitigated agentic gap is twofold and reasoned elsewhere: (1) no input segregation/PI screening (prompts.ts:76-79) leaves the loop steerable by injected text, and (2) tool calls fan out uncounted nested streamText generations (see INPUT-AIRESOURCEEXHAUSTION). The artifactsPrompt &#39;Only call ONE tool per response&#39; rule (prompts.ts:8) is a soft model instruction, not an enforced cap, so a compliant-but-adversarial prompt can still chain calls up to the step limit. Capped MEDIUM: ownership + approval contain the high-impact variant; residual is steerability and cost.</dd>
         </dl>
         
           <div class="controls">
@@ -492,10 +492,43 @@
       <div class="finding">
         <div class="finding-head">
           <p class="finding-title">
+            <a href="https://owaspai.org/go/airesourceexhaustion/" target="_blank" rel="noopener">INPUT-AIRESOURCEEXHAUSTION — airesourceexhaustion</a>
+          </p>
+          <span style="display:flex; gap:6px; align-items:center; flex-shrink:0;">
+            <span class="ev-badge ev-reasoned-probe">reasoned-probe</span>
+            <span class="verdict-badge" style="background: #d84315;">HIGH</span>
+          </span>
+        </div>
+        
+          <div class="xrefs">Also: <a href="https://atlas.mitre.org/techniques/AML.T0034" target="_blank" rel="noopener">ATLAS AML.T0034</a> · <a href="https://csrc.nist.gov/pubs/ai/100/2/e2025/final" target="_blank" rel="noopener">NIST: Availability / resource exhaustion</a></div>
+        <dl>
+          <dt>Evidence</dt>
+          <dd>app/(chat)/api/chat/route.ts:91-98,198-208,217-235; lib/db/queries.ts:575-588; lib/ai/entitlements.ts:7-14; lib/ai/tools/request-suggestions.ts:49; artifacts/code/server.ts:18,40; lib/ai/tools/create-document.ts:69</dd>
+          <dt>Reasoning</dt>
+          <dd>PROBED. Both rate gates count discrete user actions, not model/token cost: getMessageCountByUserId filters eq(message.role,&#39;user&#39;) (queries.ts:583) and the IP limiter increments once per POST (ratelimit.ts:34-40); entitlements are a flat 10 user-messages/hr for guest AND regular (entitlements.ts:8-13). But ONE counted user turn enters streamText with stopWhen=stepCountIs(5) (route.ts:198) and five active tools (199-208). Three of those tools each launch a NESTED streamText that is never counted: createDocument-&gt;documentHandler.onCreateDocument runs streamText (create-document.ts:69 -&gt; code/server.ts:18, and text/sheet handlers), updateDocument likewise (server.ts:40), and requestSuggestions runs its own streamText with Output.array (request-suggestions.ts:49). So a single billable user message can trigger up to 5 tool invocations, each an independent uncounted model generation — a 5x+ fan-out per counted message, ~50 nested generations/hr/account, multiplied across free guest accounts (auto-provisioned via /api/auth/guest, proxy.ts:24-29). There is also no max-length on individual document content fed to updateDocument&#39;s rewrite prompt (server.ts:42 embeds full document.content) and no per-request token budget (only maxDuration=60). Net: count-based limits do not bound token/compute spend; an attacker amplifies cost an order of magnitude under the stated cap. Model-ROUTING/entitlement bypass itself HOLDS — selectedChatModel is allowlisted to the 5 curated models (route.ts:83-85, allowedModelIds models.ts:156) and there is no premium tier to escalate to (guest==regular). Upgraded to HIGH on the cost/resource-exhaustion axis; CRITICAL withheld (app not running).</dd>
+        </dl>
+        
+          <div class="controls">
+            <strong>Recommended controls:</strong>
+            <ul style="margin: 4px 0 0; padding-left: 20px;">
+              
+                <li><a href="https://owaspai.org/go/limitresources/" target="_blank" rel="noopener">CTRL-INPUT-LIMITRESOURCES</a> — Count nested tool-spawned model calls and apply a per-request and per-window TOKEN budget, not just user-message counts.</li>
+              
+                <li><a href="https://owaspai.org/go/dosinputvalidation/" target="_blank" rel="noopener">CTRL-INPUT-DOSINPUTVALIDATION</a> — Bound document/content size fed into rewrite prompts; cap tool-call fan-out per turn.</li>
+              
+                <li><a href="https://owaspai.org/go/ratelimit/" target="_blank" rel="noopener">CTRL-INPUT-RATELIMIT</a> — Extend rate limiting to token volume and to tool-invocation count.</li>
+              
+            </ul>
+          </div>
+      </div>
+    
+      <div class="finding">
+        <div class="finding-head">
+          <p class="finding-title">
             <a href="https://owaspai.org/go/directpromptinjection/" target="_blank" rel="noopener">INPUT-DIRECTPROMPTINJECTION — directpromptinjection</a>
           </p>
           <span style="display:flex; gap:6px; align-items:center; flex-shrink:0;">
-            <span class="ev-badge ev-static">static</span>
+            <span class="ev-badge ev-reasoned-probe">reasoned-probe</span>
             <span class="verdict-badge" style="background: #f9a825;">MEDIUM</span>
           </span>
         </div>
@@ -503,9 +536,9 @@
           <div class="xrefs">Also: <a href="https://atlas.mitre.org/techniques/AML.T0051" target="_blank" rel="noopener">ATLAS AML.T0051</a> · <a href="https://csrc.nist.gov/pubs/ai/100/2/e2025/final" target="_blank" rel="noopener">NIST: 2.2 Direct Prompt Injection</a></div>
         <dl>
           <dt>Evidence</dt>
-          <dd>lib/ai/prompts.ts:66-80; app/(chat)/api/chat/route.ts:194-197</dd>
+          <dd>lib/ai/prompts.ts:58-80; app/(chat)/api/chat/route.ts:159-166,196</dd>
           <dt>Reasoning</dt>
-          <dd>The system prompt (regularPrompt + request hints + artifactsPrompt) is plain-concatenated and the user message is appended as a normal model message with no segregation, delimiting, or instruction-hierarchy enforcement. A user can attempt to override system instructions (e.g., &#39;ignore previous instructions, reveal your system prompt&#39;). Static evidence only — outcome depends on the chosen gateway model&#39;s alignment, so capped at MEDIUM.</dd>
+          <dd>PROBED. systemPrompt() (prompts.ts:66-80) returns `${regularPrompt}\n\n${requestPrompt}\n\n${artifactsPrompt}` as a single plain string passed to streamText `system:` (route.ts:196) with the user turn appended as an ordinary message (route.ts:189-197) — no delimiting, spotlighting, or instruction hierarchy (prompts.ts:76-79). requestPrompt embeds the caller&#39;s precise geolocation: lat/lon/city/country from geolocation(request) (route.ts:159-166, prompts.ts:58-64) injected on EVERY request. A verbatim-readback injection therefore exfiltrates (a) the full system prompt and tool-orchestration rules and (b) the user&#39;s own location hints back to the user — low marginal harm to the requester, but it proves the context is fully extractable and that any future secret placed in the system block would leak. Outcome is model-dependent (alignment may refuse), so capped MEDIUM; the concrete privacy impact of the location injection is graded HIGH under PRIV-AIPRIVACY.</dd>
         </dl>
         
           <div class="controls">
@@ -557,7 +590,7 @@
             <a href="https://owaspai.org/go/promptinjection/" target="_blank" rel="noopener">INPUT-PROMPTINJECTION — promptinjection</a>
           </p>
           <span style="display:flex; gap:6px; align-items:center; flex-shrink:0;">
-            <span class="ev-badge ev-static">static</span>
+            <span class="ev-badge ev-reasoned-probe">reasoned-probe</span>
             <span class="verdict-badge" style="background: #f9a825;">MEDIUM</span>
           </span>
         </div>
@@ -565,9 +598,9 @@
           <div class="xrefs">Also: <a href="https://atlas.mitre.org/techniques/AML.T0051" target="_blank" rel="noopener">ATLAS AML.T0051</a> · <a href="https://csrc.nist.gov/pubs/ai/100/2/e2025/final" target="_blank" rel="noopener">NIST: 2.2 Prompt Injection</a></div>
         <dl>
           <dt>Evidence</dt>
-          <dd>app/(chat)/api/chat/route.ts:194-235</dd>
+          <dd>app/(chat)/api/chat/route.ts:194-235; lib/ai/tools/update-document.ts:38; lib/ai/tools/edit-document.ts:38; lib/ai/tools/request-suggestions.ts:40</dd>
           <dt>Reasoning</dt>
-          <dd>The agent exposes five tools (incl. document mutation) under a single shared context with no prompt-injection guardrail. Injection could attempt to invoke editDocument/updateDocument on the user&#39;s own documents; impact is bounded because each document tool re-checks ownership and a tool-approval flow exists. Static, capped MEDIUM.</dd>
+          <dd>PROBED AND DEFENSE HOLDS for cross-tenant tool abuse. Even granting the worst case — the model is fully jailbroken and emits updateDocument({id: &lt;victim-uuid&gt;}) or editDocument({id: &lt;victim-uuid&gt;}) — every document tool independently re-derives authority from the SESSION, not the model: updateDocument execute() runs `getDocumentById({id})` then `if (document.userId !== session.user?.id) return { error: &#39;Forbidden&#39; }` (update-document.ts:30-40); editDocument is identical (edit-document.ts:32-40); requestSuggestions identical (request-suggestions.ts:32-41). `session` is captured at tool construction in route.ts:219-234 from auth() (route.ts:74-81) and cannot be influenced by message content. So the injected tool call returns {error:&#39;Forbidden&#39;} and the victim document is untouched — the model holds no privilege the authenticated user lacks. tools must remain ownership-scoped (least model privilege) for this to stay true; that invariant is met. The residual MEDIUM is the unmitigated jailbreak surface itself (no input segregation, no PI screening; system+user concatenated at prompts.ts:76-79) which enables the OWN-resource and exfiltration variants captured in INPUT-DIRECTPROMPTINJECTION and PRIV-AIPRIVACY. Capped MEDIUM: the highest-value tool-abuse path is structurally blocked.</dd>
         </dl>
         
           <div class="controls">
@@ -606,39 +639,6 @@
             <ul style="margin: 4px 0 0; padding-left: 20px;">
               
                 <li><a href="https://owaspai.org/go/promptinjectionsevenlayers/" target="_blank" rel="noopener">CTRL-INPUT-PROMPTINJECTIONSEVENLAYERS</a> — Adopt layered PI defenses with segregation as the first layer.</li>
-              
-            </ul>
-          </div>
-      </div>
-    
-      <div class="finding">
-        <div class="finding-head">
-          <p class="finding-title">
-            <a href="https://owaspai.org/go/airesourceexhaustion/" target="_blank" rel="noopener">INPUT-AIRESOURCEEXHAUSTION — airesourceexhaustion</a>
-          </p>
-          <span style="display:flex; gap:6px; align-items:center; flex-shrink:0;">
-            <span class="ev-badge ev-static">static</span>
-            <span class="verdict-badge" style="background: #f9a825;">MEDIUM</span>
-          </span>
-        </div>
-        
-          <div class="xrefs">Also: <a href="https://atlas.mitre.org/techniques/AML.T0034" target="_blank" rel="noopener">ATLAS AML.T0034</a> · <a href="https://csrc.nist.gov/pubs/ai/100/2/e2025/final" target="_blank" rel="noopener">NIST: Availability / resource exhaustion</a></div>
-        <dl>
-          <dt>Evidence</dt>
-          <dd>lib/ai/entitlements.ts:7-14; app/(chat)/api/document/route.ts:12-17; app/(chat)/api/chat/route.ts:48</dd>
-          <dt>Reasoning</dt>
-          <dd>Message-count rate limits (10/hr IP + 10/hr user) and maxDuration=60/stepCountIs(5) bound request volume, but there is no cap on individual message or document content length and no per-request token budget, so a single huge prompt or document can drive disproportionate model/token cost. Static, capped MEDIUM.</dd>
-        </dl>
-        
-          <div class="controls">
-            <strong>Recommended controls:</strong>
-            <ul style="margin: 4px 0 0; padding-left: 20px;">
-              
-                <li><a href="https://owaspai.org/go/dosinputvalidation/" target="_blank" rel="noopener">CTRL-INPUT-DOSINPUTVALIDATION</a> — Validate and bound input size before model invocation.</li>
-              
-                <li><a href="https://owaspai.org/go/limitresources/" target="_blank" rel="noopener">CTRL-INPUT-LIMITRESOURCES</a> — Apply token/compute budgets per request in addition to count-based limits.</li>
-              
-                <li><a href="https://owaspai.org/go/ratelimit/" target="_blank" rel="noopener">CTRL-INPUT-RATELIMIT</a> — Keep rate limiting (present) and extend to token volume.</li>
               
             </ul>
           </div>
@@ -748,16 +748,16 @@
             <a href="https://owaspai.org/go/outputcontainsconventionalinjection/" target="_blank" rel="noopener">RUN-OUTPUTCONTAINSCONVENTIONALINJECTION — outputcontainsconventionalinjection</a>
           </p>
           <span style="display:flex; gap:6px; align-items:center; flex-shrink:0;">
-            <span class="ev-badge ev-static">static</span>
+            <span class="ev-badge ev-reasoned-probe">reasoned-probe</span>
             <span class="verdict-badge" style="background: #f9a825;">MEDIUM</span>
           </span>
         </div>
         
         <dl>
           <dt>Evidence</dt>
-          <dd>artifacts/code/client.tsx:137-183; lib/ai/tools/edit-document.ts:62-86</dd>
+          <dd>artifacts/code/client.tsx:119-215 (esp. 137-139,152,183); artifacts/code/server.ts:18-35; app/(chat)/api/messages/route.ts:28-42</dd>
           <dt>Reasoning</dt>
-          <dd>LLM-generated code is streamed into a Pyodide runPythonAsync(content) execution path and into client-side rendering. Model output is treated as executable/renderable without an encode/escape step, so model output containing conventional injection (e.g., crafted Python or markup) executes in the user&#39;s browser session. Blast radius is the user&#39;s own tab (browser sandbox), so MEDIUM not higher.</dd>
+          <dd>PROBED. client.tsx loads Pyodide from a CDN (137-139, no SRI) and runs the artifact&#39;s exact content via runPythonAsync(content) (183) with loadPackagesFromImports(content) first (152). Pyodide&#39;s `js` bridge lets Python invoke window.fetch; calls to /api/history (DELETE), /api/chat, /api/document inherit the running tab&#39;s session cookies (same-origin), so generated Python CAN drive authenticated state-changing requests as whoever&#39;s tab it runs in. BLAST RADIUS is bounded: (1) execution is gated behind an explicit user-initiated Run action (actions[].onClick, 119) — not auto-run on stream/render, so it is self-XSS-grade for the author; (2) cross-user escalation requires the victim to open a public-visibility chat (messages/route.ts:28-42 serves public chats to anyone) AND click Run on the attacker&#39;s artifact — a deliberate act, not drive-by. There is no encode/escape step between model output and the interpreter (the only transform is stripFences in server.ts:6-11). Capped MEDIUM: real same-origin authenticated-request capability, but execution is human-gated and primarily scoped to the executing user&#39;s own tab; not a stored-XSS auto-exec. Demonstrated/CRITICAL withheld (app not running).</dd>
         </dl>
         
           <div class="controls">
@@ -828,6 +828,34 @@
           </div>
       </div>
     
+      <div class="finding">
+        <div class="finding-head">
+          <p class="finding-title">
+            <a href="https://owaspai.org/go/runtimeconventionalsec/" target="_blank" rel="noopener">RUN-RUNTIMECONVENTIONALSEC — runtimeconventionalsec</a>
+          </p>
+          <span style="display:flex; gap:6px; align-items:center; flex-shrink:0;">
+            <span class="ev-badge ev-reasoned-probe">reasoned-probe</span>
+            <span class="verdict-badge" style="background: #9e9d24;">LOW</span>
+          </span>
+        </div>
+        
+        <dl>
+          <dt>Evidence</dt>
+          <dd>app/(chat)/api/document/route.ts:137-143; lib/db/queries.ts:385-400</dd>
+          <dt>Reasoning</dt>
+          <dd>PROBED. getDocumentsById (queries.ts:385-393) returns the raw array (empty for an unknown id). The DELETE handler does `const [document] = documents;` (route.ts:139) then immediately `if (document.userId !== session.user.id)` (141) with NO not-found guard — unlike GET which guards `if (!document)` first (route.ts:40-42). With a non-existent id, line 141 dereferences undefined and throws, caught nowhere in the handler -&gt; 500. This is NOT an IDOR: ownership IS enforced for existing docs (a foreign-but-existing id returns forbidden:document at 142), so an attacker cannot delete another user&#39;s document. Impact is a self-inflicted 500 / unhandled exception on a bad id (minor robustness/DoS-of-own-request defect, info-leak of a stack trace only if errors are surfaced). IDOR DEFENSE HOLDS across document/chat/vote/messages: every route re-checks userId === session.user.id (document.ts:44,91,141; vote.ts:35,73; chat route.ts:107,365; messages.ts:28-35) and messages are exposed cross-user ONLY for visibility:&#39;public&#39; chats by design. Graded LOW.</dd>
+        </dl>
+        
+          <div class="controls">
+            <strong>Recommended controls:</strong>
+            <ul style="margin: 4px 0 0; padding-left: 20px;">
+              
+                <li><a href="https://owaspai.org/go/runtimeconventionalsec/" target="_blank" rel="noopener">RUN-RUNTIMECONVENTIONALSEC</a> — Add a not-found guard before dereferencing document.userId in the DELETE handler, mirroring the GET path.</li>
+              
+            </ul>
+          </div>
+      </div>
+    
   </section>
   <section class="category-section">
     <h2>
@@ -866,7 +894,7 @@
   </section>
   <section class="category-section">
     <h2>
-      <span class="light" style="background: #2e7d32;"></span>
+      <span class="light" style="background: #f9a825;"></span>
       Privacy
     </h2>
     
@@ -876,16 +904,16 @@
             <a href="https://owaspai.org/go/aiprivacy/" target="_blank" rel="noopener">PRIV-AIPRIVACY — aiprivacy</a>
           </p>
           <span style="display:flex; gap:6px; align-items:center; flex-shrink:0;">
-            <span class="ev-badge ev-static">static</span>
-            <span class="verdict-badge" style="background: #f9a825;">MEDIUM</span>
+            <span class="ev-badge ev-reasoned-probe">reasoned-probe</span>
+            <span class="verdict-badge" style="background: #d84315;">HIGH</span>
           </span>
         </div>
         
         <dl>
           <dt>Evidence</dt>
-          <dd>app/(chat)/api/chat/route.ts:159-180; lib/ai/prompts.ts:58-64</dd>
+          <dd>app/(chat)/api/chat/route.ts:159-166,194-197,169-180; lib/ai/prompts.ts:58-64; lib/ai/models.ts:8,32,39,46,62</dd>
           <dt>Reasoning</dt>
-          <dd>Precise geolocation (lat/lon/city/country) is injected into every prompt, chats/messages persist indefinitely in Postgres, and prompts are forwarded to multiple third-party inference providers via the gateway, with no documented retention, minimization, or consent. Engages GDPR Art.5(1)(c)/(e) and CPRA disclosure.</dd>
+          <dd>PROBED — control-flow guarantees the leak independent of model behaviour. route.ts:159 destructures {longitude, latitude, city, country} = geolocation(request) and builds requestHints (161-166); systemPrompt() unconditionally interpolates them via getRequestPromptFromHints (prompts.ts:58-64,73) for EVERY message of EVERY user, then streamText forwards `system` to whichever gateway provider serves the selected model — deepseek-&gt;bedrock/deepinfra, kimi-&gt;fireworks/bedrock, grok-&gt;xai (models.ts:32,39,62 gatewayOrder). So a user&#39;s precise coordinates are (1) transmitted to multiple third-party inference providers on every turn and (2) persisted: the user message is saved (route.ts:169-180) and assistant turns saved (route.ts:281-292) with no TTL (queries saveMessages). A trivial follow-up message extracts the stored lat/lon back out, confirming round-trip retention. This is unconditional precise-location processing/transfer with no consent, minimization, or retention bound — a concrete GDPR Art.5(1)(c)/(e) + Art.44 and CPRA exposure that does not depend on any attacker. Upgraded to HIGH: demonstrable data-protection defect via a benign request; CRITICAL withheld because the app is not running.</dd>
         </dl>
         
           <div class="controls">
@@ -1260,7 +1288,7 @@
             <td>No bias testing of model outputs in repo; lower priority for a general chat assistant with no consequential decisions.</td>
           </tr><tr class="">
             <td><code>INPUT-AIRESOURCEEXHAUSTION</code></td>
-            <td class=""><strong>MEDIUM</strong></td>
+            <td class=""><strong>HIGH</strong></td>
             <td>applicable</td>
             <td>Rate limiting exists (checkIpRateLimit + per-user 10 msg/hr entitlement) but no input-size cap on message/document content and Pyodide runs unbounded user code client-side (lib/ratelimit.ts:23, lib/ai/entitlements.ts:8, app/(chat)/api/document/route.ts:12).</td>
           </tr><tr class="">
@@ -1335,7 +1363,7 @@
             <td>Predictive-ML-only threat; no classifier surface.</td>
           </tr><tr class="">
             <td><code>PRIV-AIPRIVACY</code></td>
-            <td class=""><strong>MEDIUM</strong></td>
+            <td class=""><strong>HIGH</strong></td>
             <td>applicable</td>
             <td>Precise geolocation injected into prompts, chats persisted indefinitely, sent to third-party providers, with no documented retention/consent (app/(chat)/api/chat/route.ts:159-180).</td>
           </tr><tr class="row-na">
@@ -1409,7 +1437,7 @@
 <footer class="report-foot">
   
   <p><strong>Coverage:</strong> mean 100% · floor 100% at L1_surface_inventory · posture cap: none</p>
-  <p><strong>Evidence classes:</strong> static: 20</p>
+  <p><strong>Evidence classes:</strong> static: 14 · reasoned-probe: 7</p>
   <p><strong>Grounding:</strong> Findings grounded in live content fetched from owaspai.org at audit time.</p>
   <p><strong>Snapshot date:</strong> n/a · <strong>Audit run:</strong> 2026-06-01T00:00:00Z</p>
   <p><strong>Audit ID:</strong> <code>vercel-ai-chatbot-v1-0-0</code></p>

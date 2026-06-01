@@ -42,10 +42,10 @@ v1.0.0 isn't a spec — it's enforced, and the proof is a side-by-side re-audit 
 | Taxonomy entries adjudicated | **26 / 97** (~27%, the rest silent) | **97 / 97** — 85 applicable + 12 justified `N/A` |
 | Coverage measured? | no | **yes — 8 layers, mean 100%** |
 | Auth/authz matrix | none | **30 cells** (anon/guest/regular × 5 resources) |
-| Highest severity | `HIGH` ×1 (unprobed — and the app *does* rate-limit, so wrong) | `MEDIUM` (every finding `static`, capped) |
+| Highest severity | `HIGH` ×1 (asserted, no probe) | `HIGH` ×2 (each backed by a verbatim probe; L5 = 2/2) |
 | **Reported posture** | **Acceptable** | **Concerning** |
 
-The v0.2.2 run graded a quarter of the taxonomy, shipped one un-evidenced `HIGH`, and mislabelled its own 3-AMBER rollup "Acceptable." v1.0.0 makes all three impossible: every applicable entry gets a verdict, severity is capped by evidence class, and the posture is recomputed deterministically and **bounded by the lowest-covered layer**. More verdicts, lower posture, fully measured.
+The v0.2.2 run graded a quarter of the taxonomy, shipped one un-evidenced `HIGH`, and mislabelled its own AMBER rollup "Acceptable." v1.0.0 makes all three impossible: every applicable entry gets a verdict, severity is **capped by evidence class** (`static`→MEDIUM, `reasoned-probe`→HIGH, `demonstrated`→CRITICAL), and the posture is recomputed deterministically and **bounded by the lowest-covered layer**. A deep reasoned-probe pass then earned two HIGHs the honest way — cost-amplification via uncounted nested `streamText`, and always-on geolocation injection — while most attack paths' defenses *held* and were graded down accordingly. More verdicts, lower posture, fully measured, every HIGH probed.
 
 ## Why grounding matters
 
