@@ -1,8 +1,13 @@
 {
-  "generated_at": "2026-05-26T18:01:48.519Z",
+  "generated_at": "2026-06-01T11:37:40.148Z",
   "source": "https://owaspai.org/",
   "entries_total": 97,
   "entries_ok": 97,
   "entries_failed": 0,
-  "failures": []
+  "failures": [],
+  "cross_references": {
+    "ok": 39,
+    "failed": 0,
+    "failures": []
+  }
 }
