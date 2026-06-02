@@ -1,10 +1,5 @@
 name: 'OWASP AI Audit (static screen)'
-description: >-
-  First-pass static screen that catalogues the AI surfaces in a repo, maps them
-  to OWASP AI Exchange threats with live permalink citations, renders a
-  dashboard, and optionally comments on the PR. Not a full audit — it surfaces
-  presence and citations; severity grading requires the SKILL.md workflow inside
-  Claude Code.
+description: 'First-pass static screen: catalogs a repo''s AI surfaces and cites OWASP AI Exchange threats. Not a graded audit.'
 author: 'aydinfer'
 branding:
   icon: 'shield'
